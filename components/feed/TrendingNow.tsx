@@ -21,11 +21,11 @@ const TrendingItem: React.FC<TrendingItemProps> = ({ title, time, readers }) => 
 
 export const TrendingSection: React.FC = () => {
   return (
-    <div className="w-64 bg-white p-4 rounded-xl border border-gray-100 animate-fade-in">
+    <div className="w-64 bg-white p-4 rounded-xl border border-gray-300 animate-fade-in">
       <h3 className="text-lg font-semibold mb-1">Trending Now</h3>
-      <p className="text-xs text-sdg-blue mb-4">#TheSDG story</p>
+      <p className="text-xs text-gray-500 mb-4">@TheSDG story</p>
       
-      <div className="space-y-4">
+      <div className="space-y-4 px-2">
         <TrendingItem 
           title="Perfios acquires CreditMantri"
           time="21 mins ago"

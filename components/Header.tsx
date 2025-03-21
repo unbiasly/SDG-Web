@@ -1,11 +1,13 @@
+"use client";
 import React from 'react';
 import Logo from '@/public/Logo.svg';
-import { Home, Plus, Bell, Video, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import Image from 'next/image';
+import { TABS } from '@/lib/constants/feed-constants';
 
 export const NavigationHeader: React.FC = () => {
   return (
-    <header className="sticky top-0 z-50 w-full bg-transparent border-b border-gray-100 px-20 py-2.5">
+    <header className=" z-50 w-full bg-white  rounded-b-xl   px-10 py-2.5">
       <div className="flex items-center justify-between mx-auto">
         <div className="flex items-center gap-4 ">
         
@@ -14,12 +16,8 @@ export const NavigationHeader: React.FC = () => {
           
           <h1 className='text-2xl font-bold'>The SDG Story</h1>
           
-        </div>
+      </div>
         <div className="flex items-center space-x-10">
-          {/* <NavIconButton icon={<Home className="w-5 h-5" />} label="Home" isActive />
-          <NavIconButton icon={<Plus className="w-5 h-5" />} label="Post" />
-          <NavIconButton icon={<Bell className="w-5 h-5" />} label="Notifications" />
-          <NavIconButton icon={<Video className="w-5 h-5" />} label="Videos" /> */}
           <div className="relative  rounded-2xl flex-1 max-w-lg">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-gray-400" />

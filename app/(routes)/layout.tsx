@@ -26,12 +26,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#F2F2F2] `}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased max-container bg-[#FFF] `}
       >
         <NavigationHeader />
-        <div className="max-container">
             {children}
-        </div>
       </body>
     </html>
   );

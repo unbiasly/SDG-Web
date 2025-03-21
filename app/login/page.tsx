@@ -33,15 +33,15 @@ const Page = () => {
     // }
   
     return (
-      <div className="h-screen bg-white px-20">
+      <div className="h-screen  px-20">
         <div className="flex flex-col lg:flex-row space-x-32 h-screen">
           {/* Left side - Image */}
-          <div className="sign-in-image hidden lg:block lg:w-2/5 bg-gray-900 relative animate-fade-in overflow-hidden">
+          <div className="sign-in-image hidden mt-5 lg:block lg:w-1/2 bg-gray-900 relative animate-fade-in overflow-hidden">
             <ImageSlider images={LOGIN_IMAGES} captions={LOGIN_IMAGE_CAPTIONS} />
           </div>
           
           {/* Right side - Sign In Form */}
-          <div className="w-full lg:w-3/5 flex items-center justify-center  animate-slide-in-right">
+          <div className="w-full lg:w-1/2 flex items-center justify-center  animate-slide-in-right">
             <SignInForm />
           </div>
         </div>

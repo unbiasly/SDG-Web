@@ -1,5 +1,6 @@
 import React from 'react';
 import { MoreHorizontal, X, Heart, MessageCircle, Share2 } from 'lucide-react';
+import Image from 'next/image';
 
 interface PostCardProps {
   name: string;
@@ -8,6 +9,7 @@ interface PostCardProps {
   isVerified?: boolean;
   content: string;
   imageUrl: string;
+  avatar: string;
   likesCount: string;
   commentsCount: string;
   repostsCount: string;
@@ -22,6 +24,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   imageUrl,
   likesCount,
   commentsCount,
+  avatar,
   repostsCount
 }) => {
   return (
@@ -29,10 +32,12 @@ export const PostCard: React.FC<PostCardProps> = ({
       <div className="flex justify-between mb-3">
         <div className="flex items-center">
           <div className="w-10 h-10 bg-blue-100 rounded-md overflow-hidden flex-shrink-0 border border-gray-100">
-            <img 
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/UNDP_logo.svg/1200px-UNDP_logo.svg.png" 
-              alt={name} 
-              className="w-full h-full object-cover"
+            <Image
+              src={avatar} 
+              alt={name}
+              width={100}
+              height={100} 
+              className="object-cover"
             />
           </div>
           <div className="ml-2">
