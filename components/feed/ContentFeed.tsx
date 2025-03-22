@@ -23,7 +23,7 @@ export const ContentFeed: React.FC = () => {
                   {tab}
                 </button>
               </div>
-              {index < TABS.length - 1 && <div className="mx-10 my-2 border-r border-l border-gray-300 rounded-full"></div>}
+              {index < TABS.length - 1 && <div className=" my-2 border-r border-l border-gray-300 rounded-full"></div>}
             </React.Fragment>
           ))}
         </div>

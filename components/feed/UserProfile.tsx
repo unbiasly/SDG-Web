@@ -1,3 +1,4 @@
+"use client"
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
@@ -6,7 +7,7 @@ import Image from 'next/image';
 
 export const UserSidebar: React.FC = () => {
   return (
-    <div className="w-full bg-white border-2 p-4 rounded-2xl flex flex-col h-full ">
+    <div className="w-full bg-white border-1 border-gray-300 p-4 rounded-2xl flex flex-col h-full ">
       <div className="flex flex-col items-start border-b py-2 border-gray-600">
         <div className="relative mb-2 w-20">
           <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-100 to-blue-200 flex items-center justify-center overflow-hidden">
@@ -38,11 +39,12 @@ export const UserSidebar: React.FC = () => {
         <ul className="space-y-1 ">
           {PROFILE_OPTIONS.map((option) => (
             <SidebarItem 
-              key={option.id}
-              icon={option.icon} 
-              label={option.label} 
-              hasSubmenu={!!option.sub_options}
-              subOptions={option.sub_options}
+                key={option.id}
+                
+                icon={option.icon} 
+                label={option.label} 
+                hasSubmenu={!!option.sub_options}
+                subOptions={option.sub_options}
             />
           ))}
         </ul>
