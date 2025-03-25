@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
 import "../globals.css";
 import Logo from '@/public/Logo.svg';
 import { UserSidebar } from "@/components/feed/UserProfile";
@@ -30,9 +31,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased max-container bg-[#FFF] `}
+        className={`${geistSans.variable} ${geistMono.variable}  antialiased  bg-[#FFF] `}
       >
-        <main className="flex-1 flex overflow-y-auto p-3 gap-6">
+        <main className="flex-1 flex overflow-y-auto p-3 gap-6 max-container">
             <aside className="hidden xl:block space-y-3  sticky h-fit">
                 <div className="flex justify-center items-center gap-2 px-2">    
                     <Image src={Logo} alt='' width={40} height={40}  />

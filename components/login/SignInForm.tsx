@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import SocialSignIn from './SocialSignIn';
-import Link from 'next/link';
 
 interface SignInFormProps {
   className?: string;
@@ -11,12 +10,13 @@ interface SignInFormProps {
 const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [signUp, setSignUp] = useState();
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Sign in attempt with:', { email, password });
     // Add your authentication logic here
-    window.location.href = '/feed'
+    window.location.href = '/'
   };
 
   return (
@@ -28,7 +28,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5 animate-slide-up" style={{ animationDelay: '200ms' }}>
+      <form onSubmit={handleSignIn} className="space-y-5 animate-slide-up" style={{ animationDelay: '200ms' }}>
         <div>
           <input
             type="email"
@@ -60,7 +60,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
         <button
           type="submit"
           className="w-full bg-gray-500 text-white font-medium py-3 px-4 rounded-full hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-          onClick={handleSubmit}
+          onClick={handleSignIn}
         >
           Sign in
         </button>

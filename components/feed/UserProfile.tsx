@@ -2,10 +2,12 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
-import { PROFILE_OPTIONS } from '@/lib/constants/feed-constants';
+import { PROFILE_OPTIONS } from '@/lib/constants/index-constants';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 export const UserSidebar: React.FC = () => {
+    const pathname = usePathname();
   return (
     <div className="w-full bg-white border-1 border-gray-300 p-4 rounded-2xl flex flex-col h-full ">
       <div className="flex flex-col items-start border-b py-2 border-gray-600">
@@ -37,10 +39,11 @@ export const UserSidebar: React.FC = () => {
       
       <nav className="py-3">
         <ul className="space-y-1 ">
-          {PROFILE_OPTIONS.map((option) => (
+          {PROFILE_OPTIONS.map((option, key) => (
             <SidebarItem 
-                key={option.id}
-                
+                key={key}
+                isActive={pathname === option.route}
+                route={option.route}
                 icon={option.icon} 
                 label={option.label} 
                 hasSubmenu={!!option.sub_options}
@@ -57,12 +60,13 @@ interface SidebarItemProps {
   icon: string;
   label: string;
   isActive?: boolean;
+  route: string;
   hasSubmenu?: boolean;
-  subOptions?: Array<{id: string; label: string; icon: string}>;
+  subOptions?: Array<{route: string; label: string; icon: string}>;
 }
 
-const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, isActive, hasSubmenu, subOptions }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, isActive, hasSubmenu, subOptions, route }) => {
+    const [isOpen, setIsOpen] = useState(false);
 
   const toggleSubmenu = () => {
     if (hasSubmenu) {
@@ -74,8 +78,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, isActive, hasSub
     <li>
       <div className="flex flex-col">
         <Link
-          href="#" 
-          className={`flex items-center space-x-2 p-2 rounded-md hover:bg-gray-300 ${isActive ? 'bg-gray-400' : ''}`}
+          href={route} 
+          className={`flex items-center space-x-2 p-2 rounded-md hover:bg-gray-300 ${isActive ? 'bg-gray-300 font-bold ' : ''}`}
           onClick={hasSubmenu ? toggleSubmenu : undefined}
         >
           <Image src={icon} alt='.' className='object-contain' width={25} height={25} />
@@ -89,10 +93,10 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, isActive, hasSub
         
         {hasSubmenu && isOpen && subOptions && (
           <ul className=" mt-1 space-y-1">
-            {subOptions.map((subOption) => (
-              <li key={subOption.id}>
+            {subOptions.map((subOption, key) => (
+              <li key={key}>
                 <Link 
-                  href="#" 
+                  href={subOption.route} 
                   className="flex items-center p-2 rounded-md hover:bg-gray-300"
                 >
                   <Image src={subOption.icon} alt='.' className='object-contain' width={20} height={20} />

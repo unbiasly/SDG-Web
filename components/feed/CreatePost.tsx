@@ -1,15 +1,45 @@
 "use client"
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
-import { Calendar, Image as ImageIcon, Video, SmilePlus } from 'lucide-react';
+import { 
+  Calendar, 
+  Image as ImageIcon, 
+  Video, 
+  SmilePlus, 
+  X, 
+  Globe, 
+  ChevronDown, 
+  MessageCircle, 
+  FileIcon 
+} from 'lucide-react';
+import ProfileAvatar from '../profile/ProfileAvatar';
+import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const CreatePost = () => {
+  // State variables
   const [postText, setPostText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [content, setContent] = useState('');
+  const [visibility, setVisibility] = useState('Public');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Mock data
+  const username = 'John Doe';
+  const avatarSrc = 'https://i.pravatar.cc/150?img=68';
 
   const handleInputFocus = () => {
     setIsExpanded(true);
@@ -46,132 +76,185 @@ const CreatePost = () => {
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
-    if (postText.trim() || selectedFiles.length > 0) {
-      console.log('Post content:', postText);
-      console.log('Files:', selectedFiles);
+  const handlePost = () => {
+    if (content.trim()) {
+      setIsLoading(true);
       
-      // Reset form
-      setPostText('');
-      setSelectedFiles([]);
-      setPreviewUrls(prev => {
-        // Revoke all object URLs
-        prev.forEach(url => URL.revokeObjectURL(url));
-        return [];
-      });
-      setIsExpanded(false);
+      // Simulate API call
+      setTimeout(() => {
+        console.log('Post content:', content);
+        console.log('Files:', selectedFiles);
+        
+        // Reset form
+        setContent('');
+        setSelectedFiles([]);
+        setPreviewUrls(prev => {
+          // Revoke all object URLs
+          prev.forEach(url => URL.revokeObjectURL(url));
+          return [];
+        });
+        setIsLoading(false);
+        // toast("Post created successfully!");
+      }, 1000);
     }
   };
 
   return (
-    <div className="bg-white   p-4 border-b mb-4">
-      <div className="flex items-start space-x-3">
-        <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-          <img 
-            src="https://i.pravatar.cc/150?img=68" 
-            alt="User avatar" 
-            width={40} 
-            height={40} 
-            className="object-cover w-full h-full"
-          />
-        </div>
-        
-        <div className="flex-grow">
-          <div 
-            className={`${!isExpanded ? "border border-gray-300 rounded-full px-4 py-2 mb-3 w-full cursor-text" : ""}`}
-            onClick={handleInputFocus}
-          >
-            {!isExpanded && (
-              <p className="text-gray-500">Start a post</p>
-            )}
-          </div>
-          
-          {isExpanded && (
-            <div className="mt-2">
-              <textarea
-                className="w-full border border-gray-300 rounded-lg p-3 min-h-[100px] focus:outline-none focus:ring-1 focus:ring-gray-500"
-                placeholder="What's on your mind?"
-                value={postText}
-                onChange={handleInputChange}
-                autoFocus
-              />
-              
-              {previewUrls.length > 0 && (
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  {previewUrls.map((url, index) => (
-                    <div key={index} className="relative">
-                      {url.includes('video') ? (
-                        <video 
-                          src={url} 
-                          className="rounded-lg w-full h-32 object-cover" 
-                          controls
-                        />
-                      ) : (
-                        <Image 
-                          src={url} 
-                          alt={`Preview ${index}`} 
-                          width={150} 
-                          height={150}
-                          className="rounded-lg w-full h-32 object-cover" 
-                        />
-                      )}
-                      <button 
-                        className="absolute top-1 right-1 bg-gray-800 bg-opacity-70 text-white rounded-full w-6 h-6 flex items-center justify-center"
-                        onClick={() => removeFile(index)}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              <div className="flex justify-between mt-3">
-                <button 
-                  className="bg-gray-500 cursor-pointer text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-600 transition"
-                  onClick={handleSubmit}
-                >
-                  Post
-                </button>
-                <button 
-                  className="text-gray-500 px-3 py-2 rounded-lg hover:bg-gray-100 transition"
-                  onClick={() => setIsExpanded(false)}
-                >
-                  Cancel
-                </button>
+    <div className="bg-white p-4 border-b mb-4">
+      <Dialog>
+        <DialogTrigger className='flex w-full items-start justify-start space-x-3'>
+            <ProfileAvatar 
+              src='https://i.pravatar.cc/150'
+              alt='User Avatar'
+              size='xs'
+              className='object-contain'
+            />
+            <div className="w-full ">
+              <div 
+                className="border border-gray-300 rounded-full px-4 py-2 mb-3 w-full cursor-pointer"
+                onClick={handleInputFocus}
+              >
+                <p className="text-gray-500">Start a post</p>                            
               </div>
             </div>
-          )}
-          
-        </div>
-      </div>
-          <div className="flex justify-evenly text-xl mt-2 space-x-4">
-              <button 
-                className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md transition"
-                onClick={handlePhotoClick}
-              >
-                <ImageIcon size={20} className="mr-2" />
-                <span>Photo</span>
-              </button>
-              
-              <button 
-                className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md transition"
-                onClick={handleVideoClick}
-              >
-                <Video size={20} className="mr-2" />
-                <span>Video</span>
-              </button>
-              
-              <button className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md transition">
-                <SmilePlus size={20} className="mr-2" />
-                <span>GIF</span>
-              </button>
-            <button className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md transition">
-              <Calendar size={20} className="mr-2" />
-              <span>Event</span>
-            </button>
+        </DialogTrigger>
+        <DialogContent className='w-full'>
+            <DialogHeader className="">
+              <div className="flex  justify-between">
+                <DialogTitle className="text-2xl font-bold">Create a post</DialogTitle>
+              </div>
+            </DialogHeader>
             
-          </div>
+            <div className=" space-y-6">
+              <div className="flex items-center gap-3">
+                <ProfileAvatar src={avatarSrc} alt={username} className="h-12 w-12 rounded-full" size='sm'/>
+                
+                <div className="flex flex-col">
+                  <span className="font-semibold text-xl">{username}</span>
+                  <button
+                    className="flex cursor-pointer items-center gap-1 border-gray-500 border text-sm text-gray-600 hover:bg-gray-100 rounded-full px-4 py-1"
+                    onClick={() => {
+                        const nextVisibility = visibility === 'Public' ? 'Private' : 'Public';
+                      setVisibility(nextVisibility);
+                      // toast(`Visibility changed to ${nextVisibility}`);
+                    }}
+                  >
+                    <Globe className="h-4 w-4" />
+                    <span>{visibility}</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <textarea
+                  ref={textareaRef}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder={`What's on your mind, ${username}?`}
+                  className="w-full min-h-[180px] border-none focus:ring-0 text-lg resize-none"
+                  data-gramm="false"
+                />
+              </div>
+            </div>
+            
+            <div className="w-full justify-between items-center flex space-x-1">
+              <div className="flex items-center justify-between rounded-lg border border-gray-400 p-1 dark:border-gray-800">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-medium text-gray-500">Add to your post</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <button 
+                    className="p-2 rounded-full hover:bg-gray-100" 
+                    title="Add Photo" 
+                    // onClick={() => toast("Photo upload feature would open here")}
+                  >
+                    <ImageIcon className="h-5 w-5" />
+                  </button>
+                  
+                  <button 
+                    className="p-2 rounded-full hover:bg-gray-100" 
+                    title="Add Video"
+                    // onClick={() => toast("Video upload feature would open here")}
+                  >
+                    <Video className="h-5 w-5" />
+                  </button>
+                  
+                  <button 
+                    className="p-2 rounded-full hover:bg-gray-100" 
+                    title="Add GIF"
+                    // onClick={() => toast("GIF selector would open here")}
+                  >
+                    <FileIcon className="h-5 w-5" />
+                  </button>
+                  
+                  <button 
+                    className="p-2 rounded-full hover:bg-gray-100" 
+                    title="Add Date"
+                    // onClick={() => toast("Calendar would open here")}
+                  >
+                    <Calendar className="h-5 w-5" />
+                  </button>
+                  
+                  {/* <Separator orientation="vertical" className="h-6" /> */}
+                  
+                  <button 
+                    className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-100" 
+                    title="Choose Audience"
+                    // onClick={() => toast("Audience selector would open here")}
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                    <span className="text-sm font-medium">Anyone</span>
+                  </button>
+                </div>
+              </div>
+              
+                <button
+                  className={cn(
+                    'px-8 py-3 rounded-full bg-gray-300 font-bold text-black hover:bg-gray-400',
+                    content.trim() 
+                      ? 'cursor-pointer ' 
+                      : 'cursor-not-allowed',
+                    isLoading && 'opacity-75 cursor-not-allowed'
+                  )}
+                  onClick={handlePost}
+                  disabled={!content.trim() || isLoading}
+                >
+                  {isLoading ? 'Posting...' : 'Post'}
+                </button>
+              </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Action buttons */}
+      <div className="flex justify-evenly text-xl mt-2 space-x-4">
+        <button 
+          className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md transition"
+          onClick={handlePhotoClick}
+        >
+          <ImageIcon size={20} className="mr-2" />
+          <span>Photo</span>
+        </button>
+        
+        <button 
+          className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md transition"
+          onClick={handleVideoClick}
+        >
+          <Video size={20} className="mr-2" />
+          <span>Video</span>
+        </button>
+        
+        <button className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md transition">
+          <SmilePlus size={20} className="mr-2" />
+          <span>GIF</span>
+        </button>
+        
+        <button className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md transition">
+          <Calendar size={20} className="mr-2" />
+          <span>Event</span>
+        </button>
+      </div>
       
       {/* Hidden file inputs */}
       <input 

@@ -1,14 +1,10 @@
-export const LOGIN_IMAGES = [
-    "/login/Onboard-1.jpg",
-    "/login/Onboard-2.jpg",
-    "/login/Onboard-3.jpg",
-    "/login/Onboard-4.jpg",
-    
-  ];
+export const SIGN_IN_OPTIONS = [
+    ""
+];
 
-  export const LOGIN_IMAGE_CAPTIONS = [
-    "SDG Stories: Global progress, daily updates. Stay informed",
-    "Empowering communities through education",
-    "Building sustainable futures together",
-    "SDG Stories: Global progress, daily updates. Stay informed"
-  ];
+  export const LOGIN_IMAGES_AND_CAPTIONS = [
+    {id: 1, path: "/login/Onboard-1.jpg", caption: "SDG Stories: Global progress, daily updates. Stay informed"},
+    {id: 2, path: "/login/Onboard-2.jpg", caption: "Empowering communities through education"},
+    {id: 3, path: "/login/Onboard-3.jpg", caption: "Building sustainable futures together"},
+    {id: 4, path: "/login/Onboard-4.jpg", caption: "SDG Stories: Global progress, daily updates. Stay informed"},
+  ]
