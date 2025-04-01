@@ -46,7 +46,7 @@ const ImageSlider = () => {
                 ))}
             </div>
           <div className="absolute inset-x-0 bottom-20 z-20 px-10 text-center">
-            <h3 className="text-xl font-semibold text-black mb-2 animate-fade-in">
+            <h3 className="text-2xl font-semibold text-black mb-2 animate-fade-in">
               {image.caption}
             </h3>
           </div>

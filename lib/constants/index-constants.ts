@@ -28,27 +28,22 @@ export const PROFILE_TABS = [
     {id: "posts", label: "Posts"}
 ];
 
-export const TSS_NEWS = {
-    ARTICLE_TITLE: "Perfios, a B2B SaaS fintech company, has acquired CreditNirvana, an AI-driven debt management and collection platform. \"This acquisition is a strategic step in expanding our product suite and strengthening our capabilities in debt management,\" says Perfios CEO Sabyasachi Goswami. It also recently acquired fraud management company ClariS. Lenders in India spend over $7 billion.",
-
-};
 
 export const PROFILE_OPTIONS = [
     {route: "/", label: "Home", icon: "/icons/house.svg"},
-    {route: "/notifications", label: "Notifications", icon: "/icons/bell-ring.svg"},
-    {route: "/bookmarks", label: "Bookmarks", icon: "/icons/bookmark.svg"},
-    {route: "/videos", label: "Videos", icon: "/icons/tv-minimal-play.svg"},
-    {route: "/society", label: "The SDG Society", icon: "/icons/society.png"},
-    {route: "/mentorship", label: "Mentorship", icon: "/icons/leadership-development.png"},
-    {route: "/internship", label: "Internship", icon: "/icons/id-card.svg"},
-    {route: "/job", label: "Job", icon: "/icons/briefcase-business.svg"},
-    {route: "/scheme", label: "Scheme Search", icon: "/icons/chart-no-axes-gantt.svg"},
     {route: "/profile", label: "Profile", icon: "/icons/circle-user-round.svg"},
-    {route: "/settings", label: "Settings", icon: "/icons/settings.svg", sub_options: [
-        { route: "/account-settings", label: "Account Settings", icon: "/icons/user-round-pen.svg" },
-        { route: "/privacy", label: "Privacy", icon: "/icons/globe-lock.svg" },
-        { route: "/notification-settings", label: "Notification Settings", icon: "/icons/bell-ring.svg" },
-    ]},
+    // {route: "/notifications", label: "Notifications", icon: "/icons/bell-ring.svg"},
+    // {route: "/bookmarks", label: "Bookmarks", icon: "/icons/bookmark.svg"},
+    // {route: "/videos", label: "Videos", icon: "/icons/tv-minimal-play.svg"},
+    // {route: "/society", label: "The SDG Society", icon: "/icons/society.png"},
+    // {route: "/mentorship", label: "Mentorship", icon: "/icons/leadership-development.png"},
+    // {route: "/internship", label: "Internship", icon: "/icons/id-card.svg"},
+    // {route: "/job", label: "Job", icon: "/icons/briefcase-business.svg"},
+    // {route: "/scheme", label: "Scheme Search", icon: "/icons/chart-no-axes-gantt.svg"},
+    // {route: "/settings", label: "Settings", icon: "/icons/settings.svg"}, 
+    
+
+        
 ];
 
 export const MOCK_NOTIFICATIONS: Notification[] = [
@@ -162,3 +157,22 @@ export const PROFILE_ANALYTICS = [
         description: "Check out who's engaging with your posts."
     }
 ]
+
+export const SETTINGS_OPTIONS = [
+    { id: 'account', label: 'Your account' },
+    { id: 'security', label: 'Security and account access' },
+    { id: 'privacy', label: 'Privacy and safety' },
+    { id: 'notifications', label: 'Notifications' },
+    { id: 'accessibility', label: 'Accessibility, display and languages' },
+    { id: 'resources', label: 'Additional resources' },
+    { id: 'help', label: 'Help Center' },
+    { id: 'logout', label: 'Logout' },
+    
+  ];
+
+export const SDG_NEWS = [
+    // { id: "trending", title: "Trending News" },
+    // { id: "top", title: "Top News" },
+    // { id: "breaking", title: "Breaking News" },
+    { id: "sdg", title: "SDG News" },
+  ];

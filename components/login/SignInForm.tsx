@@ -1,35 +1,70 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import SocialSignIn from './SocialSignIn';
+import { toast } from 'sonner';
 
 interface SignInFormProps {
-  className?: string;
+    className?: string;
 }
 
 const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [signUp, setSignUp] = useState();
-  
-  const handleSignIn = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Sign in attempt with:', { email, password });
-    // Add your authentication logic here
-    window.location.href = '/'
-  };
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    const handleSignIn = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const response = await fetch('/login/api', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    device_id: 'web',
+                    device_token: 'web',
+                }),
+            }).then(res => res.json());
+            if (response.jwtToken) {
+                const cookieResponse = await fetch('/api/setCookieToken', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        jwtToken: response.jwtToken,
+                        refreshToken: response.refreshToken
+                    }),
+                    credentials: 'include' // Important for cookies to be sent/received
+                });
+                
+                console.log(cookieResponse)
+                console.log("Login Successful, JWT Token:", response.jwtToken)
+            // Redirect to home page or dashboard
+            window.location.href = '/';
+            } else {
+                toast.error(response?.message);
+            }
+            
+        } catch (error) {
+            console.error("Login unsuccessful", error);
+        } 
+    };
+
 
   return (
-    <div className={cn("w-full max-w-md px-6 py-8", className)}>
-      <div className="animate-slide-up" style={{ animationDelay: '100ms' }}>
-        <h1 className="text-3xl font-semibold text-gray-900 mb-2">Sign In</h1>
+    <div className={cn("w-full max-w-lg lg:max-w-md px-6 py-8", className)}>
+      <div className="animate-slide-up">
+        <h1 className="text-3xl font-semibold text-gray-900 mb-2">Sign In/ Sign Up</h1>
         <p className="text-gray-600 mb-8">
           Sign in to get the best experience of our app. Never miss update turn on notifications.
         </p>
       </div>
 
-      <form onSubmit={handleSignIn} className="space-y-5 animate-slide-up" style={{ animationDelay: '200ms' }}>
-        <div>
+      <form onSubmit={handleSignIn} className="space-y-5">
+        <div className='space-y-2 '>
           <input
             type="email"
             placeholder="Email*"
@@ -38,9 +73,6 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-        </div>
-        
-        <div>
           <input
             type="password"
             placeholder="Password*"
@@ -59,16 +91,16 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
         
         <button
           type="submit"
-          className="w-full bg-gray-500 text-white font-medium py-3 px-4 rounded-full hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          className="w-full cursor-pointer bg-gray-500 text-white font-medium py-3 px-4 rounded-full hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           onClick={handleSignIn}
         >
-          Sign in
+          Sign In / Sign Up
         </button>
       </form>
       
       <SocialSignIn className="mt-8 animate-slide-up" />
       
-      <div className=" text-center animate-slide-up" style={{ animationDelay: '500ms' }}>
+      {/* <div className=" text-center animate-slide-up">
 
         <a 
           href="#" 
@@ -76,7 +108,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
         >
           Sign up
         </a>
-      </div>
+      </div> */}
     </div>
   );
 };

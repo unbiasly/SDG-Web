@@ -202,6 +202,9 @@
     .max-container {
       @apply mx-auto lg:max-w-[1200px];
     }
+    /* .login-container {
+        @apply mx-auto md:max-w-full lg:max-w-[1600px];
+      } */
   
     .padding-container {
       @apply px-6 lg:px-20 2xl:px-0;

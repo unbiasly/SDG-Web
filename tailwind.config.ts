@@ -1,5 +1,5 @@
 import type { Config } from 'tailwindcss'
-
+const defaultTheme = require("tailwindcss/defaultTheme");
 const config: Config = {
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -16,7 +16,12 @@ const config: Config = {
         // You can add custom fonts here
       },
       screens: {
-        // You can customize breakpoints here
+        ...defaultTheme.screens,
+        
+        '13i': '1280px',
+        '15i': '1440px',
+        '3xl': '1920px',
+        '4xl': '2560px',
       },
     },
   },

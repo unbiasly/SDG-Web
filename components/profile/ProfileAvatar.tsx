@@ -20,7 +20,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
   const [imageLoaded, setImageLoaded] = useState(false);
   
   const sizeClasses = {
-    xs: 'w-10 h-10',
+    xs: 'w-11 h-11',
     sm: 'w-16 h-16',
     md: 'w-24 h-24',
     lg: 'w-32 h-32',
@@ -28,7 +28,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
   };
 
   return (
-    <div className={`profile-avatar-border ${sizeClasses[size]} ${className}`}>
+    <div className={`aspect-square ${sizeClasses[size]} ${className}`}>
       <div className="relative w-full h-full overflow-hidden rounded-full bg-gray-100 border-2 border-black shadow-lg">
         {src ? (
           <img

@@ -1,11 +1,13 @@
 import React from 'react';
 import { PostCard } from './PostCard';
-import TSSNews from './SDGNews';
+import SDGNews from './SDGNews';
 import CreatePost from './CreatePost';
 import { FEED_TABS, NOTIFICATION_TABS, SCHEME_TABS } from '@/lib/constants/index-constants';
 import NotificationList from '../notification/NotificationList'
 import { CATEGORY_SCHEMES, MINISTRY_SCHEMES, STATE_SCHEMES } from '@/lib/constants/scheme-constants';
 import SchemeCard from '../scheme/SchemeCard';
+import { PostData } from '@/service/api.interface';
+import { formatDate } from '@/lib/utilities/formatDate';
 
 
 type ContentFeedProps = {
@@ -13,11 +15,11 @@ type ContentFeedProps = {
     defaultTab?: string,
     setActiveTab: (tab: string) => void,
     tabs: string[],
-    
+    content: PostData[]
 }
 
 
-export const ContentFeed: React.FC<ContentFeedProps> = ({ defaultTab, activeTab = defaultTab, setActiveTab,  tabs }) => {
+export const ContentFeed: React.FC<ContentFeedProps> = ({ defaultTab, activeTab = defaultTab, setActiveTab,  tabs, content }) => {
     
   return (
     <div className="w-full bg-white rounded-sm border-1 border-gray-300">
@@ -46,25 +48,26 @@ export const ContentFeed: React.FC<ContentFeedProps> = ({ defaultTab, activeTab 
             <>
               <CreatePost />
               <div className="px-4 space-y-4">
-                {[1, 2, 3, 4].map((post) => (
+                {content.map((post) => (
                   <PostCard
-                    key={post}
-                    name="UNDP India"
-                    handle="@UNDPIndia"
+                    key={post._id}
+                    _id={post._id}
+                    name={post.user_id.username}
+                    handle={`@${post.user_id.username}`}
                     avatar="/feed/undp-logo-blue.svg"
-                    time="21 hrs 54 mins"
-                    isVerified={true}
-                    content="MOU Signed Between Government of West Bengal and UNDP to Strengthen Collaboration for Development"
-                    imageUrl="/feed/mou-signing.jpg"
-                    likesCount="298"
-                    commentsCount="20"
-                    repostsCount="20"
+                    time={formatDate(post.updatedAt)}
+                    isLiked={post.isLiked}
+                    content={post.content}
+                    imageUrl={ post.images[0] || "/feed/mou-signing.jpg"}
+                    likesCount={post.poststat_id?.likes || 0}
+                    commentsCount={post.poststat_id?.comments || 0}
+                    repostsCount={post.poststat_id?.reposts || 0}
                   />
                 ))}
               </div>
             </>
           )}
-          {activeTab === "The SDG News" && <TSSNews />}
+          {activeTab === "The SDG News" && <SDGNews />}
         </>
       )}
       {NOTIFICATION_TABS && <NotificationList activeTab={activeTab || ''} />}

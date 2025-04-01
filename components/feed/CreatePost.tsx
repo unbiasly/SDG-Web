@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { 
   Calendar, 
@@ -21,11 +21,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useUser } from '@/lib/redux/features/user/hooks';
 
 const CreatePost = () => {
   // State variables
   const [postText, setPostText] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
+  const { user, userLoading } = useUser();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [content, setContent] = useState('');
@@ -37,13 +38,11 @@ const CreatePost = () => {
   const videoInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
+  
   // Mock data
-  const username = 'John Doe';
+  const username = `@${user?.username}`;
   const avatarSrc = 'https://i.pravatar.cc/150?img=68';
 
-  const handleInputFocus = () => {
-    setIsExpanded(true);
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPostText(e.target.value);
@@ -76,46 +75,46 @@ const CreatePost = () => {
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (content.trim()) {
       setIsLoading(true);
       
       // Simulate API call
-      setTimeout(() => {
         console.log('Post content:', content);
-        console.log('Files:', selectedFiles);
-        
+        await fetch('/api/createPost', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ content })
+        });
         // Reset form
         setContent('');
         setSelectedFiles([]);
+
         setPreviewUrls(prev => {
           // Revoke all object URLs
           prev.forEach(url => URL.revokeObjectURL(url));
           return [];
         });
+        window.location.href='/'
         setIsLoading(false);
-        // toast("Post created successfully!");
-      }, 1000);
+
     }
   };
 
   return (
     <div className="bg-white p-4 border-b mb-4">
       <Dialog>
-        <DialogTrigger className='flex w-full items-start justify-start space-x-3'>
+        <div className='flex w-full items-center  gap-2'>
             <ProfileAvatar 
-              src='https://i.pravatar.cc/150'
-              alt='User Avatar'
-              size='xs'
-              className='object-contain'
+                src='https://i.pravatar.cc/150'
+                alt='User Avatar'
+                size='xs'
             />
-            <div className="w-full ">
-              <div 
-                className="border border-gray-300 rounded-full px-4 py-2 mb-3 w-full cursor-pointer"
-                onClick={handleInputFocus}
-              >
-                <p className="text-gray-500">Start a post</p>                            
-              </div>
+        <DialogTrigger className="w-full">
+            <div className="border  border-gray-300 rounded-full px-4 py-2 flex justify-start cursor-text">
+                <p className="text-gray-500">Post your Thoughts...</p>                            
             </div>
         </DialogTrigger>
         <DialogContent className='w-full'>
@@ -132,7 +131,7 @@ const CreatePost = () => {
                 <div className="flex flex-col">
                   <span className="font-semibold text-xl">{username}</span>
                   <button
-                    className="flex cursor-pointer items-center gap-1 border-gray-500 border text-sm text-gray-600 hover:bg-gray-100 rounded-full px-4 py-1"
+                    className="flex w-fit cursor-pointer items-center gap-1 border-gray-500 border text-sm text-gray-600 hover:bg-gray-100 rounded-full px-4 py-1"
                     onClick={() => {
                         const nextVisibility = visibility === 'Public' ? 'Private' : 'Public';
                       setVisibility(nextVisibility);
@@ -150,16 +149,24 @@ const CreatePost = () => {
                 <textarea
                   ref={textareaRef}
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={(e) => {
+                    setContent(e.target.value);
+                    // Auto-adjust height based on content
+                    if (textareaRef.current) {
+                      textareaRef.current.style.height = 'auto';
+                      textareaRef.current.style.height = `${Math.max(180, textareaRef.current.scrollHeight)}px`;
+                    }
+                  }}
                   placeholder={`What's on your mind, ${username}?`}
-                  className="w-full min-h-[180px] border-none focus:ring-0 text-lg resize-none"
+                  className="w-full min-h-[190px] text-lg resize-none hide-scrollbar outline-none border-0 focus:ring-0"
                   data-gramm="false"
                 />
               </div>
             </div>
             
             <div className="w-full justify-between items-center flex space-x-1">
-              <div className="flex items-center justify-between rounded-lg border border-gray-400 p-1 dark:border-gray-800">
+                {/* More Options Div */}
+              {/* <div className="flex items-center justify-between rounded-lg border border-gray-400 p-1 dark:border-gray-800">
                 <div className="flex items-center gap-1">
                   <span className="text-sm font-medium text-gray-500">Add to your post</span>
                 </div>
@@ -196,8 +203,7 @@ const CreatePost = () => {
                   >
                     <Calendar className="h-5 w-5" />
                   </button>
-                  
-                  {/* <Separator orientation="vertical" className="h-6" /> */}
+                
                   
                   <button 
                     className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-100" 
@@ -208,7 +214,7 @@ const CreatePost = () => {
                     <span className="text-sm font-medium">Anyone</span>
                   </button>
                 </div>
-              </div>
+              </div> */}
               
                 <button
                   className={cn(
@@ -225,10 +231,10 @@ const CreatePost = () => {
                 </button>
               </div>
         </DialogContent>
+        </div>
       </Dialog>
       
-      {/* Action buttons */}
-      <div className="flex justify-evenly text-xl mt-2 space-x-4">
+      {/* <div className="flex justify-evenly text-xl mt-2 space-x-4">
         <button 
           className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md transition"
           onClick={handlePhotoClick}
@@ -254,10 +260,10 @@ const CreatePost = () => {
           <Calendar size={20} className="mr-2" />
           <span>Event</span>
         </button>
-      </div>
+      </div> */}
       
       {/* Hidden file inputs */}
-      <input 
+      {/* <input 
         aria-label='image-input'
         type="file" 
         ref={fileInputRef} 
@@ -273,7 +279,7 @@ const CreatePost = () => {
         className="hidden" 
         accept="video/*" 
         onChange={handleFileChange}
-      />
+      /> */}
     </div>
   );
 };

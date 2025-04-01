@@ -1,5 +1,17 @@
 import type { Metadata } from "next";
 import '@/app/globals.css'
+import { Toaster } from "@/components/ui/sonner";
+import { Geist, Geist_Mono } from "next/font/google";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "The SDG Story",
@@ -12,12 +24,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className=''
-      >
-            {children}
-      </body>
-    </html>
+    <main>
+        {children}
+        <Toaster />
+    </main>
   );
 }

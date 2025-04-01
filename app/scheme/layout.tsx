@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 
 import "../globals.css";
 import Logo from '@/public/Logo.svg';
@@ -8,20 +7,6 @@ import { TrendingSection } from "@/components/feed/TrendingNow";
 import Image from "next/image";
 import { Search } from "lucide-react";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "The SDG Story",
-  description: "GGI-Web",
-};
 
 export default function RootLayout({
   children,
@@ -29,11 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased max-container bg-[#FFF] `}
-      >
-        <main className="justify-between flex overflow-y-auto p-3 gap-6">
+        <main className="max-container justify-between flex overflow-y-auto p-3 gap-6">
             <aside className="hidden xl:block space-y-3  sticky h-fit">
                 <div className="flex justify-center items-center gap-2 px-2">    
                     <Image src={Logo} alt='' width={40} height={40}  />
@@ -58,7 +39,5 @@ export default function RootLayout({
             <TrendingSection />
           </aside>
         </main>
-      </body>
-    </html>
   );
 }

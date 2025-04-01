@@ -23,7 +23,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         <img 
           src={logo} 
           alt={`${company} logo`}
-          className="w-full h-full object-cover image-lazy-load"
+          className="w-fit h-fit object-cover image-lazy-load"
         />
       </div>
       
@@ -43,18 +43,21 @@ export const ExperienceSection: React.FC<{
   title: string;
   children: React.ReactNode;
   className?: string;
-}> = ({ title, children, className }) => {
+  onAddClick?: () => void;
+  onEditClick?: () => void;
+}> = ({ title, children, className, onAddClick, onEditClick }) => {
   return (
     <div className={cn('py-6 border-b border-t border-profile-border', className)}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold">{title}</h2>
         <div className="flex items-center gap-2">
-          <button aria-label="Add experience" className="rounded-full p-2 hover:bg-gray-100 transition-colors">
+          <button aria-label="Add experience" className="rounded-full p-2 hover:bg-gray-100 transition-colors" onClick={onAddClick}>
             <Plus size={24} className="text-gray-700" />
           </button>
-          <button aria-label="Edit experience" className="rounded-full p-2 hover:bg-gray-100 transition-colors">
+          <button aria-label="Edit experience" className="rounded-full p-2 hover:bg-gray-100 transition-colors" onClick={onEditClick}>
             <PenLine size={24} className="text-gray-700" />
           </button>
+          
         </div>
       </div>
       {children}
