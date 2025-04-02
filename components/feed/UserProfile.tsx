@@ -5,13 +5,21 @@ import Link from 'next/link';
 import { PROFILE_OPTIONS } from '@/lib/constants/index-constants';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { baseURL } from '@/service/app.api';
 import { useUser } from '@/lib/redux/features/user/hooks';
 
-export const UserSidebar: React.FC = () => {
+export const UserSidebar = () => {
     const pathname = usePathname();
-    const { user, userLoading } = useUser()
+    const { user } = useUser()
 
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/logout')
+            window.location.href = '/login';
+        }
+        catch (error) {
+            console.error('Error during logout:', error);
+    }
+}
 
     return (
         <div className="w-full bg-white border-1 border-gray-300 p-4 rounded-2xl flex flex-col h-full">
@@ -31,7 +39,7 @@ export const UserSidebar: React.FC = () => {
                 <h3 className="font-semibold text-lg">{user?.name || "Name"}</h3>
                 <p className="text-sm text-gray-500 mb-1">@{user?.username}</p>
                 <p className="text-xs text-gray-500">{user?.email}</p>
-                <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                {/* <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
                     <div className="flex items-center">
                         <span className="font-semibold">000</span> <span className="ml-1">Followers</span>
                     </div>
@@ -39,7 +47,7 @@ export const UserSidebar: React.FC = () => {
                     <div className="flex items-center">
                         <span className="font-semibold">000</span> <span className="ml-1">Following</span>
                     </div>
-                </div>
+                </div> */}
             </div>
             
             <nav className="pt-2">
@@ -56,16 +64,7 @@ export const UserSidebar: React.FC = () => {
                     <li>
                         <div className="flex flex-col">
                             <button
-                                onClick={async () => {
-                                    try {
-                                        await fetch(`${baseURL}/logout`, {
-                                            method: 'HEAD',
-                                        });
-                                        window.location.href = '/login';
-                                    } catch (error) {
-                                        console.error('Error during logout:', error);
-                                    }
-                                }}
+                                onClick={handleLogout}
                                 className="flex items-center cursor-pointer space-x-2 p-2 rounded-md hover:bg-gray-300"
                             >
                                 <LogOut />
@@ -94,7 +93,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, isActive, route 
           href={route} 
           className={`flex items-center space-x-2 p-2 rounded-md hover:bg-gray-300 ${isActive ? 'bg-gray-300 font-bold ' : ''}`}
         >
-          <Image src={icon} alt='.' className='object-contain' width={25} height={25} />
+          <Image src={icon} alt='HOME' className='object-contain' width={25} height={25} />
           <span className="text-md font-regular ml-2">{label}</span>
         </Link>
       </div>

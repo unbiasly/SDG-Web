@@ -17,7 +17,7 @@ const ImageSlider = () => {
 
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-background">
+    <div className="relative h-3/4 w-3/4 overflow-hidden bg-background">
       {LOGIN_IMAGES_AND_CAPTIONS.map((image, index) => (
         <div
           key={index}

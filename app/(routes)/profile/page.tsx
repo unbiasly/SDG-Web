@@ -14,15 +14,33 @@ import { PostCard } from '@/components/feed/PostCard';
 import { UserProfileDialog } from '@/components/userDataDialogs/ProfileDialog';
 import Link from 'next/link';
 import { EducationDialog } from '@/components/userDataDialogs/EducationDialog';
+import { formatDate } from '@/lib/utilities/formatDate';
 
 const Page = () => {
-    const [activeTab, setActiveTab] = useState('about');
+    const [activeTab, setActiveTab] = useState('posts');
     const [posts, setPosts] = useState<PostsFetchResponse>();
     
     // Education dialog state
     const [educationDialogOpen, setEducationDialogOpen] = useState(false);
     const [selectedEducation, setSelectedEducation] = useState<Education | undefined>(undefined);
     
+    const getUserPosts = async () => {
+        try {
+
+            const postsResponse = await fetch(`/api/getPosts/getPostsByUser/?user_id=${user?._id}`);
+            const postsData = await postsResponse.json();
+            setPosts(postsData);
+            return postsData;
+        } catch(error) {
+            console.error("Post Fetch Error \n", error);
+            return null;
+        }
+    }
+
+    useEffect(() => {
+        getUserPosts();
+    }, []);
+
     const { 
         user,
         userLoading
@@ -178,19 +196,19 @@ const Page = () => {
                     {(posts?.data && posts.data.length > 0) ? (
                       posts.data.map((post) => (
                         <PostCard
-                          key={post._id}
-                          _id={post._id}
-                          name={post.user_id.username}
-                          handle={`@${post.user_id.username}`}
-                          avatar="/feed/undp-logo-blue.svg"
-                          time="21 hrs 54 mins"
-                          isVerified={true}
-                          content={post.content}
-                          imageUrl="/feed/mou-signing.jpg"
-                          likesCount="298"
-                          commentsCount="20"
-                          repostsCount="20"
-                        />
+                        key={post._id}
+                        _id={post._id}
+                        name={post.user_id.username}
+                        handle={`@${post.user_id.username}`}
+                        avatar="/feed/undp-logo-blue.svg"
+                        time={formatDate(post.updatedAt)}
+                        isLiked={post.isLiked}
+                        content={post.content}
+                        imageUrl={ post.images[0]}
+                        likesCount={post.poststat_id?.likes || 0}
+                        commentsCount={post.poststat_id?.comments || 0}
+                        repostsCount={post.poststat_id?.reposts || 0}
+                  />
                       ))
                     ) : (
                       <div className="text-center py-12">

@@ -24,7 +24,7 @@ export const VIDEO_TABS = [
 ];
 
 export const PROFILE_TABS = [
-    {id: "about", label: "About"},
+    // {id: "about", label: "About"},
     {id: "posts", label: "Posts"}
 ];
 
@@ -32,6 +32,7 @@ export const PROFILE_TABS = [
 export const PROFILE_OPTIONS = [
     {route: "/", label: "Home", icon: "/icons/house.svg"},
     {route: "/profile", label: "Profile", icon: "/icons/circle-user-round.svg"},
+    {route: '/goals', label: "The 17 Goals", icon: "/icons/Target.svg"}
     // {route: "/notifications", label: "Notifications", icon: "/icons/bell-ring.svg"},
     // {route: "/bookmarks", label: "Bookmarks", icon: "/icons/bookmark.svg"},
     // {route: "/videos", label: "Videos", icon: "/icons/tv-minimal-play.svg"},

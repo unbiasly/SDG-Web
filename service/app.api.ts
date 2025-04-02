@@ -27,7 +27,7 @@ const handleResponse = <T>(response: Response) => {
   };
 
 export const baseURL = process.env.NEXT_PUBLIC_API_URL;
-export const deployedURL = process.env.NEXT_PUBLIC_DEPLOYED_API;
+export const deployedURL = process.env.NEXT_PUBLIC_DEPLOYED_URL;
 
 const BackAPI = {
     postManualLogin : (body: ManualAuthRequest) => fetchClient.post<ManualAuthResponse>(`${baseURL}/auth`, body),

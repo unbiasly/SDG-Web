@@ -40,7 +40,7 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
 
   return (
     <div className={cn('relative border-b border-profile-border', className)}>
-      <div className="flex w-1/2 justify-around ">
+      <div className="flex w-1/2 justify-start ">
           {tabs.map((tab, index) => (
             <React.Fragment key={tab.id}>
               <div className={` py-2  ${activeTab === tab.id ? 'border-b-2 font-bold border-b-black active' : 'border-b-2 border-b-transparent'}`}>

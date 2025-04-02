@@ -45,8 +45,7 @@ const SDGNews = () => {
 
 
   const ArticleCard = ({ article }: { article: Article }) => (
-    <Link href={formatSDGLink(article.link)} className="bg-red-500  rounded-xl overflow-hidden shadow-sm border border-gray-900 transition-all duration-300 hover:shadow-md mb-4">
-      <div className="flex flex-col sm:flex-row">
+    <Link href={formatSDGLink(article.link)} target="_blank" className=" rounded-xl overflow-hidden shadow-sm  transition-all duration-300 hover:shadow-md mb-4 flex flex-col sm:flex-row">
         {/* <div className="w-full sm:w-1/3 md:w-1/4 h-40 sm:h-auto">
           <img 
             src={article.imageUrl} 
@@ -55,7 +54,7 @@ const SDGNews = () => {
           />
         </div> */}
         {/* sm:w-2/3 md:w-3/4 */}
-        <div className="w-full  p-4 flex flex-col justify-between">
+        <div className="w-full border rounded-xl  p-4 flex flex-col justify-between">
           <div>
             <h2 className="font-bold text-lg sm:text-xl mb-2">{article.title}</h2>
             <div className="flex items-center mb-2 font-semibold text-sm text-gray-500">
@@ -64,16 +63,15 @@ const SDGNews = () => {
               <span>{formatDate(article.updatedAt)}</span>
             </div>
           </div>
-          <div className="flex justify-between items-center mt-4" onClick={(e) => e.stopPropagation()}>
+          {/* <div className="flex justify-between items-center mt-4" onClick={(e) => e.stopPropagation()}>
             <button aria-label="bookmark" className="text-gray-400 hover:text-gray-600 transition-colors">
               <Bookmark size={20} />
             </button>
             <button aria-label="more_options" className="text-gray-400 hover:text-gray-600 transition-colors">
               <MoreVertical size={20} />
             </button>
-          </div>
+          </div> */}
         </div>
-      </div>
     </Link>
   );
 

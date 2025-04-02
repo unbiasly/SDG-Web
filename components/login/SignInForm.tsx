@@ -1,14 +1,15 @@
 "use client"
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import SocialSignIn from './SocialSignIn';
 import { toast } from 'sonner';
 
 interface SignInFormProps {
     className?: string;
+    onForgotPassword: () => void;
 }
 
-const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
+const SignInForm: React.FC<SignInFormProps> = ({ className, onForgotPassword }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -84,21 +85,20 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
         </div>
         
         <div className="flex justify-end">
-          <a href="/forgot-password" className="text-sm text-gray-500 hover:text-gray-700 underline transition-colors">
+          <button onClick={onForgotPassword} className="text-sm text-gray-500 hover:text-gray-700 underline cursor-pointer transition-colors">
             Forgot Password?
-          </a>
+          </button>
         </div>
         
         <button
           type="submit"
           className="w-full cursor-pointer bg-gray-500 text-white font-medium py-3 px-4 rounded-full hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-          onClick={handleSignIn}
         >
           Sign In / Sign Up
         </button>
       </form>
       
-      <SocialSignIn className="mt-8 animate-slide-up" />
+      {/* <SocialSignIn className="mt-8 animate-slide-up" /> */}
       
       {/* <div className=" text-center animate-slide-up">
 

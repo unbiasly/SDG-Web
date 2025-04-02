@@ -117,7 +117,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           <div className="ml-2">
             <div className="flex items-center">
               <h4 className="font-semibold text-sm">{name}</h4>
-              <span className="text-xs text-gray-500 ml-1.5">• Following</span>
+              {/* <span className="text-xs text-gray-500 ml-1.5">• Following</span> */}
             </div>
             <div className="flex items-center text-xs text-gray-500">
               <span>{handle}</span>
@@ -157,15 +157,15 @@ export const PostCard: React.FC<PostCardProps> = ({
         </div>
       </div>
       
-      <div className="flex justify-between pt-2 border-t border-gray-100">
+      <div className="flex justify-evenly pt-2 border-t border-gray-100">
         {[
-          { icon: <Heart size={18} className={isLiked ? "text-gray-500" : "text-gray-500"} />, label: "Like", onClick: handleLike, isActive: isLiked },
+          { icon: <Heart size={18} className={isLiked ? "text-gray-900 font-bold" : "text-gray-500"} />, label: "Like", onClick: handleLike, isActive: isLiked },
           { icon: <MessageCircle size={18} className={isCommentsOpen ? "text-blue-500" : "text-gray-500"} />, label: "Comment", onClick: toggleComments, isActive: isCommentsOpen },
-          { icon: <Share2 size={18} className="text-gray-500" />, label: "Share", onClick: handleShare, isActive: false }
+        //   { icon: <Share2 size={18} className="text-gray-500" />, label: "Share", onClick: handleShare, isActive: false }
         ].map((action, index) => (
           <button 
             key={index}
-            className={`w-50 flex items-center cursor-pointer justify-center gap-2 py-1.5 rounded-md transition-colors duration-200 ${action.isActive ? isLiked ? "font-bold bg-red-400 text-red-100" : "font-bold bg-gray-300" : "font-medium hover:bg-gray-200 "}`}
+            className={`w-50 flex items-center cursor-pointer justify-center gap-2 py-1.5 rounded-md transition-colors duration-200 ${action.isActive ?  "font-bold bg-gray-300" : "font-medium hover:bg-gray-200 "}`}
             onClick={action.onClick}
           >
             {action.icon}

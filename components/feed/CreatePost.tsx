@@ -35,7 +35,7 @@ const CreatePost = () => {
   
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
+//   const videoInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   
@@ -52,9 +52,9 @@ const CreatePost = () => {
     fileInputRef.current?.click();
   };
 
-  const handleVideoClick = () => {
-    videoInputRef.current?.click();
-  };
+//   const handleVideoClick = () => {
+//     videoInputRef.current?.click();
+//   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -79,27 +79,42 @@ const CreatePost = () => {
     if (content.trim()) {
       setIsLoading(true);
       
-      // Simulate API call
+      try {
         console.log('Post content:', content);
-        await fetch('/api/createPost', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ content })
+        const postData = new FormData();
+        postData.append('content', content);
+        
+        // Change the field name from 'files' to 'images' to match backend expectation
+        selectedFiles.forEach(file => {
+          postData.append('images', file); // Changed from 'files' to 'images'
         });
+
+        const response = await fetch('/api/createPost', {
+          method: 'POST',
+          body: postData,
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error creating post:', errorText);
+          throw new Error('Failed to create post');
+        }
+        
         // Reset form
         setContent('');
         setSelectedFiles([]);
-
         setPreviewUrls(prev => {
           // Revoke all object URLs
           prev.forEach(url => URL.revokeObjectURL(url));
           return [];
         });
-        window.location.href='/'
+        
+        console.log('Post created successfully');
+      } catch (error) {
+        console.error('Error in handlePost:', error);
+      } finally {
         setIsLoading(false);
-
+      }
     }
   };
 
@@ -166,55 +181,32 @@ const CreatePost = () => {
             
             <div className="w-full justify-between items-center flex space-x-1">
                 {/* More Options Div */}
-              {/* <div className="flex items-center justify-between rounded-lg border border-gray-400 p-1 dark:border-gray-800">
+              <div className="flex items-center justify-between rounded-lg border border-gray-400 px-2 p-1 dark:border-gray-800">
                 <div className="flex items-center gap-1">
                   <span className="text-sm font-medium text-gray-500">Add to your post</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <button 
-                    className="p-2 rounded-full hover:bg-gray-100" 
-                    title="Add Photo" 
-                    // onClick={() => toast("Photo upload feature would open here")}
-                  >
-                    <ImageIcon className="h-5 w-5" />
-                  </button>
-                  
-                  <button 
-                    className="p-2 rounded-full hover:bg-gray-100" 
-                    title="Add Video"
-                    // onClick={() => toast("Video upload feature would open here")}
-                  >
-                    <Video className="h-5 w-5" />
-                  </button>
-                  
-                  <button 
-                    className="p-2 rounded-full hover:bg-gray-100" 
-                    title="Add GIF"
-                    // onClick={() => toast("GIF selector would open here")}
-                  >
-                    <FileIcon className="h-5 w-5" />
-                  </button>
-                  
-                  <button 
-                    className="p-2 rounded-full hover:bg-gray-100" 
-                    title="Add Date"
-                    // onClick={() => toast("Calendar would open here")}
-                  >
-                    <Calendar className="h-5 w-5" />
-                  </button>
-                
-                  
-                  <button 
-                    className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-100" 
-                    title="Choose Audience"
-                    // onClick={() => toast("Audience selector would open here")}
-                  >
-                    <MessageCircle className="h-5 w-5" />
-                    <span className="text-sm font-medium">Anyone</span>
-                  </button>
+                  {[
+                    // { title: "Add Video", icon: <Video className="h-5 w-5" />, onClick: selectedFiles, },
+                    // { title: "Add GIF", icon: <FileIcon className="h-5 w-5" />, onClick: selectedFiles, },
+                    // { title: "Add Date", icon: <Calendar className="h-5 w-5" />, onClick: selectedFiles, },
+                    // { title: "Choose Audience", icon: <MessageCircle className="h-5 w-5" />, onClick: selectedFiles, isAudience: true }
+                    { title: "Add Photo", icon: <ImageIcon className="h-5 w-5" />, onClick: handlePhotoClick }
+                  ].map((button, index) => (
+                    <button 
+                      key={index}
+                      className={`p-2 cursor-pointer rounded-full hover:bg-gray-100 
+                        `} 
+                      title={button.title} 
+                      onClick={button.onClick}
+                    >
+                      {button.icon}
+                      {/* {button.isAudience && <span className="text-sm font-medium">Anyone</span>} */}
+                    </button>
+                  ))}
                 </div>
-              </div> */}
+              </div>
               
                 <button
                   className={cn(
@@ -230,6 +222,22 @@ const CreatePost = () => {
                   {isLoading ? 'Posting...' : 'Post'}
                 </button>
               </div>
+              {previewUrls.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                    {previewUrls.map((url, index) => (
+                        <div key={index} className="relative">
+                            <img src={url} alt={`Preview ${index}`} className="h-20 w-20 object-cover rounded" />
+                            <button
+                                aria-label='remove'
+                                className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                                onClick={() => removeFile(index)}
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+              )}
         </DialogContent>
         </div>
       </Dialog>
@@ -263,16 +271,16 @@ const CreatePost = () => {
       </div> */}
       
       {/* Hidden file inputs */}
-      {/* <input 
+      <input 
         aria-label='image-input'
         type="file" 
         ref={fileInputRef} 
         className="hidden" 
         accept="image/*" 
         multiple 
-        onChange={handleFileChange}
+        onChange={handleFileChange} 
       />
-      <input 
+      {/* <input 
         aria-label='video-input'
         type="file" 
         ref={videoInputRef} 
@@ -280,6 +288,8 @@ const CreatePost = () => {
         accept="video/*" 
         onChange={handleFileChange}
       /> */}
+      {/* Display selected images */}
+      
     </div>
   );
 };
