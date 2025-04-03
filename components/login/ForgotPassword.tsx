@@ -10,6 +10,7 @@ interface ForgotPasswordFormProps {
 
 const ForgotPasswordForm = ({ onBackToSignIn }: ForgotPasswordFormProps) => {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 //   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,6 +21,7 @@ const ForgotPasswordForm = ({ onBackToSignIn }: ForgotPasswordFormProps) => {
     }
     
     try {
+        setLoading(true)
       const response = await fetch('/login/api/forgotPassword', {
         method: 'POST',
         headers: {
@@ -29,6 +31,7 @@ const ForgotPasswordForm = ({ onBackToSignIn }: ForgotPasswordFormProps) => {
       });
       
       const data = await response.json();
+      setLoading(false);
     //   setIsSubmitted(true);
       
       if (!data.success) {
@@ -53,6 +56,14 @@ const ForgotPasswordForm = ({ onBackToSignIn }: ForgotPasswordFormProps) => {
     toast.success("Recovery email resent!");
     // Handle resend logic here
   };
+
+  // Loading spinner component
+  const LoadingSpinner = () => (
+    <div className="flex justify-center items-center">
+      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+      <span className="ml-2">Loading...</span>
+    </div>
+  );
 
   return (
     <div className="w-full max-w-md space-y-6 p-2">
@@ -97,7 +108,7 @@ const ForgotPasswordForm = ({ onBackToSignIn }: ForgotPasswordFormProps) => {
           onClick={handleSubmit}
           className="w-full bg-[#19486A] text-xl  py-6 hover:scale-105 transition-all duration-300 cursor-pointer rounded-full text-white"
         >
-          Continue
+          {loading ? <LoadingSpinner /> : "Continue"}
         </Button>
       </div>
 

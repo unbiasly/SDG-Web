@@ -12,7 +12,7 @@ export default function GoalPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex flex-1 justify-center  overflow-hidden">
     <div className="p-4">
       <GoalHeader goal={goal} />
 

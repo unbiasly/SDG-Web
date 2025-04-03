@@ -55,6 +55,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className, onForgotPassword }) 
     };
 
 
+
   return (
     <div className={cn("w-full max-w-lg lg:max-w-md px-6 py-8", className)}>
       <div className="animate-slide-up">
@@ -85,9 +86,16 @@ const SignInForm: React.FC<SignInFormProps> = ({ className, onForgotPassword }) 
         </div>
         
         <div className="flex justify-end">
-          <button onClick={onForgotPassword} className="text-sm text-gray-500 hover:text-gray-700 underline cursor-pointer transition-colors">
+          <span 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onForgotPassword();
+            }} 
+            className="text-sm text-gray-500 hover:text-gray-700 underline cursor-pointer transition-colors"
+          >
             Forgot Password?
-          </button>
+          </span>
         </div>
         
         <button

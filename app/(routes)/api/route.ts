@@ -1,4 +1,3 @@
-
 import { baseURL } from "@/service/app.api";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -7,7 +6,7 @@ export async function GET() {
     const cookieStore = await cookies(); // Ensure to await the promise
     const jwtToken = cookieStore.get('jwtToken')?.value;
     if (!jwtToken) {
-        return NextResponse.json({ error: 'Unauthorized (Token Undefined)' }, { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized (Token Undefined)', redirectToLogin: true }, { status: 401 });
     }
     
     try {
@@ -18,13 +17,20 @@ export async function GET() {
             }
         });
         
+        if (!response.ok) {
+            // Handle unauthorized response from backend
+            if (response.status === 401) {
+                return NextResponse.json({ error: 'Unauthorized', redirectToLogin: true }, { status: 401 });
+            }
+            throw new Error(`API error: ${response.status}`);
+        }
+        
         const data = await response.json();
         return NextResponse.json(data);
     } catch (error) {
-        console.log("api/route.ts :",error)
-        window.location.href="/login"
+        console.log("api/route.ts error:", error);
         return NextResponse.json(
-            { error: 'Failed to fetch user data' }, 
+            { error: 'Failed to fetch user data', redirectToLogin: true }, 
             { status: 500 }
         );
     }

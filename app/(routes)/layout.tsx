@@ -7,7 +7,6 @@ import { UserSidebar } from "@/components/feed/UserProfile";
 import { TrendingSection } from "@/components/feed/TrendingNow";
 import Image from "next/image";
 import { Search } from "lucide-react";
-import { ReduxProvider } from "@/lib/redux/provider";
 import { setupTokenRefresh } from "@/lib/utilities/tokenRefresh";
 import { useEffect } from "react";
 import { useAppDispatch } from "@/lib/redux/hooks";
@@ -45,18 +44,30 @@ export default function RootLayout({
           const response = await fetch('/api', {
             credentials: 'include'
           });
+          
+          if (!response.ok) {
+            // If unauthorized, handle it
+            if (response.status === 401) {
+              dispatch(fetchUserFailure('Unauthorized'));
+              window.location.href = '/login';
+              return null;
+            }
+          }
+          
           const data = await response.json();
           dispatch(fetchUserSuccess(data));
           return data;
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
           dispatch(fetchUserFailure(errorMessage));
+          // Redirect to login for auth errors
+          window.location.href = '/login';
           throw error;
         }
       };
     
   return (
-    <main className="flex-1 flex overflow-y-auto p-3 gap-6 max-container">
+      <main className="flex-1 flex overflow-y-auto p-3 gap-6 max-container">
         <aside className="hidden xl:block space-y-3  sticky h-fit">
             <Link href='/' className="flex justify-center items-center gap-2 px-2">    
                 <Image src={Logo} alt='' width={40} height={40}  />
