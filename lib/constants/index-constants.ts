@@ -2,7 +2,7 @@ import { Notification } from "@/service/api.interface";
 
 export const FEED_TABS = [
     "For You", 
-    "The SDG News"
+    // "The SDG News"
 ];
 
 export const NOTIFICATION_TABS = [
@@ -176,4 +176,30 @@ export const SDG_NEWS = [
     // { id: "top", title: "Top News" },
     // { id: "breaking", title: "Breaking News" },
     { id: "sdg", title: "SDG News" },
+  ];
+
+  export const FEEDBACK_OPTIONS = [
+    "I'm not interested in the author",
+    "I'm not interested in this topic",
+    "I've seen too many posts on this topic",
+    "I've seen this post before",
+    "This post is old",
+    "It's something else"
+  ];
+
+  export const POLICY_OPTIONS = [
+    "Harassment",
+    "Fraud or scam",
+    "Spam",
+    "Misinformation",
+    "Hateful Speech",
+    "Threats or violence",
+    "Self-harm",
+    "Graphic content",
+    "Dangerous or extremist organization",
+    "Sexual content",
+    "Fake account",
+    "Child exploitation",
+    "Illegal goods and services",
+    "Infringement"
   ];

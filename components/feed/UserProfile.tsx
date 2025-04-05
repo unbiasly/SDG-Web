@@ -6,6 +6,7 @@ import { PROFILE_OPTIONS } from '@/lib/constants/index-constants';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useUser } from '@/lib/redux/features/user/hooks';
+import ProfileAvatar from '../profile/ProfileAvatar';
 
 export const UserSidebar = () => {
     const pathname = usePathname();
@@ -26,19 +27,19 @@ export const UserSidebar = () => {
             <div className="flex flex-col items-start border-b py-2 border-gray-600">
                 <div className="relative mb-2 w-20">
                     <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-100 to-blue-200 flex items-center justify-center overflow-hidden">
-                        <img
-                            src="https://i.pravatar.cc/150?img=68"
-                            alt="User"
-                            className="w-full h-full object-cover"
+                        <ProfileAvatar 
+                        src={user?.profileImage || ''}
+                        className='object-contain'
+                        size='profile'
+                        displayName={user?.username}
                         />
                     </div>
                     <button aria-label='.' className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm">
                         <div className="w-3 h-3 rounded-full bg-green-500"></div>
                     </button>
                 </div>
-                <h3 className="font-semibold text-lg">{user?.name || "Name"}</h3>
+                <h3 className="font-semibold text-lg">{user?.fName && user?.lName ? `${user.fName} ${user.lName}` : (user?.name || `@${user?.username}`)}</h3>
                 <p className="text-sm text-gray-500 mb-1">@{user?.username}</p>
-                <p className="text-xs text-gray-500">{user?.email}</p>
                 {/* <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
                     <div className="flex items-center">
                         <span className="font-semibold">000</span> <span className="ml-1">Followers</span>
@@ -65,7 +66,7 @@ export const UserSidebar = () => {
                         <div className="flex flex-col">
                             <button
                                 onClick={handleLogout}
-                                className="flex items-center cursor-pointer space-x-2 p-2 rounded-md hover:bg-gray-300"
+                                className="flex items-center cursor-pointer space-x-2 p-2 rounded-xl hover:bg-accent/30"
                             >
                                 <LogOut />
                                 <span className="text-md font-regular ml-2">Logout</span>
@@ -91,7 +92,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, isActive, route 
       <div className="flex flex-col">
         <Link
           href={route} 
-          className={`flex items-center space-x-2 p-2 rounded-md hover:bg-gray-300 ${isActive ? 'bg-gray-300 font-bold ' : ''}`}
+          className={`flex items-center space-x-2 p-2 rounded-xl hover:bg-accent/30 ${isActive ? ' font-bold text-accent' : ''}`}
         >
           <Image src={icon} alt='HOME' className='object-contain' width={25} height={25} />
           <span className="text-md font-regular ml-2">{label}</span>

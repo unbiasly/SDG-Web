@@ -84,7 +84,6 @@ export interface UserData {
     username: string;
     name?: string;
     location?: string;
-    email: string;
     gender?: string;
     experience?: Experience[];
     education?: Education[];
@@ -93,6 +92,11 @@ export interface UserData {
     portfolioLink?: string;
     profileImage?: File;
     profileBackgroundImage?: File;
+    fName?: string; // Added from UserDetailsRequest
+    lName?: string; // Added from UserDetailsRequest
+    occupation?: string; // Added from UserDetailsRequest
+    pronouns?: string; // Added from UserDetailsRequest
+    headline?: string; // Added from UserDetailsRequest
 }
 
 export interface UserResponse {
@@ -101,16 +105,20 @@ export interface UserResponse {
 }
 
 export interface UserDetailsRequest {
-    username?: string;
-    name?: string;
-    location?: string;
-    email?: string;
-    gender?: string;
-    dob?: Date;
-    bio?: string;
-    portfolioLink?: string;
-    profileImage?: File;
-    profileBackgroundImage?: File;
+    username: string;
+    name: string;
+    location: string;
+    gender: string;
+    dob: Date;
+    bio: string;
+    fName: string;
+    lName: string;
+    occupation: string; 
+    pronouns: string; 
+    headline: string;
+    portfolioLink: string;
+    profileImage: File | string;
+    profileBackgroundImage: File | string;
     education?: Education[];
     experience?: Experience[];
 }

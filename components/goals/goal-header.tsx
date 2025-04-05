@@ -15,7 +15,7 @@ interface GoalProps {
 
 export default function GoalHeader({ goal }: GoalProps) {
   return (
-    <div className="rounded-xl h-screen p-5 text-white relative " style={{ backgroundColor: goal.color }}>
+    <div className="rounded-2xl h-screen p-5 text-white relative " style={{ backgroundColor: goal.color }}>
       {/* Navigation buttons at the top with higher z-index */}
       <div className="flex justify-between mb-8 z-10 relative">
         <div>

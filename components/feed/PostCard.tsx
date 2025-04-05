@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { baseURL } from '@/service/app.api';
 import CommentSection from '../comments/CommentSection';
 import { CommentData } from '@/service/api.interface';
+import ProfileAvatar from '../profile/ProfileAvatar';
+import KebabMenu from '../post/KebabMenu';
 
 interface PostCardProps {
   _id:string;
@@ -102,18 +104,10 @@ export const PostCard: React.FC<PostCardProps> = ({
     } 
     
   return (
-    <div className="post-card animate-fade-in">
+    <div className="border-b border-gray-300">
       <div className="flex justify-between mb-3">
         <div className="flex items-center">
-          <div className="w-10 h-10 bg-blue-100 rounded-md overflow-hidden flex-shrink-0 border border-gray-100">
-            <Image
-              src={avatar} 
-              alt={name}
-              width={100}
-              height={100} 
-              className="object-cover"
-            />
-          </div>
+            <ProfileAvatar src={avatar} alt={name} size='xs' className='' />
           <div className="ml-2">
             <div className="flex items-center">
               <h4 className="font-semibold text-sm">{name}</h4>
@@ -127,12 +121,10 @@ export const PostCard: React.FC<PostCardProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button aria-label='.' className="p-1.5 rounded-full hover:bg-gray-100 transition-colors duration-200">
-            <MoreHorizontal size={16} className="text-gray-500" />
-          </button>
-          <button aria-label='.' className="p-1.5 rounded-full hover:bg-gray-100 transition-colors duration-200">
+        <KebabMenu postId={_id} />
+          {/* <button aria-label='remove-post-feed' className="p-1.5 rounded-full hover:bg-gray-100 transition-colors duration-200">
             <X size={16} className="text-gray-500" />
-          </button>
+          </button> */}
         </div>
       </div>
       
@@ -146,7 +138,7 @@ export const PostCard: React.FC<PostCardProps> = ({
       <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
         <div className="flex items-center">
           <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
-            <Heart size={10} className="text-white" />
+            <Heart size={10} color='white' className="text-white" />
           </div>
           <span className="ml-1.5">{likesCount}</span>
         </div>
@@ -157,15 +149,35 @@ export const PostCard: React.FC<PostCardProps> = ({
         </div>
       </div>
       
-      <div className="flex justify-evenly pt-2 border-t border-gray-100">
+      <div className="flex h-1 w-full my-2">
+        <div className="flex-1 bg-[#E5243B]/60"></div>
+        <div className="flex-1 bg-[#DDA63A]/60"></div>
+        <div className="flex-1 bg-[#4C9F38]/60"></div>
+        <div className="flex-1 bg-[#C5192D]/60"></div>
+        <div className="flex-1 bg-[#FF3A21]/60"></div>
+        <div className="flex-1 bg-[#26BDE2]/60"></div>
+        <div className="flex-1 bg-[#FCC30B]/60"></div>
+        <div className="flex-1 bg-[#A21942]/60"></div>
+        <div className="flex-1 bg-[#FD6925]/60"></div>
+        <div className="flex-1 bg-[#DD1367]/60"></div>
+        <div className="flex-1 bg-[#FD9D24]/60"></div>
+        <div className="flex-1 bg-[#BF8B2E]/60"></div>
+        <div className="flex-1 bg-[#3F7E44]/60"></div>
+        <div className="flex-1 bg-[#0A97D9]/60"></div>
+        <div className="flex-1 bg-[#56C02B]/60"></div>
+        <div className="flex-1 bg-[#00689D]/60"></div>
+        <div className="flex-1 bg-[#19486A]/60"></div>
+      </div>
+      
+      <div className="flex justify-evenly pt-2 ">
         {[
-          { icon: <Heart size={18} className={isLiked ? "text-gray-900 font-bold" : "text-gray-500"} />, label: "Like", onClick: handleLike, isActive: isLiked },
+          { icon: <Heart size={18}  className={isLiked ? "text-accent font-bold" : "text-gray-500"} />, label: "Like", onClick: handleLike, isActive: isLiked },
           { icon: <MessageCircle size={18} className={isCommentsOpen ? "text-blue-500" : "text-gray-500"} />, label: "Comment", onClick: toggleComments, isActive: isCommentsOpen },
         //   { icon: <Share2 size={18} className="text-gray-500" />, label: "Share", onClick: handleShare, isActive: false }
         ].map((action, index) => (
           <button 
             key={index}
-            className={`w-50 flex items-center cursor-pointer justify-center gap-2 py-1.5 rounded-md transition-colors duration-200 ${action.isActive ?  "font-bold bg-gray-300" : "font-medium hover:bg-gray-200 "}`}
+            className={`w-50 flex items-center cursor-pointer justify-center gap-2 py-1.5 rounded-xl transition-colors duration-200 ${action.isActive ?  "font-bold bg-gray-300" : "font-medium hover:bg-gray-200 "}`}
             onClick={action.onClick}
           >
             {action.icon}
@@ -173,7 +185,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           </button>
         ))}
       </div>
-      <div className="px-2 py-3">
+      <div className="p-2">
         <CommentSection 
           post_id={_id}
           isOpen={isCommentsOpen} 

@@ -100,13 +100,13 @@ const SignInForm: React.FC<SignInFormProps> = ({ className, onForgotPassword }) 
         
         <button
           type="submit"
-          className="w-full cursor-pointer bg-gray-500 text-white font-medium py-3 px-4 rounded-full hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          className="w-full cursor-pointer bg-accent text-white font-medium py-3 px-4 rounded-full hover:bg-accent/80 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
         >
           Sign In / Sign Up
         </button>
       </form>
       
-      {/* <SocialSignIn className="mt-8 animate-slide-up" /> */}
+      <SocialSignIn className="mt-8 animate-slide-up" />
       
       {/* <div className=" text-center animate-slide-up">
 

@@ -8,12 +8,14 @@ interface UserState {
   userData: UserResponse | null;
   loading: boolean;
   error: string | null;
+  fallbackColor: string;
 }
 
 const initialState: UserState = {
   userData: null,
   loading: false,
   error: null,
+  fallbackColor: '',
 };
 
 export const userSlice = createSlice({
@@ -69,7 +71,10 @@ export const userSlice = createSlice({
         }
         state.userData.data.experience.push(experienceToAdd);
       }
-    }
+    },
+    setFallbackColor: (state, action: PayloadAction<string>) => {
+      state.fallbackColor = action.payload;
+    },
   },
 });
 
@@ -80,7 +85,8 @@ export const {
   clearUserData,
   updateUserDetails,
   addEducation,
-  addExperience
+  addExperience,
+  setFallbackColor
 } = userSlice.actions;
 
 export default userSlice.reducer;

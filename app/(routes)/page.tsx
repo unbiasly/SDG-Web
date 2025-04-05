@@ -1,29 +1,14 @@
 "use client"
 import { ContentFeed } from '@/components/feed/ContentFeed'
 import { FEED_TABS } from '@/lib/constants/index-constants'
-import { fetchUserFailure, fetchUserStart, fetchUserSuccess } from '@/lib/redux/features/user/userSlice';
-import { useAppDispatch, useAppSelector } from '@/lib/redux/hooks';
 import { PostsFetchResponse } from '@/service/api.interface';
 import React, { useEffect, useState } from 'react'
 
 export default function Home() {
     const [activeTab, setActiveTab] = useState("For You");
-    const dispatch = useAppDispatch();
     
     useEffect(() => {
-        const fetchUserData = async () => {
-            dispatch(fetchUserStart());
-            try {
-                const response = await fetch('/api', {
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                dispatch(fetchUserSuccess(data));
-            } catch (error) {
-                console.error(error);
-                dispatch(fetchUserFailure(error instanceof Error ? error.message : 'An unknown error occurred'));
-            }
-        };
+        
         
         const getAllPosts = async () => {
             try {
@@ -37,9 +22,8 @@ export default function Home() {
             }
         }
         
-        fetchUserData();
         getAllPosts();
-    }, [dispatch]);
+    }, []);
 
     const [posts, setPosts] = useState<PostsFetchResponse>();
 

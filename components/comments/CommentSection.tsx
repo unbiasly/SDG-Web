@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import ProfileAvatar from "../profile/ProfileAvatar";
-import { MoreVertical, Smile } from "lucide-react";
+// import { MoreVertical, Smile } from "lucide-react";
 import { Image } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommentData } from "@/service/api.interface";
+import { useUser } from "@/lib/redux/features/user/hooks";
 
 interface CommentSectionProps {
     post_id: string;
@@ -28,6 +29,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 }) => {
 //   const [sortBy, setSortBy] = useState<string>("most-relevant");
   const [comment, setComment] = useState<string>("");
+  const { user } = useUser()
 
 
   if (!isOpen) return null;
@@ -59,7 +61,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     <div className={cn("border-t border-gray-200 pt-3", className)}>
       {/* Comment input area */}
       <div className="flex gap-3 mb-4">
-        <ProfileAvatar size="xs" />
+        <ProfileAvatar src={user?.profileImage || ''} size="xs" />
         <div className="flex-1 relative">
           <input
             type="text"
@@ -141,7 +143,7 @@ const Comment: React.FC<CommentProps> = ({
     return (
         <div className={cn("flex gap-3 py-4", className)}>
         <div className="w-fit h-fit">
-            <ProfileAvatar src={userAvatar} size="xs" />
+            <ProfileAvatar src={userAvatar || ''} size="xs" />
         </div>
       
       <div className="flex-1">

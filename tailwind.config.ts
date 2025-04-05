@@ -11,9 +11,7 @@ const config: Config = {
       colors: {
         // You can add custom colors here
         border: "hsl(var(--border))",
-      },
-      fontFamily: {
-        // You can add custom fonts here
+        primary: "#19486A",
       },
       screens: {
         ...defaultTheme.screens,

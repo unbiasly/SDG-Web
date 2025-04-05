@@ -5,7 +5,7 @@ import { ArrowRight, Bookmark, MoreVertical, Check } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-interface Article {
+export interface Article {
   _id: string;
   title: string;
   publisher: string;
@@ -45,7 +45,7 @@ const SDGNews = () => {
 
 
   const ArticleCard = ({ article }: { article: Article }) => (
-    <Link href={formatSDGLink(article.link)} target="_blank" className=" rounded-xl overflow-hidden shadow-sm  transition-all duration-300 hover:shadow-md mb-4 flex flex-col sm:flex-row">
+    <Link href={formatSDGLink(article.link)} target="_blank" className=" rounded-2xl overflow-hidden shadow-sm  transition-all duration-300 hover:shadow-md mb-4 flex flex-col sm:flex-row">
         {/* <div className="w-full sm:w-1/3 md:w-1/4 h-40 sm:h-auto">
           <img 
             src={article.imageUrl} 
@@ -54,7 +54,7 @@ const SDGNews = () => {
           />
         </div> */}
         {/* sm:w-2/3 md:w-3/4 */}
-        <div className="w-full border rounded-xl  p-4 flex flex-col justify-between">
+        <div className="w-full border rounded-2xl  p-4 flex flex-col justify-between">
           <div>
             <h2 className="font-bold text-lg sm:text-xl mb-2">{article.title}</h2>
             <div className="flex items-center mb-2 font-semibold text-sm text-gray-500">
@@ -114,7 +114,7 @@ const SDGNews = () => {
           <div key={i} className="mb-10">
             <div className="h-6 bg-gray-200 rounded w-1/4 mb-6"></div>
             {[1, 2].map((j) => (
-              <div key={j} className="flex mb-4 bg-gray-100 rounded-xl h-40"></div>
+              <div key={j} className="flex mb-4 bg-gray-100 rounded-2xl h-40"></div>
             ))}
           </div>
         ))}

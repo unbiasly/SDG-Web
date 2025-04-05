@@ -9,7 +9,6 @@ import SchemeCard from '../scheme/SchemeCard';
 import { PostData } from '@/service/api.interface';
 import { formatDate } from '@/lib/utilities/formatDate';
 
-
 type ContentFeedProps = {
     activeTab: string,
     defaultTab?: string,
@@ -21,14 +20,15 @@ type ContentFeedProps = {
 
 export const ContentFeed: React.FC<ContentFeedProps> = ({ defaultTab, activeTab = defaultTab, setActiveTab,  tabs, content }) => {
     
+
   return (
-    <div className="w-full bg-white rounded-sm border-1 border-gray-300">
+    <div className="w-full bg-white rounded-2xl border-1 border-gray-300">
 
       <div className="border-b border-gray-300 mb-0.5">
         <div className="flex w-full justify-evenly ">
           {tabs.map((tab, index) => (
             <React.Fragment key={tab}>
-              <div className={` py-2  ${activeTab === tab ? 'border-b-2 border-b-black active' : 'border-b-2 border-b-transparent'}`}>
+              <div className={` py-2  ${activeTab === tab ? 'border-b-3 border-b-accent text-accent font-bold active ' : 'border-b-2 text-gray-400 border-b-transparent'}`}>
                 <button
                   className="flex justify-center text-xl font-medium cursor-pointer"
                   onClick={() => setActiveTab(tab)}
@@ -52,9 +52,9 @@ export const ContentFeed: React.FC<ContentFeedProps> = ({ defaultTab, activeTab 
                   <PostCard
                     key={post._id}
                     _id={post._id}
-                    name={post.user_id.username}
+                    name={post.user_id.name || `@${post.user_id.username}`}
                     handle={`@${post.user_id.username}`}
-                    avatar="/feed/undp-logo-blue.svg"
+                    avatar={post.user_id.profileImage || ''}
                     time={formatDate(post.updatedAt)}
                     isLiked={post.isLiked}
                     content={post.content}

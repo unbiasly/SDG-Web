@@ -1,6 +1,4 @@
 "use client"
-import { Geist, Geist_Mono } from "next/font/google";
-
 import "../globals.css";
 import Logo from '@/public/Logo.svg';
 import { UserSidebar } from "@/components/feed/UserProfile";
@@ -10,18 +8,9 @@ import { Search } from "lucide-react";
 import { setupTokenRefresh } from "@/lib/utilities/tokenRefresh";
 import { useEffect } from "react";
 import { useAppDispatch } from "@/lib/redux/hooks";
-import { fetchUserFailure, fetchUserStart, fetchUserSuccess } from "@/lib/redux/features/user/userSlice";
+import { fetchUserFailure, fetchUserStart, fetchUserSuccess, setFallbackColor } from "@/lib/redux/features/user/userSlice";
 import Link from "next/link";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { getRandomColor } from "@/lib/utilities/generateColor";
 
 export default function RootLayout({
   children,
@@ -53,8 +42,12 @@ export default function RootLayout({
               return null;
             }
           }
-          
           const data = await response.json();
+          if (data.data && data.data._id) {
+            // Set fallback color for new users
+            const fallbackColor = getRandomColor();
+            dispatch(setFallbackColor(fallbackColor));
+          }
           dispatch(fetchUserSuccess(data));
           return data;
         } catch (error) {
@@ -77,7 +70,7 @@ export default function RootLayout({
         </aside>
         {children}
     <aside className="hidden xl:block sticky space-y-3 ">
-    <div className="relative  rounded-2xl flex-1 w-full">
+    {/* <div className="relative  rounded-2xl flex-1 w-full">
         <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
             <Search className="h-4 w-4 text-gray-400" />
         </div>
@@ -86,8 +79,8 @@ export default function RootLayout({
             placeholder="Search"
             className="w-full h-10 pl-10 pr-4 rounded-2xl bg-sdg-gray text-sm outline-none ring-1 ring-gray-300 transition-all duration-200"
         />
-    </div>
-        {/* <TrendingSection /> */}
+    </div> */}
+        <TrendingSection />
     </aside>
     </main>
   );

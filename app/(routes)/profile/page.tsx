@@ -15,6 +15,7 @@ import { UserProfileDialog } from '@/components/userDataDialogs/ProfileDialog';
 import Link from 'next/link';
 import { EducationDialog } from '@/components/userDataDialogs/EducationDialog';
 import { formatDate } from '@/lib/utilities/formatDate';
+import Image from 'next/image';
 
 const Page = () => {
     const [activeTab, setActiveTab] = useState('posts');
@@ -66,20 +67,31 @@ const Page = () => {
     };
 
     return (
-        <div className="w-full   min-h-screen flex flex-1 flex-col border-gray-300 rounded-xl border-1 pb-20">
+        <div className="w-full   min-h-screen flex flex-1 flex-col border-gray-300 rounded-2xl border-1 pb-20">
           {/* Header with gray background */}
-          <div className="h-40 bg-gray-300 rounded-t-xl relative">
-            <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-sm cursor-pointer transition-transform duration-200 hover:scale-105">
+          <div className="h-40 rounded-t-xl relative overflow-hidden">
+            {user?.profileBackgroundImage ? (
+              <Image 
+                src={typeof user.profileBackgroundImage === 'string' ? user.profileBackgroundImage : ''}
+                alt="Profile background"
+                fill
+                className="object-cover"
+                priority
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-300" />
+            )}
+            {/* <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-sm cursor-pointer transition-transform duration-200 hover:scale-105">
               <Camera size={24} className="text-gray-700" />
-            </div>
+            </div> */}
           </div>
             {/* Main content */}
-          <div className="w-full mx-auto px-4 sm:px-6 -mt-20 relative z-10 animate-slide-up">
+          <div className="w-full mx-auto px-4 sm:px-6 -mt-20 relative z-10">
             {/* Profile header */}
             <div className="flex justify-between items-end mb-8">
               <ProfileAvatar 
                 size="xl"
-                src="https://i.pravatar.cc/150?img=65"
+                src={user?.profileImage || ''}
                 alt="Profile" 
               />
               <UserProfileDialog/>
@@ -88,20 +100,28 @@ const Page = () => {
             {/* Profile info */}
             <div className="mt-6 animate-scale-in">
               <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-bold">{user?.name || "Name"}</h1>
-                <CircleCheckBig size={20} className="text-gray-500" />
+                <h1 className="text-3xl font-bold">{ user?.fName && user?.lName ? `${user.fName} ${user.lName}` : user?.username}</h1>
+                {/* <CircleCheckBig size={20} className="text-gray-500" /> */}
               </div>
-              <p className="text-xl text-profile-text mt-1">{user?.experience?.[0]?.role || ''}</p>
+              <p className="text-xl  ">{user?.occupation || ''}</p>
+              <p className="text-xl font-semibold  ">{user?.headline || ''}</p>
+              
               
               <div className="mt-4 text-profile-secondary">
                 <p className="mb-1">{user?.experience?.[0]?.company || ''}</p>
-                <p className="mb-1"></p>
-                <Link href={user?.portfolioLink|| ''} className="flex items-center gap-1 mb-4">
+                <p className="mb-1">{user?.location || ''}</p>
+                <Link href={user?.portfolioLink || ''} className="flex items-center gap-1 mb-4">
                   <LinkIcon size={16} />
-                  <span>{user?.portfolioLink|| ''}</span>
+                  <span>{user?.portfolioLink || ''}</span>
                 </Link>
                 
-                <div className="flex gap-6 mt-4 mb-6">
+                {user?.bio && (
+                  <div className="mb-4">
+                    <p className="text-md text-gray-500">{user.bio}</p>
+                  </div>
+                )}
+                
+                {/* <div className="flex gap-6 mt-4 mb-6">
                   <div className="flex items-baseline gap-1">
                     <span className="text-profile-text font-semibold">000</span>
                     <span>Followers</span>
@@ -110,7 +130,7 @@ const Page = () => {
                     <span className="text-profile-text font-semibold">000</span>
                     <span>Following</span>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
             
@@ -198,9 +218,9 @@ const Page = () => {
                         <PostCard
                         key={post._id}
                         _id={post._id}
-                        name={post.user_id.username}
+                        name={post.user_id.name || ''}
                         handle={`@${post.user_id.username}`}
-                        avatar="/feed/undp-logo-blue.svg"
+                        avatar={post.user_id.profileImage || ''}
                         time={formatDate(post.updatedAt)}
                         isLiked={post.isLiked}
                         content={post.content}

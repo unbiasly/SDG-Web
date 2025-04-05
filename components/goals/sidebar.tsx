@@ -85,7 +85,7 @@ function NavItem({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 px-2 py-2 rounded-md ${
+      className={`flex items-center gap-3 px-2 py-2 rounded-2xl ${
         isActive ? "text-blue-600 font-medium" : "text-gray-700 hover:bg-gray-100"
       }`}
     >

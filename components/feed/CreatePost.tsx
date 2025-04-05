@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import { 
   Calendar, 
@@ -40,8 +40,7 @@ const CreatePost = () => {
   
   
   // Mock data
-  const username = `@${user?.username}`;
-  const avatarSrc = 'https://i.pravatar.cc/150?img=68';
+  
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -110,6 +109,7 @@ const CreatePost = () => {
         });
         
         console.log('Post created successfully');
+        window.location.reload();
       } catch (error) {
         console.error('Error in handlePost:', error);
       } finally {
@@ -119,11 +119,11 @@ const CreatePost = () => {
   };
 
   return (
-    <div className="bg-white p-4 border-b mb-4">
+    <div className="bg-white p-4 border-b border-gray-300 mb-4">
       <Dialog>
         <div className='flex w-full items-center  gap-2'>
             <ProfileAvatar 
-                src='https://i.pravatar.cc/150'
+                src={user?.profileImage || ''}
                 alt='User Avatar'
                 size='xs'
             />
@@ -141,11 +141,11 @@ const CreatePost = () => {
             
             <div className=" space-y-6">
               <div className="flex items-center gap-3">
-                <ProfileAvatar src={avatarSrc} alt={username} className="h-12 w-12 rounded-full" size='sm'/>
+                <ProfileAvatar src={user?.profileImage || ''} alt={`@${user?.username}`} size='sm' />
                 
                 <div className="flex flex-col">
-                  <span className="font-semibold text-xl">{username}</span>
-                  <button
+                  <span className="font-semibold text-xl">{user?.name || `@${user?.username}`}</span>
+                  {/* <button
                     className="flex w-fit cursor-pointer items-center gap-1 border-gray-500 border text-sm text-gray-600 hover:bg-gray-100 rounded-full px-4 py-1"
                     onClick={() => {
                         const nextVisibility = visibility === 'Public' ? 'Private' : 'Public';
@@ -156,7 +156,7 @@ const CreatePost = () => {
                     <Globe className="h-4 w-4" />
                     <span>{visibility}</span>
                     <ChevronDown className="h-4 w-4" />
-                  </button>
+                  </button> */}
                 </div>
               </div>
               
@@ -172,7 +172,7 @@ const CreatePost = () => {
                       textareaRef.current.style.height = `${Math.max(180, textareaRef.current.scrollHeight)}px`;
                     }
                   }}
-                  placeholder={`What's on your mind, ${username}?`}
+                  placeholder={`What's on your mind, @${user?.username}?`}
                   className="w-full min-h-[190px] text-lg resize-none hide-scrollbar outline-none border-0 focus:ring-0"
                   data-gramm="false"
                 />
@@ -244,7 +244,7 @@ const CreatePost = () => {
       
       {/* <div className="flex justify-evenly text-xl mt-2 space-x-4">
         <button 
-          className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md transition"
+          className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-2xl transition"
           onClick={handlePhotoClick}
         >
           <ImageIcon size={20} className="mr-2" />
@@ -252,19 +252,19 @@ const CreatePost = () => {
         </button>
         
         <button 
-          className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md transition"
+          className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-2xl transition"
           onClick={handleVideoClick}
         >
           <Video size={20} className="mr-2" />
           <span>Video</span>
         </button>
         
-        <button className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md transition">
+        <button className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-2xl transition">
           <SmilePlus size={20} className="mr-2" />
           <span>GIF</span>
         </button>
         
-        <button className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md transition">
+        <button className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-2xl transition">
           <Calendar size={20} className="mr-2" />
           <span>Event</span>
         </button>

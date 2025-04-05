@@ -1,27 +1,33 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera } from 'lucide-react';
+import Image from 'next/image';
+import UserFallback from './UserFallback';
 
 interface ProfileAvatarProps {
-  src?: string;
+  src: string | File;
   alt?: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'profile' | 'lg' | 'xl';
   editable?: boolean;
   className?: string;
+  displayName?: string;
 }
 
 const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
-  src = 'https://i.pravatar.cc/150?img=68',
+  src,
   alt = 'Profile',
-  size = 'lg',
+  size = 'sm',
   editable = false,
   className = '',
+  displayName = '',
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   
+
   const sizeClasses = {
     xs: 'w-11 h-11',
     sm: 'w-16 h-16',
+    profile: 'w-20 h-20',
     md: 'w-24 h-24',
     lg: 'w-32 h-32',
     xl: 'w-40 h-40',
@@ -31,18 +37,18 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
     <div className={`aspect-square ${sizeClasses[size]} ${className}`}>
       <div className="relative w-full h-full overflow-hidden rounded-full bg-gray-100 border-2 border-black shadow-lg">
         {src ? (
-          <img
-            src={src}
+          <Image
+            src={typeof src === 'string' ? src : ''}
             alt={alt}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${
+            layout="fill"
+            className={`object-cover transition-opacity duration-300 ${
               imageLoaded ? 'opacity-100' : 'opacity-0'
             } image-lazy-load`}
             onLoad={() => setImageLoaded(true)}
+            priority
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
-            <span className="text-lg font-medium">?</span>
-          </div>
+          <UserFallback charSize={size}/>
         )}
         
         {editable && (
@@ -54,5 +60,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
     </div>
   );
 };
+
+
 
 export default ProfileAvatar;

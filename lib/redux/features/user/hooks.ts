@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "../../hooks";
 import { 
   selectUser, 
@@ -14,9 +14,15 @@ import {
   fetchUserFailure,
   updateUserDetails,
   addEducation,
-  addExperience
+  addExperience,
+  setFallbackColor
 } from "./userSlice";
 import { UserResponse, Education, Experience } from "@/service/api.interface";
+
+const generateRandomColor = () => {
+  const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+  return randomColor;
+};
 
 export const useUser = () => {
   const user = useAppSelector(selectUser);
@@ -27,8 +33,7 @@ export const useUser = () => {
   const education = useAppSelector(selectEducation);
   
   const dispatch = useAppDispatch();
-  // Function to fetch user data
-  
+
   
   // Function to update user details
   const updateUser = (details: Partial<UserResponse['data']>) => {
@@ -58,3 +63,4 @@ export const useUser = () => {
     addUserExperience
   };
 }; 
+
