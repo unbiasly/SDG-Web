@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ProfileAvatar from "../profile/ProfileAvatar";
 // import { MoreVertical, Smile } from "lucide-react";
-import { Image } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommentData } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
@@ -12,6 +11,7 @@ interface CommentSectionProps {
     commentCount?: number;
     comments: CommentData[];
     className?: string;
+    onCommentAdded?: () => void; // Add callback for parent component
 }
 
 interface CommentProps {
@@ -24,19 +24,27 @@ interface CommentProps {
 const CommentSection: React.FC<CommentSectionProps> = ({
   post_id,
   isOpen,
-  comments,
-  className
+  comments: initialComments,
+  className,
+  onCommentAdded
 }) => {
 //   const [sortBy, setSortBy] = useState<string>("most-relevant");
   const [comment, setComment] = useState<string>("");
-  const { user } = useUser()
+  const [comments, setComments] = useState<CommentData[]>(initialComments || []);
+  const { user } = useUser();
 
+  // Update local comments when prop changes
+  useEffect(() => {
+    setComments(initialComments || []);
+  }, [initialComments]);
 
   if (!isOpen) return null;
 
   const handleComment = async () => {
+    if (!comment.trim()) return;
+    
     try {
-        const response = await fetch(`/api/postAction/?post_id=${post_id}&type=comment`, {
+        const response = await fetch(`/api/post/post-action/?post_id=${post_id}&type=comment`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json'
@@ -52,6 +60,25 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         
         // Handle successful comment
         console.log('commented successfully');
+        
+        // Add the new comment to the local state immediately
+        const newComment: CommentData = {
+          _id: Date.now().toString(), // Temporary ID until refresh
+          user_id: {
+            _id: user?._id || '',
+            username: user?.username || '',
+            profileImage: user?.profileImage?.toString() || ''
+          },
+          comment: comment
+        };
+        
+        setComments(prevComments => [newComment, ...prevComments]);
+        
+        // Notify parent component to refresh comments
+        if (onCommentAdded) {
+          onCommentAdded();
+        }
+        
         setComment(""); // Clear the input after successful comment
     } catch (error) {
         console.error('Error commenting post:', error);
@@ -128,10 +155,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     </div>
   )
 };
-
-
-
-
 
 const Comment: React.FC<CommentProps> = ({
     userName,

@@ -3,6 +3,7 @@ import '@/app/globals.css'
 import { Toaster } from "@/components/ui/sonner";
 import { gilroy } from "@/lib/fonts";
 import { ReduxProvider } from "@/lib/redux/provider";
+import QueryProvider from "./providers";
 
 
 export const metadata: Metadata = {
@@ -21,7 +22,9 @@ export default function RootLayout({
         className={`${gilroy.variable} antialiased bg-[#FFF]`}
       >
         <ReduxProvider>
+            <QueryProvider>
           {children}
+            </QueryProvider>
         </ReduxProvider>
         <Toaster />
       </body>

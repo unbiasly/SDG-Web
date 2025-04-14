@@ -16,7 +16,7 @@ interface TrendingItemProps {
 
 const TrendingItem: React.FC<TrendingItemProps> = ({ _id, title, publisher, link }) => {
   return (
-    <div className=' rounded-2xl mb-2 shadow-sm p-1'>
+    <div className=' rounded-xs mb-2 shadow-sm   p-1'>
         <Link key={_id} href={link} target='_blank' className="mb-2">
         <h4 className="text-sm font-medium line-clamp-2">{title}</h4>
             <span className='text-xs text-gray-500'>{publisher}</span>
@@ -74,11 +74,11 @@ export const TrendingSection: React.FC = () => {
     }
 
     return (
-        <div className="w-64 bg-white p-3 rounded-2xl  border border-gray-300 animate-fade-in">
+        <div className="w-64 bg-white p-3 rounded-2xl border border-gray-300 animate-fade-in">
             <h3 className="text-xl text-accent font-semibold mb-1">SDG News</h3>
             <p className="text-sm text-gray-500 mb-4">@TheSDG story</p>
             
-            <ScrollArea className="h-[500px]">
+            <ScrollArea className="h-[800px]">
                 {articles.map((article) => (
                     <TrendingItem 
                         key={article._id}

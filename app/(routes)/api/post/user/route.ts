@@ -4,12 +4,12 @@ import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
     const limit = 20;
     const cookieStore = await cookies(); // Ensure to await the promise
+    const { userId } = await req.json();
     const jwtToken = cookieStore.get('jwtToken')?.value;
     const url = new URL(req.url);
-    const userId = url.searchParams.get('user_id');
     
 
     try {

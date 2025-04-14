@@ -125,13 +125,35 @@ export interface UserDetailsRequest {
 
 export interface PostsFetchResponse {
     success: boolean;
-    data?: PostData[];
-    pagination?: {
+    data: Post[];
+    pagination: {
         limit: number;
-        cursor: string | null;
+        cursor: string;
         nextCursor: string | null;
         hasMore: boolean;
+        totalItems?: number;
     };
+}
+
+export interface Post {
+    _id: string;
+    content: string;
+    images: string[];
+    user_id: {
+        _id: string;
+        name: string;
+        username: string;
+        profileImage: string;
+    };
+    poststat_id: {
+        likes: number;
+        comments: number;
+        reposts: number;
+    };
+    isLiked: boolean;
+    isBookmarked: boolean;
+    updatedAt: string;
+    createdAt: string;
 }
 
 export interface PostData {
@@ -175,13 +197,80 @@ export interface CommentData {
     comment: string;
 }
 
-export interface CommentsFetchResponse {
+export interface BookmarkData {
+    _id: string;
+    user_id: {
+        _id: string;
+        username: string;
+        profileImage?: string;
+        name?: string;
+        followerCount: number;
+        isFollowing: boolean | null;
+    };
+    content: string;
+    images: string[];
+    status: string;
+    visibility: string;
+    original_post_id: string | null;
+    poststat_id: {
+        _id: string;
+        likes: number;
+        views: number;
+        bookmarks: number;
+        comments: number;
+        reposts: number;
+    };
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+    isLiked: boolean;
+    isBookmarked: boolean;
+    isReposted: boolean;
+}
+
+export interface BookmarksFetchResponse {
     success: boolean;
+    data?: BookmarkData[];
+    pagination?: {
+        limit: number;
+        cursor: string | null;
+        nextCursor: string | null;
+        hasMore: boolean;
+    };
+}
+
+export interface CommentsFetchResponse {
     data?: CommentData[];
     pagination?: {
         limit: number;
         cursor: string | null;
         nextCursor: string | null;
         hasMore: boolean;
+    };
+}
+
+export interface SDGVideoData {
+    _id: string;
+    title: string;
+    thumbnail_url: string;
+    video_id: string;
+    link: string;
+    published_date: string;
+    channel_name: string;
+    status: string;
+    type: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface SDGVideoResponse {
+    success: boolean;
+    data: SDGVideoData[];
+    pagination: {
+        limit: number;
+        cursor: string | null;
+        nextCursor: string | null;
+        hasMore: boolean;
+        totalItems?: number;
     };
 }

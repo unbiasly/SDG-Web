@@ -10,6 +10,7 @@ export interface Article {
   title: string;
   publisher: string;
   link: string;
+  isBookmarked: boolean;
   createdAt: string;
   updatedAt: string;
 //   imageUrl: string;
@@ -18,7 +19,7 @@ export interface Article {
 const SDGNews = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [isActive, setIsActive] = useState(false);
 
   const News = async () => {
     try {
@@ -63,14 +64,14 @@ const SDGNews = () => {
               <span>{formatDate(article.updatedAt)}</span>
             </div>
           </div>
-          {/* <div className="flex justify-between items-center mt-4" onClick={(e) => e.stopPropagation()}>
+          <div className="flex justify-between items-center mt-4" onClick={(e) => e.stopPropagation()}>
             <button aria-label="bookmark" className="text-gray-400 hover:text-gray-600 transition-colors">
-              <Bookmark size={20} />
+              <Bookmark size={20} className={`${isActive ? "fill-current text-accent" : "text-gray-500"}`} />
             </button>
             <button aria-label="more_options" className="text-gray-400 hover:text-gray-600 transition-colors">
               <MoreVertical size={20} />
             </button>
-          </div> */}
+          </div>
         </div>
     </Link>
   );

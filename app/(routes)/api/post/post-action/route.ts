@@ -5,9 +5,7 @@ import { NextRequest } from "next/server";
 export async function PATCH(req: NextRequest) {
     const cookieStore = await cookies(); // Ensure to await the promise
     const jwtToken = cookieStore.get('jwtToken')?.value;
-    const url = new URL(req.url);
-    const postId = url.searchParams.get('post_id');
-    const actionType = url.searchParams.get('type');
+    const { postId, actionType } = await req.json();
 
 
     try {
@@ -23,10 +21,10 @@ export async function PATCH(req: NextRequest) {
             body: JSON.stringify(body), // Pass body only if it's defined
         });
         
-        if (!response.ok) {
-            const errorText = await response.text(); // Get the response text for better error handling
-            throw new Error(`Failed to fetch posts: ${response.status} ${response.statusText} - ${errorText}`);
-        }
+        // if (!response.ok) {
+        //     const errorText = await response.text(); // Get the response text for better error handling
+        //     throw new Error(`Failed to fetch posts: ${response.status} ${response.statusText} - ${errorText}`);
+        // }
         
         const data = await response.json();
         console.log('Posts data:', data);
@@ -38,14 +36,14 @@ export async function PATCH(req: NextRequest) {
     }
 }
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
     const cookieStore = await cookies(); // Ensure to await the promise
     const jwtToken = cookieStore.get('jwtToken')?.value;
     const url = new URL(req.url);
-    const postId = url.searchParams.get('post_id');
-    const actionType = url.searchParams.get('type');
     const limit = url.searchParams.get('limit') || '30';
     const cursor = url.searchParams.get('cursor');
+    const { postId, actionType } = await req.json();
+
 
     try {
         const response = await fetch(`${baseURL}/post-action/${postId}/${actionType}?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`, {

@@ -27,8 +27,15 @@ const Page = () => {
     
     const getUserPosts = async () => {
         try {
-
-            const postsResponse = await fetch(`/api/getPosts/getPostsByUser/?user_id=${user?._id}`);
+            if (!user?._id) return; // Guard clause to prevent unnecessary API calls
+            const postsResponse = await fetch(`/api/post/user`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ userId: user._id }),
+            });
             const postsData = await postsResponse.json();
             setPosts(postsData);
             return postsData;
@@ -37,15 +44,17 @@ const Page = () => {
             return null;
         }
     }
+    
+        const { 
+            user,
+            userLoading
+        } = useUser();  
 
     useEffect(() => {
-        getUserPosts();
-    }, []);
-
-    const { 
-        user,
-        userLoading
-    } = useUser();
+        if (user?._id && !userLoading) {
+            getUserPosts();
+        }
+    }, [user, userLoading]); // Add user and userLoading as dependencies
 
     // Function to open dialog for adding new education
     const handleAddEducation = () => {
@@ -223,8 +232,10 @@ const Page = () => {
                         avatar={post.user_id.profileImage || ''}
                         time={formatDate(post.updatedAt)}
                         isLiked={post.isLiked}
+                        userId={post.user_id._id}
+                        isBookmarked={post.isBookmarked || false}
                         content={post.content}
-                        imageUrl={ post.images[0]}
+                        imageUrl={post.images || []}
                         likesCount={post.poststat_id?.likes || 0}
                         commentsCount={post.poststat_id?.comments || 0}
                         repostsCount={post.poststat_id?.reposts || 0}

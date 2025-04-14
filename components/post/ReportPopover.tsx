@@ -47,7 +47,7 @@ const ReportPopover = ({ open, onOpenChange, postId }: ReportPopoverProps) => {
     
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/reportPost`, {
+      const response = await fetch(`/api/post/report`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -137,6 +137,7 @@ const ReportPopover = ({ open, onOpenChange, postId }: ReportPopoverProps) => {
             </div>
           </div>
         )}
+        
         
         {step === "feedback" && (
           <div className="">

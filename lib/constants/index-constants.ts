@@ -28,19 +28,21 @@ export const PROFILE_TABS = [
     {id: "posts", label: "Posts"}
 ];
 
+export const BOOKMARKS_TABS = ['All', 'Posts', 'News', 'Jobs', 'Schemes'];
+
 
 export const PROFILE_OPTIONS = [
     {route: "/", label: "Home", icon: "/icons/house.svg"},
     {route: "/profile", label: "Profile", icon: "/icons/circle-user-round.svg"},
-    {route: '/goals', label: "The 17 Goals", icon: "/icons/Target.svg"}
-    // {route: "/notifications", label: "Notifications", icon: "/icons/bell-ring.svg"},
-    // {route: "/bookmarks", label: "Bookmarks", icon: "/icons/bookmark.svg"},
-    // {route: "/videos", label: "Videos", icon: "/icons/tv-minimal-play.svg"},
+    {route: "/bookmarks", label: "Bookmarks", icon: "/icons/bookmark.svg"},
+    {route: '/goals', label: "The 17 Goals", icon: "/icons/Target.svg"},
+    {route: "/videos", label: "Videos", icon: "/icons/tv-minimal-play.svg"},
     // {route: "/society", label: "The SDG Society", icon: "/icons/society.png"},
     // {route: "/mentorship", label: "Mentorship", icon: "/icons/leadership-development.png"},
     // {route: "/internship", label: "Internship", icon: "/icons/id-card.svg"},
     // {route: "/job", label: "Job", icon: "/icons/briefcase-business.svg"},
     // {route: "/scheme", label: "Scheme Search", icon: "/icons/chart-no-axes-gantt.svg"},
+    // {route: "/notifications", label: "Notifications", icon: "/icons/bell-ring.svg"},
     // {route: "/settings", label: "Settings", icon: "/icons/settings.svg"}, 
     
 

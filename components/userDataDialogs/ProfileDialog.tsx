@@ -136,7 +136,7 @@ export const UserProfileDialog = ({
           <p className="text-sm text-gray-500 mt-1">* Indicates required</p>
         </DialogHeader>
 
-        <div className="py-4 space-y-6">
+        <div className="space-y-6">
 
           {/* First Name */}
           <div className="space-y-2">
