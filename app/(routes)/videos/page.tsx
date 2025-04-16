@@ -154,16 +154,16 @@ const Page = () => {
         tabs={VIDEO_TABS}
       >
         <div className="flex justify-end mb-2">
-          <button aria-label="filter" className="p-2 rounded-md hover:bg-gray-100">
+          {/* <button aria-label="filter" className="p-2 rounded-md hover:bg-gray-100">
             <Filter className="h-5 w-5 text-gray-500" />
-          </button>
+          </button> */}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 px-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-1 px-4 gap-4">
           {videos.map((video) => (
-            <React.Fragment key={video._id}>
+            <div className='px-0' key={video._id}>
               <VideoCard video={video} />
-            </React.Fragment>
+            </div>
           ))}
           
           {/* Loading indicator and ref for intersection observer */}

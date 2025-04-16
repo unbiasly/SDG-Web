@@ -61,22 +61,14 @@ export async function POST(req: NextRequest) {
 // PATCH /v1/sdg-video-action/:video_id/:type
 export async function PATCH(req: NextRequest) {
     try {
-        // const { video_id, type } = params;
-        
-        // if (!video_id || !type) {
-        //     return NextResponse.json(
-        //         { success: false, message: "Video ID and action type are required" },
-        //         { status: 400 }
-        //     );
-        // }
+        const cookieStore = await cookies();
+        const jwtToken = cookieStore.get('jwtToken')?.value;
 
         // Extract video_id and type from URL path
         const url = new URL(req.url);
-        const pathParts = url.pathname.split('/');
-        const video_id = pathParts[pathParts.length - 2];
-        const type = pathParts[pathParts.length - 1];
+        const {videoId, actionType} = await req.json();
         
-        if (!video_id || !type) {
+        if (!videoId || !actionType) {
             return NextResponse.json(
                 { success: false, message: "Video ID and action type are required" },
                 { status: 400 }
@@ -84,8 +76,8 @@ export async function PATCH(req: NextRequest) {
         }
 
         // Validate action type
-        const validActionTypes = ["like", "dislike", "bookmark", "unbookmark"];
-        if (!validActionTypes.includes(type)) {
+        const validActionTypes = ["like", "dislike", "bookmark" ];
+        if (!validActionTypes.includes(actionType)) {
             return NextResponse.json(
                 { success: false, message: "Action type not allowed" },
                 { status: 404 }
@@ -93,11 +85,11 @@ export async function PATCH(req: NextRequest) {
         }
 
         // Make API call to your backend service
-        const response = await fetch(`${baseURL}/sdg-video-action/${video_id}/${type}`, {
+        const response = await fetch(`${baseURL}/sdg-video-action/${videoId}/${actionType}`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer `
+                "Authorization": `Bearer ${jwtToken}`
             }
         });
 

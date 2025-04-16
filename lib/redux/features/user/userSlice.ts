@@ -46,32 +46,32 @@ export const userSlice = createSlice({
         };
       }
     },
-    addEducation: (state, action: PayloadAction<Education>) => {
-      if (state.userData && state.userData.data) {
-        const educationToAdd = {
-          ...action.payload,
-          _id: action.payload._id && action.payload._id !== "" ? action.payload._id : crypto.randomUUID()
-        };
+    // addEducation: (state, action: PayloadAction<Education>) => {
+    //   if (state.userData && state.userData.data) {
+    //     const educationToAdd = {
+    //       ...action.payload,
+    //       _id: action.payload._id && action.payload._id !== "" ? action.payload._id : crypto.randomUUID()
+    //     };
         
-        if (!state.userData.data.education) {
-          state.userData.data.education = [];
-        }
-        state.userData.data.education.push(educationToAdd);
-      }
-    },
-    addExperience: (state, action: PayloadAction<Experience>) => {
-      if (state.userData && state.userData.data) {
-        const experienceToAdd = {
-          ...action.payload,
-          _id: action.payload._id && action.payload._id !== "" ? action.payload._id : crypto.randomUUID()
-        };
+    //     if (!state.userData.data.education) {
+    //       state.userData.data.education = [];
+    //     }
+    //     state.userData.data.education.push(educationToAdd);
+    //   }
+    // },
+    // addExperience: (state, action: PayloadAction<Experience>) => {
+    //   if (state.userData && state.userData.data) {
+    //     const experienceToAdd = {
+    //       ...action.payload,
+    //       _id: action.payload._id && action.payload._id !== "" ? action.payload._id : crypto.randomUUID()
+    //     };
         
-        if (!state.userData.data.experience) {
-          state.userData.data.experience = [];
-        }
-        state.userData.data.experience.push(experienceToAdd);
-      }
-    },
+    //     if (!state.userData.data.experience) {
+    //       state.userData.data.experience = [];
+    //     }
+    //     state.userData.data.experience.push(experienceToAdd);
+    //   }
+    // },
     setFallbackColor: (state, action: PayloadAction<string>) => {
       state.fallbackColor = action.payload;
     },
@@ -84,8 +84,8 @@ export const {
   fetchUserFailure,
   clearUserData,
   updateUserDetails,
-  addEducation,
-  addExperience,
+//   addEducation,
+//   addExperience,
   setFallbackColor
 } = userSlice.actions;
 

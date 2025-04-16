@@ -13,8 +13,9 @@ import { useUser } from "@/lib/redux/features/user/hooks";
 interface EducationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (education: Education) => void;
+  onSave: (education: Education, index?: number) => void;
   education?: Education;
+  index?: number;
 }
 
 export const EducationDialog: React.FC<EducationDialogProps> = ({
@@ -22,6 +23,7 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
   onOpenChange,
   onSave,
   education,
+  index,
 }) => {
   const [educationData, setEducationData] = useState<Education>(
     education || {
@@ -29,7 +31,6 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
       degree: "",
       startDate: new Date().toISOString(),
       endDate: new Date().toISOString(),
-      _id: ""
     }
   );
   const [startDateCalendarOpen, setStartDateCalendarOpen] = useState<boolean>(false);
@@ -60,7 +61,7 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
       // First update the education entry via API
       await updateEducation();
       // Then call the parent component's onSave callback
-      onSave(educationData);
+      onSave(educationData, index);
       onOpenChange(false);
     //   ({
     //     title: education?._id ? "Education updated" : "Education added",
@@ -79,10 +80,21 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
   };
 
   const updateEducation = async () => {
-    const endpoint = '/profile/userDetailsUpdate';
+    const endpoint = '/api/careerUpdate';
     const method = "PUT";
     
-    // Prepare the request body based on whether we're adding or updating
+    // Prepare the updated education array
+    let updatedEducations = [...(user?.education || [])];
+    
+    if (index !== undefined) {
+      // Edit existing education
+      updatedEducations[index] = educationData;
+    } else {
+      // Add new education
+      updatedEducations.push(educationData);
+    }
+    
+    // Prepare the request body
     const requestBody = {
       username: user?.username,
       name: user?.name,
@@ -91,9 +103,7 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
       dob: user?.dob,
       bio: user?.bio,
       portfolioLink: user?.portfolioLink,
-      education: education?._id 
-        ? user?.education?.map(edu => edu._id === education._id ? educationData : edu) || []
-        : [...(user?.education || []), educationData],
+      education: updatedEducations,
       experience: user?.experience || []
     };
     
@@ -112,6 +122,54 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
     return await response.json();
   };
 
+  // Delete function using array index
+  const handleDelete = async () => {
+    if (index === undefined) return;
+    
+    setIsSubmitting(true);
+    try {
+      // Create a copy of the education array
+      let updatedEducations = [...(user?.education || [])];
+      
+      // Remove the education at the specified index
+      updatedEducations.splice(index, 1);
+      
+      // Prepare request body
+      const requestBody = {
+        username: user?.username,
+        name: user?.name,
+        location: user?.location,
+        gender: user?.gender,
+        dob: user?.dob,
+        bio: user?.bio,
+        portfolioLink: user?.portfolioLink,
+        education: updatedEducations,
+        experience: user?.experience || []
+      };
+      
+      // Send API request
+      const response = await fetch('/api/careerUpdate', {
+        method: "PUT",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete education');
+      }
+      
+      // Close dialog and notify parent with the deleted index
+      onOpenChange(false);
+      onSave(educationData, index);
+    } catch (error) {
+      console.error('Error deleting education:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -126,7 +184,7 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
           {/* <div className="flex justify-between items-center w-full">
           </div> */}
             <DialogTitle className="text-xl font-bold">
-              {education?._id ? "Edit education" : "Add education"}
+              {index !== undefined ? "Edit education" : "Add education"}
             </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">* Indicates required</p>
         </DialogHeader>
@@ -239,20 +297,32 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
           </div>
         </div>
 
-        <div className="border-t pt-4 flex justify-end">
-          <Button 
-            onClick={handleSave} 
-            className="bg-red-600 hover:bg-red-700 text-white px-8"
-            disabled={
-              isSubmitting || 
-              !educationData.school || 
-              !educationData.degree || 
-              !educationData.startDate || 
-              !educationData.endDate
-            }
-          >
-            {isSubmitting ? "Saving..." : "Save"}
-          </Button>
+        <div className="border-t pt-4 flex justify-between">
+          {index !== undefined && (
+            <Button 
+              onClick={handleDelete}
+              variant="outline"
+              className="text-red-600 border-red-600 hover:bg-red-50"
+              disabled={isSubmitting}
+            >
+              Delete
+            </Button>
+          )}
+          <div className={index !== undefined ? "" : "ml-auto"}>
+            <Button 
+              onClick={handleSave} 
+              className="bg-red-600 hover:bg-red-700 text-white px-8"
+              disabled={
+                isSubmitting || 
+                !educationData.school || 
+                !educationData.degree || 
+                !educationData.startDate || 
+                !educationData.endDate
+              }
+            >
+              {isSubmitting ? "Saving..." : "Save"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

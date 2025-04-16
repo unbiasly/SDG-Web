@@ -13,8 +13,8 @@ import {
   fetchUserSuccess, 
   fetchUserFailure,
   updateUserDetails,
-  addEducation,
-  addExperience,
+//   addEducation,
+//   addExperience,
   setFallbackColor
 } from "./userSlice";
 import { UserResponse, Education, Experience } from "@/service/api.interface";
@@ -41,13 +41,13 @@ export const useUser = () => {
   };
   
   // Functions to add education and experience
-  const addUserEducation = (edu: Education) => {
-    dispatch(addEducation(edu));
-  };
+//   const addUserEducation = (edu: Education) => {
+//     dispatch(addEducation(edu));
+//   };
   
-  const addUserExperience = (exp: Experience) => {
-    dispatch(addExperience(exp));
-  };
+//   const addUserExperience = (exp: Experience) => {
+//     dispatch(addExperience(exp));
+//   };
   
   return {
     user,
@@ -59,8 +59,8 @@ export const useUser = () => {
     selectEducation,
     education,
     updateUser,
-    addUserEducation,
-    addUserExperience
+    // addUserEducation,
+    // addUserExperience
   };
 }; 
 

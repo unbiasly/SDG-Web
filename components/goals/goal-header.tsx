@@ -2,6 +2,8 @@
 import Link from "next/link"
 import { CircleArrowDown } from "lucide-react"
 import Image from "next/image"
+import { sdgGoals } from "@/lib/constants/goal-constants"
+import { slugify } from "@/lib/utilities/slugify"
 
 interface GoalProps {
   goal: {
@@ -14,20 +16,35 @@ interface GoalProps {
 }
 
 export default function GoalHeader({ goal }: GoalProps) {
+  // Find previous and next goals for navigation
+  const currentIndex = sdgGoals.findIndex(g => g.id === goal.id)
+  const prevGoal = currentIndex > 0 ? sdgGoals[currentIndex - 1] : null
+  const nextGoal = currentIndex < sdgGoals.length - 1 ? sdgGoals[currentIndex + 1] : null
+
+  // Generate slugs for the prev and next goals
+  const prevSlug = prevGoal ? slugify(prevGoal.title) : null
+  const nextSlug = nextGoal ? slugify(nextGoal.title) : null
+
   return (
     <div className="rounded-2xl h-screen p-5 text-white relative " style={{ backgroundColor: goal.color }}>
       {/* Navigation buttons at the top with higher z-index */}
       <div className="flex justify-between mb-8 z-10 relative">
         <div>
-          {goal.id > 1 && (
-            <Link href={`/goals/${goal.id - 1}`} className="border border-white/50 text-white px-5 py-2 rounded-full text-sm">
+          {prevGoal && (
+            <Link 
+              href={`/goals/${prevSlug}`} 
+              className="border border-white/50 text-white px-5 py-2 rounded-full text-sm"
+            >
               Back
             </Link>
           )}
         </div>
         <div>
-          {goal.id < 17 && (
-            <Link href={`/goals/${goal.id + 1}`} className="border border-white/50 text-white px-5 py-2 rounded-full text-sm">
+          {nextGoal && (
+            <Link 
+              href={`/goals/${nextSlug}`} 
+              className="border border-white/50 text-white px-5 py-2 rounded-full text-sm"
+            >
               Next
             </Link>
           )}

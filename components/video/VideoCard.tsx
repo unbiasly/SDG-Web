@@ -25,15 +25,13 @@ interface VideoCardProps {
     comments?: number;
     views?: number;
     likes?: number;
-};
+  };
 }
 
 const VideoCard = ({ video }: VideoCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
-//   const [isBookmarked, setIsBookmarked] = useState(video.isBookmarked || false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
-
-  
   const handlePlayClick = () => {
     setIsPlaying(true);
   };
@@ -43,24 +41,29 @@ const VideoCard = ({ video }: VideoCardProps) => {
     setIsPlaying(false);
   };
   
-//   const handleBookmarkToggle = async () => {
-//     try {
-//       const actionType = isBookmarked ? 'unbookmark' : 'bookmark';
+  const handleBookmarkToggle = async () => {
+    try {
       
-//       const response = await fetch(`/api/video/${video._id}/${actionType}`, {
-//         method: 'PATCH',
-//         headers: {
-//           'Content-Type': 'application/json',
-//         }
-//       });
       
-//       if (response.ok) {
-//         setIsBookmarked(!isBookmarked);
-//       }
-//     } catch (error) {
-//       console.error("Error toggling bookmark:", error);
-//     }
-//   };
+      const response = await fetch(`/api/video`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          videoId: video._id,
+          actionType: 'bookmark',
+        }),
+      });
+      
+      if (response.ok) {
+        setIsBookmarked(!isBookmarked);
+        // TODO: Consistently set the IsBookmarked state
+      }
+    } catch (error) {
+      console.error("Error toggling bookmark:", error);
+    }
+  };
   
   const formattedDate = video.published_date
     ? formatDistanceToNow(new Date(video.published_date), { addSuffix: true })
@@ -82,31 +85,35 @@ const VideoCard = ({ video }: VideoCardProps) => {
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-all">
       <div className="flex items-center p-4 space-x-3">
-        <div className="h-10 w-10 bg-gray-700 rounded flex items-center justify-center">
+        <div className="h-10 w-10 bg-gray-600 rounded flex items-center justify-center">
           {isPodcast ? (
-            <Volume2 className="h-5 w-5 text-white" />
+            <Volume2 color="white" className="h-5 w-5 text-white" />
           ) : (
-            <Video className="h-5 w-5 text-white" />
+            <Video color="white" className="h-5 w-5 text-white" />
           )}
         </div>
         <div className="flex-1">
           <h3 className="text-sm font-medium line-clamp-2">{video.title}</h3>
         </div>
-        {/* <button 
+        <button 
           aria-label={isBookmarked ? "unbookmark" : "bookmark"} 
           className={cn(
-            "hover:text-blue-600 transition-colors",
-            isBookmarked ? "text-blue-600" : "text-gray-400" 
+            "hover:text-blue-600 transition-colors cursor-pointer rounded-full p-1",
+            
           )}
           onClick={handleBookmarkToggle}
         >
-          <Bookmark className="h-5 w-5" />
-        </button> */}
+          <Bookmark className={cn(
+            "h-5 w-5",
+            isBookmarked ? "fill-current text-blue-600" : "text-gray-400"
+          )} />
+        </button>
       </div>
       
-      <div className="rounded-lg px-5 relative aspect-video">
+      {/* Modified image container with reduced height but contained image */}
+      <div className="px-5 relative h-72">
         {isPlaying ? (
-          <div className="relative w-full h-full">
+          <div className="relative w-full h-full rounded-lg overflow-hidden">
             <YouTube
               videoId={video.video_id}
               opts={opts}
@@ -115,33 +122,24 @@ const VideoCard = ({ video }: VideoCardProps) => {
             />
             <button 
               onClick={handleVideoClose}
-              className="absolute top-2 right-2 bg-black/60 rounded-full p-1 text-white hover:bg-black/80 z-10"
+              className="absolute cursor-pointer top-2 right-2 bg-black/60 rounded-full p-1 text-white hover:bg-black/80 z-10"
               aria-label="Close video"
             >
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5" color="white"/>
             </button>
           </div>
         ) : (
           <div 
-            className="relative cursor-pointer group w-full h-full"
+            className="relative cursor-pointer w-full h-full rounded-lg overflow-hidden   flex items-center justify-center"
             onClick={handlePlayClick}
           >
             <img 
               src={video.thumbnail_url} 
               alt={video.title}
-              className="w-full h-full aspect-video rounded object-cover"
+              className="max-h-full max-w-full rounded-sm object-cover aspect-video"
             />
-            <div className={cn(
-              "absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity",
-              isPodcast ? "bg-blue-900/30" : "bg-white/20"
-            )}>
-              {isPodcast ? (
-                <div className="bg-white/20 p-4 rounded-full">
-                  <Volume2 className="h-12 w-12 text-white" />
-                </div>
-              ) : (
-                <PlayCircle className="h-16 w-16 text-black" />
-              )}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/10">
+              <PlayCircle className="h-12 w-12 text-white" />
             </div>
           </div>
         )}

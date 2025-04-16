@@ -108,46 +108,49 @@ export function SocialPostDialog({ open, onOpenChange, avatar, name, handle, tim
         <DialogDescription className="sr-only">{content}</DialogDescription>
         
         {/* Left side - Image Carousel */}
-        <div className="h-full w-2/3 rounded-lg border-r-2 bg-[#1E1E1E] flex items-center justify-center overflow-hidden relative">
-            {imageUrl && imageUrl.length > 0 && (
-                <Carousel className="w-full h-full flex justify-center items-center">
-                    <CarouselContent className="h-full">
-                        {Array.isArray(imageUrl) && imageUrl.map((url, index) => (
-                            <CarouselItem key={index} >
-                                <div className="relative w-full h-full flex items-center justify-center p-4">
-                                    <Image 
-                                        src={url}
-                                        alt={`${content} ${index + 1}`}
-                                        width={0}
-                                        height={0}
-                                        sizes="100vw"
-                                        className="w-full  h-full object-contain"
-                                        // todo : fix the image sizing
-                                        priority={index === 0}
-                                        loading={index === 0 ? "eager" : "lazy"}
-                                        quality={100}
-                                    />
-                                </div>
-                            </CarouselItem>
-                        ))}
-                    </CarouselContent>
-                    
-                    {imageUrl.length > 1 && (
-                        <>
-                            <CarouselPrevious className="absolute left-4 bg-black/50 border-none hover:bg-black/70 z-10" />
-                            <CarouselNext className="absolute right-4 bg-black/50 border-none hover:bg-black/70 z-10" />
-                            
-                            {/* Image counter indicator */}
-                            <div className="absolute bottom-4 right-4 bg-black/50 px-2 py-1 rounded-md text-white text-xs z-10">
-                                {imageUrl.map((_, i) => (
-                                    <span key={i} className="inline-block w-2 h-2 rounded-full mx-1 bg-white/50"></span>
-                                ))}
+        <div className="h-full w-2/3 rounded-lg border-r-2 bg-[#1E1E1E] overflow-hidden ">
+    {imageUrl && imageUrl.length > 0 && (
+        <Carousel className="w-full h-full flex items-center justify-center">
+            <CarouselContent>
+                {Array.isArray(imageUrl) ? (
+                    imageUrl.map((url, index) => (
+                        <CarouselItem key={index}>
+                            <div className="relative w-full h-full">
+                                <Image
+                                    src={url}
+                                    alt={`Image ${index + 1}`}
+                                    width={1000}
+                                    height={1000}
+                                    className="object-contain p-2"
+                                    priority={index === 0}
+                                />
                             </div>
-                        </>
-                    )}
-                </Carousel>
+                        </CarouselItem>
+                    ))
+                ) : (
+                    <CarouselItem>
+                        <div className="relative aspect-video w-full">
+                            <Image
+                                src={imageUrl}
+                                alt="Post image"
+                                fill
+                                className="object-contain"
+                                priority
+                            />
+                        </div>
+                    </CarouselItem>
+                )}
+            </CarouselContent>
+            
+            {Array.isArray(imageUrl) && imageUrl.length > 1 && (
+                <>
+                    <CarouselPrevious className="absolute left-4 bg-black/50 border-none hover:bg-black/70 z-10" />
+                    <CarouselNext className="absolute right-4 bg-black/50 border-none hover:bg-black/70 z-10" />
+                </>
             )}
-        </div>
+        </Carousel>
+    )}
+</div>
         
         {/* Right side - Content */}
         <div className="flex flex-col h-full w-1/3">

@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { sdgGoals } from "@/lib/constants/goal-constants"
 import Image from "next/image"
+import { slugify } from "@/lib/utilities/slugify"
 
 export default function Page() {
   return (
@@ -18,17 +19,24 @@ export default function Page() {
         </div> 
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 p-2">
-            {sdgGoals.map((goal) => (
-            <Link key={goal.id} href={`/goals/${goal.id}`} className="aspect-square relative hover:scale-105 transition-all">
-                <Image 
+            {sdgGoals.map((goal) => {
+              const goalSlug = slugify(goal.title);
+              return (
+                <Link 
+                  key={goal.id} 
+                  href={`/goals/${goalSlug}`} 
+                  className="aspect-square relative hover:scale-105 transition-all"
+                >
+                  <Image 
                     src={goal.titleCard} 
                     alt={`SDG Goal ${goal.id}: ${goal.title}`}
                     className="w-full h-full object-cover"
                     width={500}
                     height={500}
-                />
-            </Link>
-            ))}
+                  />
+                </Link>
+              )
+            })}
         </div>
         </div>
     </div>

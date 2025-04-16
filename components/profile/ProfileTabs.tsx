@@ -51,7 +51,7 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
                   {tab.label}
                 </button>
               </div>
-              {index < tabs.length - 1 && <div className=" my-2 border-r border-l border-gray-300 rounded-full"></div>}
+              {index < tabs.length - 1 && <div className=" my-2 border-r border-l mx-5 border-gray-300 rounded-full"></div>}
             </React.Fragment>
           ))}
         </div>

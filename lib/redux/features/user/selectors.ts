@@ -11,8 +11,6 @@ export const selectIsAuthenticated = (state: RootState) =>
   !!state.user.userData?.data?._id;
 export const selectUsername = (state: RootState) => 
   state.user.userData?.data?.username;
-export const selectEmail = (state: RootState) => 
-  state.user.userData?.data?.email;
 export const selectEducation = (state: RootState) => 
   state.user.userData?.data?.education || [];
 export const selectExperience = (state: RootState) => 

@@ -11,6 +11,7 @@ import EditPost from '../post/EditPost';
 import { useUser } from '@/lib/redux/features/user/hooks';
 import { BentoImageGrid } from '../post/BentoGrid';
 import DeletePostModal from '../post/DeletePostModal';
+import Link from 'next/link';
 
 interface PostCardProps {
   _id: string;
@@ -20,6 +21,7 @@ interface PostCardProps {
   isVerified?: boolean;
   content: string;
   isLiked: boolean;
+  isReposted?: boolean;
   userId: string;
   isBookmarked: boolean;
   imageUrl: string[];
@@ -35,6 +37,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   handle,
   time,
   isVerified = false,
+  isReposted = false,
   content,
   imageUrl,
   isLiked,
@@ -51,7 +54,6 @@ export const PostCard: React.FC<PostCardProps> = ({
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [localLikesCount, setLocalLikesCount] = useState(likesCount);
     const [isLocalLiked, setIsLocalLiked] = useState(isLiked);
-    const [isReposted, setIsReposted] = useState(false);
     
     // PostMenu state
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -243,14 +245,20 @@ export const PostCard: React.FC<PostCardProps> = ({
     <div className="w-full border-b border-gray-300">
       <div className="flex justify-between mb-3">
         <div className="flex items-center">
-            <ProfileAvatar src={avatar} alt={name} size='xs' className='' />
+            <Link href={`/profile/${userId}`}>
+                <ProfileAvatar src={avatar} alt={name} size='xs' className='' />
+            </Link>
           <div className="ml-2">
             <div className="flex items-center">
-              <h4 className="font-semibold text-sm">{name}</h4>
-              {/* <span className="text-xs text-gray-500 ml-1.5">• Following</span> */}
+                <Link href={`/profile/${userId}`}>
+                    <h4 className="font-semibold text-sm">{name}</h4>
+                </Link>
+              {isReposted && <span className="text-xs text-gray-500 ml-1.5">• Reposted</span>}
             </div>
             <div className="flex items-center text-xs text-gray-500">
-              <span>{handle}</span>
+                <Link href={`/profile/${userId}`}>
+                    <span>{handle}</span>
+                </Link>
               <span className="mx-1.5">•</span>
               <span>{time}</span>
             </div>

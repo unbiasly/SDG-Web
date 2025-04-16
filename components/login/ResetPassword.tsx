@@ -3,9 +3,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 // import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock, CheckCircle2 } from "lucide-react";
 import PasswordStrengthMeter from "./PasswordStrengthMeter";
+import Link from "next/link";
 
 const ResetPassword = () => {
   const [email, setEmail] = useState("");
@@ -15,7 +16,7 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const { toast } = useToast();
+  
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -37,28 +38,22 @@ const ResetPassword = () => {
     e.preventDefault();
 
     if (!validateEmail(email)) {
-      toast({
-        title: "Invalid email",
-        description: "Please enter a valid email address.",
-        variant: "destructive",
+      toast.error("Invalid email", {
+        description: "Please enter a valid email address."
       });
       return;
     }
 
     if (!validatePassword(password)) {
-      toast({
-        title: "Password too short",
-        description: "Password must be at least 8 characters long.",
-        variant: "destructive",
+      toast.error("Password too short", {
+        description: "Password must be at least 8 characters long."
       });
       return;
     }
 
     if (password !== confirmPassword) {
-      toast({
-        title: "Passwords don't match",
-        description: "Your password and confirmation password must match.",
-        variant: "destructive",
+      toast.error("Passwords don't match", {
+        description: "Your password and confirmation password must match."
       });
       return;
     }
@@ -70,26 +65,25 @@ const ResetPassword = () => {
       setIsLoading(false);
       setIsSuccess(true);
       
-      toast({
-        title: "Password reset successful",
-        description: "Your password has been reset successfully.",
+      toast.success("Password reset successful", {
+        description: "Your password has been reset successfully."
       });
     }, 1500);
   };
 
   if (isSuccess) {
     return (
-      <div className="form-card bg-sdg-purple-light/30 text-center py-16">
+      <div className="form-card bg-[#F0EBFF] text-center py-16">
         <div className="flex flex-col items-center justify-center space-y-4">
-          <div className="rounded-full bg-sdg-green-light p-3 inline-flex">
-            <CheckCircle2 className="h-12 w-12 text-sdg-green" />
+          <div className="rounded-full bg-[#E6F7E9] p-3 inline-flex">
+            <CheckCircle2 className="h-12 w-12 text-[#34C759]" />
           </div>
           <h2 className="text-2xl font-bold text-gray-800">Password Reset Successful</h2>
           <p className="text-gray-600 max-w-xs mx-auto">
             Your password has been updated successfully. You can now login with your new credentials.
           </p>
           <Button 
-            className="mt-4 bg-sdg-purple hover:bg-sdg-purple-dark transition-all"
+            className="mt-4 bg-accent hover:bg-accent/80 text-white transition-all"
             onClick={() => window.location.href = "/login"}
           >
             Go to Login
@@ -100,7 +94,7 @@ const ResetPassword = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="form-card border border-gray-100 space-y-6">
+    <form onSubmit={handleSubmit} className="form-card space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Reset Password</h1>
         <p className="text-gray-500">Enter your email and create a new password</p>
@@ -119,7 +113,7 @@ const ResetPassword = () => {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10"
+              className="pl-10 bg-white"
               required
             />
           </div>
@@ -137,7 +131,7 @@ const ResetPassword = () => {
               placeholder="Create a secure password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10"
+              className="pl-10 pr-10 bg-white"
               required
             />
             <button
@@ -167,7 +161,7 @@ const ResetPassword = () => {
               placeholder="Confirm your new password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className={`pl-10 pr-10 ${
+              className={`pl-10 bg-white pr-10 ${
                 confirmPassword && password !== confirmPassword
                   ? "border-red-500 focus:ring-red-500"
                   : ""
@@ -194,7 +188,7 @@ const ResetPassword = () => {
 
       <Button
         type="submit"
-        className="w-full bg-sdg-purple hover:bg-sdg-purple-dark transition-all"
+        className="w-full bg-accent hover:bg-[#1A2530] text-white transition-all shadow-sm"
         disabled={isLoading}
       >
         {isLoading ? (
@@ -210,9 +204,9 @@ const ResetPassword = () => {
       <div className="text-center">
         <p className="text-sm text-gray-500">
           Remember your password?{" "}
-          <a href="/login" className="text-sdg-purple hover:underline">
+          <Link href="/login" className="text-accent hover:text-[#2980B9] font-bold hover:underline">
             Back to login
-          </a>
+          </Link>
         </p>
       </div>
     </form>

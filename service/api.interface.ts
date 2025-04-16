@@ -64,7 +64,7 @@ export interface PostCreateResponse {
 }
 
 export interface Experience {
-    _id: string;
+    // _id: string;
     company: string;
     role: string;
     startDate: string;
@@ -72,7 +72,7 @@ export interface Experience {
 }
 
 export interface Education {
-    _id: string;
+    // _id: string;
     school: string;
     degree: string;
     startDate: string;
@@ -137,23 +137,30 @@ export interface PostsFetchResponse {
 
 export interface Post {
     _id: string;
-    content: string;
-    images: string[];
     user_id: {
         _id: string;
-        name: string;
         username: string;
-        profileImage: string;
+        name?: string;
+        profileImage?: string;
+        followerCount: number;
+        isFollowing: boolean | null;
     };
+    content: string;
+    images: string[];
+    status?: string;
+    visibility: string;
+    original_post_id: string | null;
     poststat_id: {
         likes: number;
         comments: number;
         reposts: number;
-    };
+    } | null;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
     isLiked: boolean;
     isBookmarked: boolean;
-    updatedAt: string;
-    createdAt: string;
+    isReposted: boolean;
 }
 
 export interface PostData {
@@ -197,7 +204,7 @@ export interface CommentData {
     comment: string;
 }
 
-export interface BookmarkData {
+export interface PostBookmarkData {
     _id: string;
     user_id: {
         _id: string;
@@ -228,9 +235,20 @@ export interface BookmarkData {
     isReposted: boolean;
 }
 
+export interface SDGArticleData {
+    _id: string;
+    title: string;
+    publisher: string;
+    link: string;
+    createdAt: string;
+    updatedAt: string;
+    isBookmarked?: boolean;
+}
+
+
 export interface BookmarksFetchResponse {
     success: boolean;
-    data?: BookmarkData[];
+    data?: PostBookmarkData[] | SDGArticleData[];
     pagination?: {
         limit: number;
         cursor: string | null;
@@ -261,6 +279,7 @@ export interface SDGVideoData {
     type: string;
     createdAt: string;
     updatedAt: string;
+    isBookmarked?: boolean;
 }
 
 export interface SDGVideoResponse {

@@ -5,7 +5,6 @@ import { PostCard } from '@/components/feed/PostCard';
 import SDGNews from '@/components/feed/SDGNews';
 import { FEED_TABS } from '@/lib/constants/index-constants'
 import { formatDate } from '@/lib/utilities/formatDate';
-import { PostsFetchResponse } from '@/service/api.interface';
 import { fetchPosts } from '@/service/posts.service';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import React, { useEffect } from 'react'
@@ -74,6 +73,7 @@ export default function Home() {
                   {posts.filter(post => post !== undefined).map((post) => (
                     <PostCard
                       key={post._id}
+                      isReposted={post.original_post_id !== null}
                       _id={post._id}
                       name={post.user_id.name || `@${post.user_id.username}`}
                       handle={`@${post.user_id.username}`}

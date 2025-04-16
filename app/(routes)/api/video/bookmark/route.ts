@@ -1,6 +1,10 @@
 import { baseURL } from "@/service/app.api";
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+
 export const GET = async (req: NextRequest) => {
+    const cookieStore = await cookies();
+    const jwtToken = cookieStore.get('jwtToken')?.value;
     try {
 
         // Extract query parameters
@@ -8,13 +12,6 @@ export const GET = async (req: NextRequest) => {
         const cursor = searchParams.get("cursor") || undefined;
         const limit = parseInt(searchParams.get("limit") || "30", 10);
 
-        // Validate limit
-        if (isNaN(limit) || limit <= 0) {
-            return NextResponse.json(
-                { success: false, message: "Invalid limit parameter" },
-                { status: 400 }
-            );
-        }
 
         // Build the query string
         let queryString = `limit=${limit}`;
@@ -25,7 +22,7 @@ export const GET = async (req: NextRequest) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${req.cookies.get('jwtToken')?.value}`
+                "Authorization": `Bearer ${jwtToken}`
             }
         });
 
