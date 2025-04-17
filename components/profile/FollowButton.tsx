@@ -5,6 +5,7 @@ import { Button } from '../ui/button'
 interface FollowButtonProps {
     targetId?: string;
     userId: string;
+    followed?: boolean;
 
 }
 
@@ -46,7 +47,7 @@ const FollowButton = ({ targetId, userId }: FollowButtonProps) => {
 
   return (
     <Button onClick={handleToggleFollow} className="rounded-full cursor-pointer px-6 py-2 bg-accent hover:bg-accent/80 text-white border-none backdrop-blur-sm transition-all duration-300 font-medium">
-        {isFollowing ? 'Following' : 'Follow'}
+        {isFollowing ? 'Unfollow' : 'Follow'}
     </Button>
   )
 }

@@ -121,7 +121,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             if (isOwnProfile) {
                 // Only fetch analytics if viewing own profile
                 getAnalytics();
-            } else if (user?._id) {
+            } else if (!isOwnProfile) {
                 // Only track profile view if viewing someone else's profile
                 trackProfileView(userData._id);
             }

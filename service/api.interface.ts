@@ -15,6 +15,8 @@ export interface ManualAuthResponse {
     message?: string;
     jwtToken?: string;
     refreshToken?: string;
+    userId?: string;
+    sessionId?: string;
 }
 
 export interface SocialAuthRequest {
@@ -275,11 +277,16 @@ export interface SDGVideoData {
     link: string;
     published_date: string;
     channel_name: string;
+    description?: string;
     status: string;
     type: string;
     createdAt: string;
     updatedAt: string;
+    comments?: number;
+    likes?: number;
+    views?: number;
     isBookmarked?: boolean;
+    isLiked?: boolean;
 }
 
 export interface SDGVideoResponse {
@@ -294,6 +301,48 @@ export interface SDGVideoResponse {
     };
 }
 
+export interface AnalyticsResponseData {
+  success: boolean;
+  message: string;
+  data: {
+    analytics: {
+      total_post_impressions: number;
+      total_unique_post_impressions: number;
+      total_views: number;
+      unique_profiles: number;
+    };
+    followCounts: {
+      followerCount: number;
+      followingCount: number;
+    };
+  };
+  total_views?: number; // For backward compatibility
+}
+
+export interface AnalyticsData {
+  _id: string;
+  userId: string;
+  startDate: string;
+  endDate: string;
+  views: number;
+}
+
+
+export interface SchemeAnalyticsResponse {
+    success: boolean;
+    data: {
+        stateWise: SchemeCardProps[];
+        categoryWise: SchemeCardProps[];
+        ministryWise: SchemeCardProps[];
+    };
+}
+
+export interface SchemeCardProps {
+    label: string;
+    count: number;
+    icon: string;
+    onClick?: () => void;
+};
 export interface AnalyticsResponseData {
   success: boolean;
   message: string;

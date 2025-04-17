@@ -142,6 +142,7 @@ export const PostCard: React.FC<PostCardProps> = ({
             if (data.repostsCount !== undefined) {
                 setLocalLikesCount(data.repostsCount);
             }
+            window.location.reload();
         } catch (error) {
             console.error('Error reposting:', error);
         }
@@ -366,9 +367,9 @@ export const PostCard: React.FC<PostCardProps> = ({
       
       <div className="flex justify-evenly pt-2 ">
         {[
-            { icon: <ThumbsUp size={18}  className={isActive ? "text-accent font-bold" : "text-gray-500"} />, label: "Like", onClick: handleLike, isActive: isActive },
-            { icon: <MessageCircle size={18} className={isCommentsOpen ? "text-blue-500" : "text-gray-500"} />, label: "Comment", onClick: toggleComments, isActive: isCommentsOpen },
-            { icon: <Repeat2 size={18} className="text-gray-500" />, label: "Repost", onClick: handleRepost, isActive: false },
+            { icon: <ThumbsUp size={18}  className={isActive ? "fill-current font-bold" : "text-gray-500"} />, label: "Like", onClick: handleLike, isActive: isActive },
+            { icon: <MessageCircle size={18} className={isCommentsOpen ? "fill-current" : "text-gray-500"} />, label: "Comment", onClick: toggleComments, isActive: isCommentsOpen },
+            { icon: <Repeat2 size={18}  />, label: "Repost", onClick: handleRepost, isActive: false },
             //   { icon: <Share2 size={18} className="text-gray-500" />, label: "Share", onClick: handleShare, isActive: false }
         ].map((action, index) => (
             <button 

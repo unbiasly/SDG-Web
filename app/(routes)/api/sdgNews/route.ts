@@ -2,14 +2,13 @@
 import { baseURL } from "@/service/app.api";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
-import { deployedURL } from "@/service/app.api";
+
 
 export async function POST(req: NextRequest) {
     const limit = 20;
 
     const { userId } = await req.json();
-    console.log(`${deployedURL}/sdg-news/?limit=${limit}&userId=${userId}`);
-    const response = await fetch(`${deployedURL}/sdg-news/?limit=${limit}&userId=${userId}`, {
+    const response = await fetch(`${baseURL}/sdg-news/?limit=${limit}&userId=${userId}`, {
         headers: {
             "Content-Type": "application/json",
         }

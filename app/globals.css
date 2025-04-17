@@ -230,6 +230,10 @@ body {
     .max-container {
       @apply mx-auto lg:max-w-[1200px];
     }
+    .video-container {
+        @apply mx-auto lg:max-w-[1200px];
+        
+    }
     /* .login-container {
         @apply mx-auto md:max-w-full lg:max-w-[1600px];
       } */
@@ -351,4 +355,12 @@ body {
 
   svg {
     color: black;
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-in-out;
   }

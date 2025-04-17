@@ -2,7 +2,7 @@ import { baseURL } from "@/service/app.api";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-// GET /v1/sdg-video
+// POST /v1/sdg-video
 export async function POST(req: NextRequest) {
     try {
         const cookieStore = await cookies();

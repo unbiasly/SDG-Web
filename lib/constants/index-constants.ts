@@ -37,6 +37,15 @@ export const BOOKMARKS_TABS = [
     // "Schemes"
 ];
 
+export const SEARCH_RESULT_CATEGORIES = [
+    {id: "all", label: "All"},
+    {id: "people", label: "People"},
+    {id: "companies", label: "Companies"},
+    {id: "ministries", label: "Videos"},
+    {id: "news", label: "News"},
+    {id: "society", label: "Society"}
+]
+
 export const PROFILE_OPTIONS = [
   {
     icon: '/icons/house.svg',
@@ -50,14 +59,14 @@ export const PROFILE_OPTIONS = [
   // {route: "/mentorship", label: "Mentorship", icon: "/icons/leadership-development.png"},
   // {route: "/internship", label: "Internship", icon: "/icons/id-card.svg"},
   // {route: "/job", label: "Job", icon: "/icons/briefcase-business.svg"},
-  // {route: "/scheme", label: "Scheme Search", icon: "/icons/chart-no-axes-gantt.svg"},
+  {route: "/scheme", label: "Scheme Search", icon: "/icons/chart-no-axes-gantt.svg"},
   {route: "/notifications", label: "Notifications", icon: "/icons/bell-ring.svg"},
   {
     icon: '/icons/circle-user-round.svg',
     label: 'Profile',
     routeGenerator: (userId: string) => `/profile/${userId}`
   },
-  // {route: "/settings", label: "Settings", icon: "/icons/settings.svg"}, 
+  {route: "/settings", label: "Settings", icon: "/icons/settings.svg"}, 
 ];
 
 export const MOCK_NOTIFICATIONS: Notification[] = [
@@ -167,22 +176,12 @@ export const PROFILE_ANALYTICS = [
     },
     {
         type: "impressions",
-        description: "Check out who's engaging with your posts.",
-        total_impressions: 100,
+        count: 0,
+        description: "Check out who's engaging with your posts."
     }
 ]
 
-export const SETTINGS_OPTIONS = [
-    { id: 'account', label: 'Your account' },
-    { id: 'security', label: 'Security and account access' },
-    { id: 'privacy', label: 'Privacy and safety' },
-    { id: 'notifications', label: 'Notifications' },
-    { id: 'accessibility', label: 'Accessibility, display and languages' },
-    { id: 'resources', label: 'Additional resources' },
-    { id: 'help', label: 'Help Center' },
-    { id: 'logout', label: 'Logout' },
-    
-  ];
+
 
 export const SDG_NEWS = [
     // { id: "trending", title: "Trending News" },

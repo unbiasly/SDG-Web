@@ -1,4 +1,4 @@
-import { baseURL, deployedURL } from "@/service/app.api";
+import { baseURL } from "@/service/app.api";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -182,7 +182,7 @@ export async function DELETE(req: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const response = await fetch(`${deployedURL}/post/${postId}`, {
+    const response = await fetch(`${baseURL}/post/${postId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',

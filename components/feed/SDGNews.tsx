@@ -10,16 +10,57 @@ export interface Article {
   title: string;
   publisher: string;
   link: string;
-  isBookmarked: boolean;
+  isBookmarked?: boolean;
   createdAt: string;
   updatedAt: string;
 //   imageUrl: string;
 }
 
+export const ArticleCard = ({ article }: { article: Article }) => {
+    const [isActive, setIsActive] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    
+    return (
+        <Link href={formatSDGLink(article.link)} target="_blank" className=" rounded-2xl overflow-hidden shadow-sm  transition-all duration-300 hover:shadow-md mb-4 flex flex-col sm:flex-row">
+            {/* <div className="w-full sm:w-1/3 md:w-1/4 h-40 sm:h-auto">
+              <img 
+                src={article.imageUrl} 
+                alt={article.title} 
+                className="w-full h-full object-cover"
+              />
+            </div> */}
+            {/* sm:w-2/3 md:w-3/4 */}
+            <div className="w-full border rounded-2xl  p-4 flex flex-col justify-between">
+              <div>
+                <h2 className="font-bold text-lg sm:text-xl mb-2">{article.title}</h2>
+                <div className="flex items-center mb-2 font-semibold text-sm text-gray-500">
+                  <span>{article.publisher}</span>
+                  <span className="mx-3">•</span>
+                  <span>{formatDate(article.updatedAt)}</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center mt-4" onClick={(e) => e.stopPropagation()}>
+                <button aria-label="bookmark" className="text-gray-400 hover:text-gray-600 transition-colors">
+                  <Bookmark size={20} className={`${isActive ? "fill-current text-accent" : "text-gray-500"}`} />
+                </button>
+                <button 
+                  aria-label="more_options" 
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                >
+                  <MoreVertical size={20} />
+                </button>
+              </div>
+            </div>
+        </Link>
+    );
+};
+
+
 const SDGNews = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isActive, setIsActive] = useState(false);
+  
 
   const News = async () => {
     try {
@@ -39,43 +80,13 @@ const SDGNews = () => {
     }
   }
 
-  useEffect(() => {
-    News()
-}, []);
+//   useEffect(() => {
+//     News()
+// }, []);
 
 
 
-  const ArticleCard = ({ article }: { article: Article }) => (
-    <Link href={formatSDGLink(article.link)} target="_blank" className=" rounded-2xl overflow-hidden shadow-sm  transition-all duration-300 hover:shadow-md mb-4 flex flex-col sm:flex-row">
-        {/* <div className="w-full sm:w-1/3 md:w-1/4 h-40 sm:h-auto">
-          <img 
-            src={article.imageUrl} 
-            alt={article.title} 
-            className="w-full h-full object-cover"
-          />
-        </div> */}
-        {/* sm:w-2/3 md:w-3/4 */}
-        <div className="w-full border rounded-2xl  p-4 flex flex-col justify-between">
-          <div>
-            <h2 className="font-bold text-lg sm:text-xl mb-2">{article.title}</h2>
-            <div className="flex items-center mb-2 font-semibold text-sm text-gray-500">
-              <span>{article.publisher}</span>
-              <span className="mx-3">•</span>
-              <span>{formatDate(article.updatedAt)}</span>
-            </div>
-          </div>
-          <div className="flex justify-between items-center mt-4" onClick={(e) => e.stopPropagation()}>
-            <button aria-label="bookmark" className="text-gray-400 hover:text-gray-600 transition-colors">
-              <Bookmark size={20} className={`${isActive ? "fill-current text-accent" : "text-gray-500"}`} />
-            </button>
-            <button aria-label="more_options" className="text-gray-400 hover:text-gray-600 transition-colors">
-              <MoreVertical size={20} />
-            </button>
-          </div>
-        </div>
-    </Link>
-  );
-
+  
   const NewsSection = ({ 
     title, 
     articleIds, 
