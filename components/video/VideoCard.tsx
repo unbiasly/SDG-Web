@@ -3,35 +3,42 @@
 import { useState } from "react";
 import { Bookmark, PlayCircle, PauseCircle, X, Volume2, Video } from "lucide-react";
 import YouTube from "react-youtube";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, set } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface VideoCardProps {
-  video: {
+interface Goal {
     _id: string;
-    title: string;
-    thumbnail_url: string;
-    description?: string;
-    type: string;
-    channel_name: string;
-    video_id: string;
-    link: string;
-    published_date: string;
-    createdAt: string;
-    updatedAt: string;
-    status?: string;
-    saved?: boolean;
-    comments?: number;
-    views?: number;
-    likes?: number;
-  };
+    name: string;
+}
+
+interface VideoCardProps {
+    video: {
+        _id: string;
+        title: string;
+        thumbnail_url: string;
+        description?: string;
+        type: string;
+        channel_name: string;
+        video_id: string;
+        link: string;
+        published_date: string;
+        createdAt: string;
+        updatedAt: string;
+        status?: string;
+        goal_id?: Goal[];
+        isBookmarked?: boolean;
+        comments?: number;
+        views?: number;
+        likes?: number;
+    };
 }
 
 const VideoCard = ({ video }: VideoCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-
+  const isBookmarked = video.isBookmarked;
+  console.log(isBookmarked)
+  const [isActive, setIsActive] = useState(isBookmarked);
   const handlePlayClick = () => {
     setIsPlaying(true);
   };
@@ -57,7 +64,7 @@ const VideoCard = ({ video }: VideoCardProps) => {
       });
       
       if (response.ok) {
-        setIsBookmarked(!isBookmarked);
+        setIsActive(!isActive);
         // TODO: Consistently set the IsBookmarked state
       }
     } catch (error) {
@@ -96,7 +103,7 @@ const VideoCard = ({ video }: VideoCardProps) => {
           <h3 className="text-sm font-medium line-clamp-2">{video.title}</h3>
         </div>
         <button 
-          aria-label={isBookmarked ? "unbookmark" : "bookmark"} 
+          aria-label={isActive ? "unbookmark" : "bookmark"} 
           className={cn(
             "hover:text-blue-600 transition-colors cursor-pointer rounded-full p-1",
             
@@ -105,7 +112,7 @@ const VideoCard = ({ video }: VideoCardProps) => {
         >
           <Bookmark className={cn(
             "h-5 w-5",
-            isBookmarked ? "fill-current text-blue-600" : "text-gray-400"
+            isActive ? "fill-current " : "text-gray-400"
           )} />
         </button>
       </div>

@@ -26,7 +26,7 @@ export default function GoalHeader({ goal }: GoalProps) {
   const nextSlug = nextGoal ? slugify(nextGoal.title) : null
 
   return (
-    <div className="rounded-2xl h-screen p-5 text-white relative " style={{ backgroundColor: goal.color }}>
+    <div className="rounded-2xl flex-1 h-screen p-5  text-white relative " style={{ backgroundColor: goal.color }}>
       {/* Navigation buttons at the top with higher z-index */}
       <div className="flex justify-between mb-8 z-10 relative">
         <div>
@@ -51,22 +51,22 @@ export default function GoalHeader({ goal }: GoalProps) {
         </div>
       </div>
 
-      <div className="flex flex-col h-[calc(100%-120px)] justify-center items-start px-16">
+      <div className="flex  flex-col h-[calc(100%-120px)] justify-center items-start px-16">
         <div className="flex items-start justify-start space-x-6">
             <div className="text-8xl font-bold leading-none text-black/40">{goal.id}</div>
             <div className="flex flex-col space-y-6">
-                <h1 className="text-5xl w-1/2 font-bold uppercase tracking-wide">{goal.title}</h1>
+                <h1 className="text-[2.6rem] font-bold uppercase tracking-wide">{goal.title}</h1>
                 
                 <p className="text-2xl font-bold">
                 {goal.subtitle}
                 </p>
                 
-                <button 
+                {/* <button 
                     className="mt-8 flex items-center gap-2 hover:underline"
                 >
                     <CircleArrowDown size={20} color="white"/>
                     <span>Find out more</span>
-                </button>
+                </button> */}
             </div>
         </div>
       </div>

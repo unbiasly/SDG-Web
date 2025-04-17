@@ -43,11 +43,6 @@ export const PROFILE_OPTIONS = [
     label: 'Home',
     route: '/'
   },
-  {
-    icon: '/icons/circle-user-round.svg',
-    label: 'Profile',
-    routeGenerator: (userId: string) => `/profile/${userId}`
-  },
   {route: "/bookmarks", label: "Bookmarks", icon: "/icons/bookmark.svg"},
   {route: '/goals', label: "The 17 Goals", icon: "/icons/Target.svg"},
   {route: "/videos", label: "Videos", icon: "/icons/tv-minimal-play.svg"},
@@ -56,7 +51,12 @@ export const PROFILE_OPTIONS = [
   // {route: "/internship", label: "Internship", icon: "/icons/id-card.svg"},
   // {route: "/job", label: "Job", icon: "/icons/briefcase-business.svg"},
   // {route: "/scheme", label: "Scheme Search", icon: "/icons/chart-no-axes-gantt.svg"},
-  // {route: "/notifications", label: "Notifications", icon: "/icons/bell-ring.svg"},
+  {route: "/notifications", label: "Notifications", icon: "/icons/bell-ring.svg"},
+  {
+    icon: '/icons/circle-user-round.svg',
+    label: 'Profile',
+    routeGenerator: (userId: string) => `/profile/${userId}`
+  },
   // {route: "/settings", label: "Settings", icon: "/icons/settings.svg"}, 
 ];
 
@@ -162,13 +162,13 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
 export const PROFILE_ANALYTICS = [
     {
         type: "views",
-        count: 0,
-        description: "Update your profile to attracts viewers."
+        description: "Update your profile to attracts viewers.",
+        total_views: 100,
     },
     {
         type: "impressions",
-        count: 0,
-        description: "Check out who's engaging with your posts."
+        description: "Check out who's engaging with your posts.",
+        total_impressions: 100,
     }
 ]
 

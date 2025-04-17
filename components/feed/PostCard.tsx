@@ -242,7 +242,12 @@ export const PostCard: React.FC<PostCardProps> = ({
     } 
     
   return (
-    <div className="w-full border-b border-gray-300">
+    <div className="w-full border-b  p-2 border-gray-300">
+        {isReposted && (
+          <div className=" py-2 border-b px-4 mb-2  text-sm text-gray-500">
+            <Link href={`/profile/${userId}`} className="font-bold hover:underline">{name}</Link> reposted this
+          </div>
+        )}
       <div className="flex justify-between mb-3">
         <div className="flex items-center">
             <Link href={`/profile/${userId}`}>
@@ -253,7 +258,7 @@ export const PostCard: React.FC<PostCardProps> = ({
                 <Link href={`/profile/${userId}`}>
                     <h4 className="font-semibold text-sm">{name}</h4>
                 </Link>
-              {isReposted && <span className="text-xs text-gray-500 ml-1.5">• Reposted</span>}
+              {/* <span className="text-xs text-gray-500 ml-1.5">• Reposted</span> */}
             </div>
             <div className="flex items-center text-xs text-gray-500">
                 <Link href={`/profile/${userId}`}>
@@ -376,7 +381,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           </button>
         ))}
       </div>
-      <div className="p-2">
+      <div className={ isCommentsOpen ? "p-2" : "hidden"}>
         <CommentSection 
           post_id={_id}
           isOpen={isCommentsOpen} 

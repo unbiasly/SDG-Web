@@ -293,3 +293,29 @@ export interface SDGVideoResponse {
         totalItems?: number;
     };
 }
+
+export interface AnalyticsResponseData {
+  success: boolean;
+  message: string;
+  data: {
+    analytics: {
+      total_post_impressions: number;
+      total_unique_post_impressions: number;
+      total_views: number;
+      unique_profiles: number;
+    };
+    followCounts: {
+      followerCount: number;
+      followingCount: number;
+    };
+  };
+  total_views?: number; // For backward compatibility
+}
+
+export interface AnalyticsData {
+  _id: string;
+  userId: string;
+  startDate: string;
+  endDate: string;
+  views: number;
+}

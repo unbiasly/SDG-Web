@@ -6,6 +6,7 @@ import { Article } from './SDGNews';
 import { formatSDGLink } from '@/lib/utilities/sdgLinkFormat';
 import { ScrollArea } from '../ui/scroll-area';
 import { Bookmark, Flag, MoreVertical, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { useUser } from '@/lib/redux/features/user/hooks';
 
 interface TrendingItemProps {
   _id: string;
@@ -13,10 +14,11 @@ interface TrendingItemProps {
   publisher: string;
   link: string;
   updatedAt: string;
+  isBookmarked?: boolean;
 }
 
-const TrendingItem: React.FC<TrendingItemProps> = ({ _id, title, publisher, link }) => {
-    const [isBookmarked, setIsBookmarked] = useState(false);
+const TrendingItem: React.FC<TrendingItemProps> = ({ _id, title, publisher, link, isBookmarked }) => {
+    const [isActive, setIsActive] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -42,12 +44,12 @@ const TrendingItem: React.FC<TrendingItemProps> = ({ _id, title, publisher, link
                 }),
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to bookmark article');
-            }
+            // if (!response.ok) {
+            //     throw new Error('Failed to bookmark article');
+            // }
 
             const data = await response.json();
-            setIsBookmarked(!isBookmarked);
+            setIsActive(!isActive);
             console.log('Article bookmarked:', data);
         } catch (error) {
             console.error('Error bookmarking article:', error);
@@ -100,16 +102,29 @@ export const TrendingSection: React.FC = () => {
     const [articles, setArticles] = useState<Article[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    const { user } = useUser();
     const News = async () => {
         try {
-            setIsLoading(true);
-            const response = await fetch('/api/sdgNews');
             
-            if (!response.ok) {
-                throw new Error('Failed to fetch SDG news');
+            setIsLoading(true);
+            const response = await fetch('/api/sdgNews', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: user?._id,
+                }),
+
             }
+            );
+            
+            // if (!response.ok) {
+            //     throw new Error('Failed to fetch SDG news');
+            // }
             
             const data = await response.json();
+            console.log('Fetched SDG news:', data);
             setArticles(data.data || []);
         } catch (error) {
             console.error('Error fetching SDG news:', error);
@@ -119,8 +134,10 @@ export const TrendingSection: React.FC = () => {
     }
 
     useEffect(() => {
-        News();
-    }, []);
+        if (user) {
+            News();
+        }
+    }, [user]);
 
     if (isLoading) {
         return (
@@ -129,7 +146,7 @@ export const TrendingSection: React.FC = () => {
                 <div className="h-4 w-24 bg-gray-200 rounded-2xl mb-4 animate-pulse"></div>
                 
                 <div className="space-y-4">
-                    {[...Array(5)].map((_, index) => (
+                    {[...Array(7)].map((_, index) => (
                         <div key={index} className="rounded-2xl p-1">
                             <div className="h-10 bg-gray-200 rounded-2xl mb-1 animate-pulse"></div>
                             <div className="h-3 w-20 bg-gray-200 rounded-2xl animate-pulse"></div>
@@ -154,6 +171,7 @@ export const TrendingSection: React.FC = () => {
                         publisher={article.publisher}
                         link={formatSDGLink(article.link)}
                         updatedAt={article.updatedAt}
+                        isBookmarked={article.isBookmarked}
                     />
                 ))}
             </ScrollArea>

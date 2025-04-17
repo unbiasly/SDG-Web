@@ -5,15 +5,15 @@ import { NextRequest, NextResponse } from 'next/server';
 // The base URL should be defined in your environment variables
 
 export async function POST(req: NextRequest) {
-  try {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const searchParams = req.nextUrl.searchParams;
+    const limit = searchParams.get('limit') || 20;
+    const cursor = searchParams.get('cursor') || '';
     
+  try {
     if (!jwtToken) {
       console.log('No JWT token found in cookies');
-      // For tracking analytics, we'll continue without authentication rather than throwing an error
-      // This matches the Flutter implementation where 'track' actions don't trigger token refresh
-      // For other actions we would return an unauthorized response
     }
     
     // Parse the request body
@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       type,
       viewerId
     };
+    console.log(JSON.stringify(requestData));
     
     // Remove null or empty values (similar to Flutter implementation)
     Object.keys(requestData).forEach(key => {
@@ -36,18 +37,18 @@ export async function POST(req: NextRequest) {
       }
     });
     // Log request for debugging (similar to Flutter _logApiAction)
-    console.log('Sending Analytics Request:', {
-      endpoint: `${baseURL}/analytics`,
-      method: 'POST',
-      requestData
-    });
+    // console.log('Sending Analytics Request:', {
+    //   endpoint: `${baseURL}/analytics`,
+    //   method: 'POST',
+    //   requestData
+    // });
     
     // Forward the request to the backend API
     const response = await fetch(`${baseURL}/analytics`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
+        'Authorization': `Bearer ${jwtToken}`
       },
       body: JSON.stringify(requestData),
     });

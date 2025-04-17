@@ -12,13 +12,7 @@ import { CommentData } from "@/service/api.interface";
 import { useUser } from '@/lib/redux/features/user/hooks';
 import EditPost from './EditPost';
 import ReportPopover from './ReportPopover';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import ImageCarousel from "./ImageCarousel";
 
 interface SocialPostDialogProps {
   open: boolean;
@@ -108,49 +102,14 @@ export function SocialPostDialog({ open, onOpenChange, avatar, name, handle, tim
         <DialogDescription className="sr-only">{content}</DialogDescription>
         
         {/* Left side - Image Carousel */}
-        <div className="h-full w-2/3 rounded-lg border-r-2 bg-[#1E1E1E] overflow-hidden ">
-    {imageUrl && imageUrl.length > 0 && (
-        <Carousel className="w-full h-full flex items-center justify-center">
-            <CarouselContent>
-                {Array.isArray(imageUrl) ? (
-                    imageUrl.map((url, index) => (
-                        <CarouselItem key={index}>
-                            <div className="relative w-full h-full">
-                                <Image
-                                    src={url}
-                                    alt={`Image ${index + 1}`}
-                                    width={1000}
-                                    height={1000}
-                                    className="object-contain p-2"
-                                    priority={index === 0}
-                                />
-                            </div>
-                        </CarouselItem>
-                    ))
-                ) : (
-                    <CarouselItem>
-                        <div className="relative aspect-video w-full">
-                            <Image
-                                src={imageUrl}
-                                alt="Post image"
-                                fill
-                                className="object-contain"
-                                priority
-                            />
-                        </div>
-                    </CarouselItem>
-                )}
-            </CarouselContent>
-            
-            {Array.isArray(imageUrl) && imageUrl.length > 1 && (
-                <>
-                    <CarouselPrevious className="absolute left-4 bg-black/50 border-none hover:bg-black/70 z-10" />
-                    <CarouselNext className="absolute right-4 bg-black/50 border-none hover:bg-black/70 z-10" />
-                </>
-            )}
-        </Carousel>
-    )}
-</div>
+        <div className="h-full w-2/3 rounded-lg border-r-2 bg-[#1E1E1E] overflow-hidden">
+          {imageUrl && imageUrl.length > 0 && (
+            <ImageCarousel 
+              images={Array.isArray(imageUrl) ? imageUrl : [imageUrl]} 
+              className="w-full h-full"
+            />
+          )}
+        </div>
         
         {/* Right side - Content */}
         <div className="flex flex-col h-full w-1/3">

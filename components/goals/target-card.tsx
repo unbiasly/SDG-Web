@@ -5,6 +5,7 @@ interface TargetProps {
     id: string
     title: string
     description: string
+    card: string
   }
   color: string
 }
@@ -13,12 +14,10 @@ export default function TargetCard({ target, color }: TargetProps) {
   return (
     <div>
       <div className="flex gap-2 mb-2">
-        <div className="w-16 h-16 flex items-center justify-center text-white" style={{ backgroundColor: color }}>
-          <div className="text-center">
-            <div className="text-xs">TARGET</div>
-            <div className="text-sm font-bold">{target.id}</div>
-          </div>
-        </div>
+            <Image src={target.card} alt={target.id} width={10} height={10}  className="w-1/3  h-full" /> 
+        {/* <div className="flex items-center justify-center text-white">
+          
+          </div> */}
         {/* <div className="w-16 h-16 flex items-center justify-center bg-gray-200">
           <Image
             src="/placeholder.svg?height=40&width=40"

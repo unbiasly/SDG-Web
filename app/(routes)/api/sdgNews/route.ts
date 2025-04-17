@@ -4,20 +4,21 @@ import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 import { deployedURL } from "@/service/app.api";
 
-
-export async function GET() {
+export async function POST(req: NextRequest) {
     const limit = 20;
-    // const cursor = 
-    const response = await fetch(`${deployedURL}/sdg-news/?limit=${limit}&cursor=`, {
+
+    const { userId } = await req.json();
+    console.log(`${deployedURL}/sdg-news/?limit=${limit}&userId=${userId}`);
+    const response = await fetch(`${deployedURL}/sdg-news/?limit=${limit}&userId=${userId}`, {
         headers: {
             "Content-Type": "application/json",
         }
     });
 
     const data = await response.json();
-    if (data.pagination.hasMore) {
-        const cursor = data.pagination.nextCursor;
-    }
+    // if (data.pagination.hasMore) {
+    //     const cursor = data.pagination.nextCursor;
+    // }
 
     return Response.json({ 
         success: true, 

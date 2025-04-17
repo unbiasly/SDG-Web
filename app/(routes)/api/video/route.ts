@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
         // Make API call to backend
         const response = await fetch(`${baseURL}/sdg-video?${queryString}`, {
-            method: "GET",
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${jwtToken}`
