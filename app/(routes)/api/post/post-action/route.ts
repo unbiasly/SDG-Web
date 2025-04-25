@@ -3,14 +3,20 @@ import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 
 export async function PATCH(req: NextRequest) {
-    const cookieStore = await cookies(); // Ensure to await the promise
+    const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
-    const { postId, actionType } = await req.json();
-
+    
+    // Parse the request body once
+    const requestBody = await req.json();
+    const { postId, actionType, comment } = requestBody;
 
     try {
-        const body = (actionType === 'comment' || actionType === 'share') 
-            ? await req.json() : undefined; // No body for other action types
+        let body = undefined;
+        if (actionType === 'comment') {
+            body = { comment };
+        } else if (actionType === 'share') {
+            body = requestBody; // Or extract specific share data if needed
+        }
 
         const response = await fetch(`${baseURL}/post-action/${postId}/${actionType}`, {
             method: 'PATCH',
@@ -18,21 +24,16 @@ export async function PATCH(req: NextRequest) {
                 'Authorization': `Bearer ${jwtToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(body), // Pass body only if it's defined
+            body: body ? JSON.stringify(body) : undefined,
         });
         
-        // if (!response.ok) {
-        //     const errorText = await response.text(); // Get the response text for better error handling
-        //     throw new Error(`Failed to fetch posts: ${response.status} ${response.statusText} - ${errorText}`);
-        // }
-        
         const data = await response.json();
-        console.log('Posts data:', data);
+        console.log('Action response:', data);
         
         return Response.json(data);
     } catch (error) {
-        console.error("Error fetching posts:", error);
-        return Response.json({ error: "Failed to fetch posts" }, { status: 500 });
+        console.error(`Error performing ${actionType}:`, error);
+        return Response.json({ error: `Failed to ${actionType}` }, { status: 500 });
     }
 }
 
