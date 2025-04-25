@@ -1,9 +1,10 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronRight, SmartphoneIcon, LaptopIcon, MonitorIcon } from 'lucide-react';
+import { ArrowLeft, ChevronRight, SmartphoneIcon, LaptopIcon, MonitorIcon, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { SessionsResponse } from '@/service/api.interface';
+import SessionItem from './SessionItem';
 
 const Sessions = () => {
   const router = useRouter();
@@ -37,7 +38,6 @@ const Sessions = () => {
       } else {
         throw new Error('Invalid response format');
       }
-      return response.json()
     } catch (error) {
       console.error('Error fetching sessions:', error);
       setError(error instanceof Error ? error.message : 'An unknown error occurred');
@@ -46,36 +46,6 @@ const Sessions = () => {
     }
   };
 
-  const removeSession = async (sessionIds: string[]) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/settings/session', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ sessionIds })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to remove sessions');
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        fetchSessions();
-      } else {
-        throw new Error('Invalid response format');
-      }
-    } catch (error) {
-      console.error('Error removing sessions:', error);
-      setError(error instanceof Error ? error.message : 'An unknown error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const getDeviceInfo = (userAgent: string) => {
     const isMobile = /mobile|android|iphone|ipad|ipod/i.test(userAgent.toLowerCase());
@@ -159,6 +129,10 @@ const Sessions = () => {
     }
     return ip;
   };
+
+    const handleSessionRemoved = () => {
+        fetchSessions();
+    };
   
   if (isLoading && !sessions) {
     return (
@@ -198,7 +172,7 @@ const Sessions = () => {
           <div>
             <h2 className="text-xl font-bold mb-4">Current active session</h2>
             <p className="text-gray-600 mb-4">
-              You're logged into this Unbiasly account on this device and are currently using it.
+              You're logged into this SDG account on this device and are currently using it.
             </p>
             
             {sessions.currentSession && (
@@ -211,7 +185,7 @@ const Sessions = () => {
                     <div className="text-xs text-gray-400">IP: {formatIpAddress(sessions.currentSession.ipAddress)}</div>
                   </div>
                 </div>
-                <ChevronRight className="h-5 w-5 text-gray-400" />
+                {/* <ChevronRight className="h-5 w-5 text-gray-400" /> */}
               </div>
             )}
           </div>
@@ -226,22 +200,15 @@ const Sessions = () => {
               
               <p className="text-gray-600 mb-4">
                 Logging out will end {sessions.otherSessions.length} of your other active sessions. It won't affect your current active session.{' '}
-                <a href="#" className="text-blue-500 hover:underline">Learn more</a>
+                {/* <a href="#" className="text-blue-500 hover:underline">Learn more</a> */}
               </p>
               
 
               {sessions.otherSessions.map(session => (
-                <div key={session._id} className="flex items-center justify-between border-b py-4">
-                  <div className="flex items-center">
-                    {getDeviceIcon(getDeviceInfo(session.userAgent).deviceType)}
-                    <div className="ml-4">
-                      <div className="font-semibold">{getDeviceInfo(session.userAgent).deviceName}</div>
-                      <div className="text-gray-500">{formatLoginTime(session.loginTime)}</div>
-                      <div className="text-xs text-gray-400">IP: {formatIpAddress(session.ipAddress)}</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400" />
-                </div>
+                <SessionItem 
+                key={session._id}
+                session={session}
+                onSessionRemoved={handleSessionRemoved}/>
               ))}
             </div>
           )}

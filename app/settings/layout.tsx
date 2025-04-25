@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+'use client';
 
 import "../globals.css";
 import Logo from '@/public/Logo.svg';
@@ -6,12 +6,55 @@ import { UserSidebar } from "@/components/feed/UserProfile";
 import { TrendingSection } from "@/components/feed/TrendingNow";
 import Image from "next/image";
 import { Search } from "lucide-react";
+import { fetchUserFailure, fetchUserStart, fetchUserSuccess, setFallbackColor } from "@/lib/redux/features/user/userSlice";
+import { getRandomColor } from "@/lib/utilities/generateColor";
+import { useEffect } from "react";
+import { useAppDispatch } from "@/lib/redux/hooks";
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+    const dispatch = useAppDispatch();
+    
+        useEffect(() => {
+            // Set up the token refresh service worker
+            fetchUser();
+            // setupTokenRefresh();
+        }, []);
+        
+        const fetchUser = async () => {
+            dispatch(fetchUserStart());
+            try {
+              const response = await fetch('/api', {
+                credentials: 'include'
+              });
+              
+              if (!response.ok) {
+                // If unauthorized, handle it
+                if (response.status === 401) {
+                  dispatch(fetchUserFailure('Unauthorized'));
+                  window.location.href = '/login';
+                  return null;
+                }
+              }
+              const data = await response.json();
+              if (data.data && data.data._id) {
+                // Set fallback color for new users
+                const fallbackColor = getRandomColor();
+                dispatch(setFallbackColor(fallbackColor));
+              }
+              dispatch(fetchUserSuccess(data));
+              return data;
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+              dispatch(fetchUserFailure(errorMessage));
+              // Redirect to login for auth errors
+              window.location.href = '/login';
+              throw error;
+            }
+          };
   return (
     <main className="flex-1 flex overflow-y-auto p-3 gap-6 max-container">
       <aside className="hidden xl:block space-y-3 sticky h-fit ">

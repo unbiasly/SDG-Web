@@ -27,8 +27,14 @@ export async function PUT(request:NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
 
-    // Removing User Sessions
+    // Parsing the request body
     const { sessionIds } = await request.json();
+    
+    // Validate that sessionIds is an array
+    if (!Array.isArray(sessionIds)) {
+        return new Response(JSON.stringify({ error: "sessionIds must be an array" }), { status: 400 });
+    }
+    
     const response = await fetch(`${baseURL}/session`, {
         method: "PUT",
         headers: {
@@ -37,10 +43,13 @@ export async function PUT(request:NextRequest) {
         },
         body: JSON.stringify({ sessionIds }),
     });
+    
     const data = await response.json();
 
     if (!response.ok) {
         return new Response(JSON.stringify(data), { status: response.status });
     }
-    return new Response(JSON.stringify({ message: "Session updated" }), { status: 200 });
+    
+    
+    return NextResponse.json(data);
 }

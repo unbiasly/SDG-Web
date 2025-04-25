@@ -59,7 +59,7 @@ export const PROFILE_OPTIONS = [
   // {route: "/mentorship", label: "Mentorship", icon: "/icons/leadership-development.png"},
   // {route: "/internship", label: "Internship", icon: "/icons/id-card.svg"},
   // {route: "/job", label: "Job", icon: "/icons/briefcase-business.svg"},
-  {route: "/scheme", label: "Scheme Search", icon: "/icons/chart-no-axes-gantt.svg"},
+//   {route: "/scheme", label: "Scheme Search", icon: "/icons/chart-no-axes-gantt.svg"},
   {route: "/notifications", label: "Notifications", icon: "/icons/bell-ring.svg"},
   {
     icon: '/icons/circle-user-round.svg',
