@@ -22,8 +22,8 @@ export default function RootLayout({
 
     useEffect(() => {
         // Set up the token refresh service worker
-        setupTokenRefresh();
         fetchUser();
+        // setupTokenRefresh();
     }, []);
     
     const fetchUser = async () => {

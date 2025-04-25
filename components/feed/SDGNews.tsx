@@ -39,7 +39,7 @@ export const ArticleCard = ({ article }: { article: Article }) => {
                   <span>{formatDate(article.updatedAt)}</span>
                 </div>
               </div>
-              <div className="flex justify-between items-center mt-4" onClick={(e) => e.stopPropagation()}>
+              {/* <div className="flex justify-between items-center mt-4" onClick={(e) => e.stopPropagation()}>
                 <button aria-label="bookmark" className="text-gray-400 hover:text-gray-600 transition-colors">
                   <Bookmark size={20} className={`${isActive ? "fill-current text-accent" : "text-gray-500"}`} />
                 </button>
@@ -50,7 +50,7 @@ export const ArticleCard = ({ article }: { article: Article }) => {
                 >
                   <MoreVertical size={20} />
                 </button>
-              </div>
+              </div> */}
             </div>
         </Link>
     );
