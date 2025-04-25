@@ -42,6 +42,9 @@ const appleProvider = new OAuthProvider('apple.com');
 googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');
 
+googleProvider.setCustomParameters({
+    prompt: 'select_account'
+  });
 facebookProvider.addScope('email');
 facebookProvider.addScope('public_profile');
 

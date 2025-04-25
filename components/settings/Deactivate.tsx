@@ -36,13 +36,8 @@ const Deactivate = () => {
 
   return (
     <div className="w-full mx-auto p-4">
-      <div className="flex items-center mb-6">
-        <Button 
-          variant="ghost" 
-          className="p-0 mr-4"
-        >
-          <ArrowLeft size={24} />
-        </Button>
+      <div className="flex items-center mb-6 space-x-2">
+            <ArrowLeft size={20} onClick={() => window.location.href = '/settings'} />
         <h1 className="text-2xl font-bold">Deactivate account</h1>
       </div>
 
@@ -84,7 +79,7 @@ const Deactivate = () => {
               return (
                 <li key={index}>
                   {text}
-                  <Link href="/settings/profile" className="text-blue-600 hover:underline">change them</Link> 
+                  <Link href="/settings" className="text-blue-600 hover:underline">change them </Link> 
                   before you deactivate this account.
                 </li>
               );

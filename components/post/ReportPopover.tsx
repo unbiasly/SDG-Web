@@ -96,7 +96,7 @@ const ReportPopover = ({ open, onOpenChange, postId }: ReportPopoverProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="">
         <DialogHeader className="border-b border-gray-100 pb-4">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold">Report this post</DialogTitle>
@@ -105,16 +105,16 @@ const ReportPopover = ({ open, onOpenChange, postId }: ReportPopoverProps) => {
 
         {step === "report" && (
           <div className="">
-            <h3 className="text-2xl font-semibold mb-6">Select our policy that applies</h3>
+            <h3 className="text-xl font-semibold mb-6">Select our policy that applies</h3>
             
-            <div className="flex flex-wrap gap-3 mb-16">
+            <div className="flex flex-wrap gap-3 ">
               {POLICY_OPTIONS.map((policy) => (
                 <button
                   key={policy}
-                  className={`px-5 py-3 rounded-full border ${
+                  className={`px-3 py-1 cursor-pointer rounded-full border ${
                     selectedPolicies.includes(policy)
-                      ? "border-blue-700 bg-blue-50 text-blue-700"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      ? "border-accent bg-blue-50 text-accent"
+                      : "border-accent text-accent hover:bg-gray-50"
                   } transition-colors text-sm md:text-base`}
                   onClick={() => togglePolicy(policy)}
                   disabled={isSubmitting}
@@ -127,8 +127,8 @@ const ReportPopover = ({ open, onOpenChange, postId }: ReportPopoverProps) => {
             <div className="flex justify-end">
               <button 
                 onClick={handleContinueToFeedback}
-                className={`px-8 py-3 rounded-full font-medium text-white ${
-                  selectedPolicies.length > 0 && !isSubmitting ? "bg-blue-700 hover:bg-blue-800" : "bg-blue-300 cursor-not-allowed"
+                className={`px-8 py-2 rounded-full cursor-pointer font-medium text-white ${
+                  selectedPolicies.length > 0 && !isSubmitting ? "bg-accent " : "bg-gray-400 cursor-not-allowed"
                 } transition-colors`}
                 disabled={selectedPolicies.length === 0 || isSubmitting}
               >
@@ -141,22 +141,22 @@ const ReportPopover = ({ open, onOpenChange, postId }: ReportPopoverProps) => {
         
         {step === "feedback" && (
           <div className="">
-            <h3 className="text-2xl font-semibold mb-8">Tell us why to help improve the feed.</h3>
+            <h3 className="text-xl font-semibold mb-8">Tell us why to help improve the feed.</h3>
             
-            <div className="space-y-5 mb-16">
+            <div className="space-y-5 mb-12">
               {FEEDBACK_OPTIONS.map((option) => (
-                <div key={option} className="flex items-center gap-3">
+                <div key={option} className="flex items-center gap-3"
+                  onClick={() => setSelectedFeedback(option)}>
                   <div 
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      selectedFeedback === option ? "border-blue-700" : "border-gray-300"
+                      selectedFeedback === option ? "border-accent" : "border-gray-300"
                     }`}
-                    onClick={() => setSelectedFeedback(option)}
                   >
                     {selectedFeedback === option && (
-                      <div className="w-2.5 h-2.5 rounded-full bg-blue-700"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-accent"></div>
                     )}
                   </div>
-                  <span className="text-lg text-gray-700">{option}</span>
+                  <span className="text-sm text-gray-800 font-semibold">{option}</span>
                 </div>
               ))}
             </div>
@@ -164,15 +164,15 @@ const ReportPopover = ({ open, onOpenChange, postId }: ReportPopoverProps) => {
             <div className="flex items-center justify-between">
               <button 
                 onClick={handleBackToReport}
-                className="text-blue-700 hover:underline font-medium"
+                className={`px-8 py-2 rounded-full font-medium text-white bg-accent cursor-pointer`}
                 disabled={isSubmitting}
               >
-                Back to policies
+                Back
               </button>
               <button 
                 onClick={handleSubmit}
-                className={`px-8 py-3 rounded-full font-medium text-white ${
-                  selectedFeedback && !isSubmitting ? "bg-blue-700 hover:bg-blue-800" : "bg-blue-300 cursor-not-allowed"
+                className={`px-8 py-2 rounded-full font-medium text-white ${
+                  selectedFeedback && !isSubmitting ? "bg-accent cursor-pointer" : "bg-gray-400 cursor-not-allowed"
                 } transition-colors`}
                 disabled={!selectedFeedback || isSubmitting}
               >

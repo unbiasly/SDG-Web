@@ -4,7 +4,7 @@ export async function POST(req: NextRequest) {
     try {
         // Parse the JSON body
         const body = await req.json();
-        const { jwtToken, refreshToken } = body;
+        const { jwtToken, refreshToken, sessionId, userId } = body;
         
         // Create a new response
         const response = new NextResponse(
@@ -39,6 +39,16 @@ export async function POST(req: NextRequest) {
                 path: '/'
             });
         }
+        if (sessionId) {
+            response.cookies.set({
+                name: 'sessionId',
+                value: sessionId,
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
+                path: '/'
+        })}
         
         return response;
     } catch (error) {

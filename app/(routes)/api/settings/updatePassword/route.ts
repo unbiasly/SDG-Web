@@ -12,6 +12,8 @@ export async function POST(request: NextRequest) {
         status: 400,
         });
     }
+    console.log("newPassword", newPassword);
+    console.log("oldPassword", oldPassword);
     
     const response = await fetch(`${baseURL}/update-password`, {
         method: "POST",

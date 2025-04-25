@@ -1,6 +1,6 @@
 import { baseURL } from "@/service/app.api";
 import { cookies } from "next/headers";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
     const cookieStore = await cookies();
@@ -14,17 +14,12 @@ export async function GET() {
         },
     });
     const data = await response.json();
-
+    console.log("data", data);
     if (!response.ok) {
         return new Response(JSON.stringify(data), { status: response.status });
     }
 
-
-
-    
-
-
-    return new Response(JSON.stringify({ message: "Session data" }), { status: 200 });
+    return NextResponse.json(data);
 }
 
 

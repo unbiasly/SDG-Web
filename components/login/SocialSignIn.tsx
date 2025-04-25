@@ -63,8 +63,10 @@ const SocialSignIn: React.FC<SocialSignInProps> = ({ className }) => {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              jwtToken: data.jwtToken,
-              refreshToken: data.refreshToken
+                jwtToken: data.jwtToken,
+                refreshToken: data.refreshToken,
+                sessionId: data.sessionId,
+                userId: data.userId,
             }),
             credentials: 'include'
           });

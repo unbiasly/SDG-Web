@@ -2,12 +2,23 @@
 import ForgotPasswordForm from '@/components/login/ForgotPassword';
 import ImageSlider from '@/components/login/ImageSlider';
 import SignInForm from '@/components/login/SignInForm';
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation';
 
 const Page = () => {
+    const searchParams = useSearchParams();
     const [showForgotPassword, setShowForgotPassword] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
     const [animationClass, setAnimationClass] = useState("");
+  
+    useEffect(() => {
+      // Check if forgotPassword parameter exists in the URL
+      const forgotPassword = searchParams.get('forgotPassword');
+      if (forgotPassword === 'true') {
+        // Set state directly without animation
+        setShowForgotPassword(true);
+      }
+    }, [searchParams]);
   
     const handleForgotPassword = () => {
       setIsAnimating(true);

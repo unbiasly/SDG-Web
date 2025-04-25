@@ -26,6 +26,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className, onForgotPassword }) 
                     password,
                     device_id: 'web',
                     device_token: 'web',
+                    isSignin: true, 
                 }),
             }).then(res => res.json());
             if (response.jwtToken) {
@@ -36,7 +37,9 @@ const SignInForm: React.FC<SignInFormProps> = ({ className, onForgotPassword }) 
                     },
                     body: JSON.stringify({
                         jwtToken: response.jwtToken,
-                        refreshToken: response.refreshToken
+                        refreshToken: response.refreshToken,
+                        sessionId: response.sessionId,
+                        userId: response.userId,
                     }),
                     credentials: 'include' // Important for cookies to be sent/received
                 });

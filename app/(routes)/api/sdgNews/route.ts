@@ -5,12 +5,15 @@ import { NextRequest } from "next/server";
 
 
 export async function POST(req: NextRequest) {
+    const cookieStore = await cookies();
+    const jwtToken = cookieStore.get('jwtToken')?.value;
     const limit = 20;
 
     const { userId } = await req.json();
     const response = await fetch(`${baseURL}/sdg-news/?limit=${limit}&userId=${userId}`, {
         headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${jwtToken}`,
         }
     });
 

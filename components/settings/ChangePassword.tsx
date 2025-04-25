@@ -3,10 +3,9 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const ChangePassword = () => {
-  const router = useRouter();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -32,14 +31,14 @@ const ChangePassword = () => {
 
     try {
       // Replace with your API call
-      const response = await fetch('/api/user/change-password', {
+      const response = await fetch('/api/settings/updatePassword', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          currentPassword, 
-          newPassword 
+            oldPassword : currentPassword, 
+            newPassword 
         }),
       });
 
@@ -49,7 +48,7 @@ const ChangePassword = () => {
       }
 
       // Success - navigate back or show success message
-      router.back();
+      window.location.href = '/login';
     } catch (err: any) {
       setError(err.message || 'An error occurred while changing password');
     } finally {
@@ -59,21 +58,15 @@ const ChangePassword = () => {
 
   return (
     <div className="w-full mx-auto p-4">
-      <div className="flex items-center mb-6">
-        <Button 
-          variant="ghost" 
-          className="p-0 mr-4"
-        //   onClick={() => router.back()}
-        >
-          <ArrowLeft size={24} />
-        </Button>
+      <div className="flex items-center space-x-2 mb-6">
+            <ArrowLeft size={25} onClick={() => window.location.href = '/settings'} />
         <h1 className="text-2xl font-bold">Change your password</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* Current password */}
         <div className="space-y-2">
-          <label htmlFor="current-password" className="text-gray-700 block text-lg font-medium">
+          <label htmlFor="current-password" className="text-gray-700 block  font-medium">
             Current password
           </label>
           <Input
@@ -81,16 +74,16 @@ const ChangePassword = () => {
             type="password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            className="w-full h-14 rounded-md bg-gray-100"
+            className="w-full h-10 border-0 rounded-md bg-gray-100"
           />
-          <a href="#" className="text-blue-600 hover:underline block mt-1">
+          <Link href="/login?forgotPassword=true" className="text-accent hover:underline block mt-1">
             Forgot Password?
-          </a>
+          </Link>
         </div>
 
         {/* New password */}
         <div className="space-y-2">
-          <label htmlFor="new-password" className="text-gray-700 block text-lg font-medium">
+          <label htmlFor="new-password" className="text-gray-700 block  font-medium">
             New password
           </label>
           <Input
@@ -98,13 +91,13 @@ const ChangePassword = () => {
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full h-14 rounded-md bg-gray-100"
+            className="w-full h-10 rounded-md bg-gray-100"
           />
         </div>
 
         {/* Confirm password */}
         <div className="space-y-2">
-          <label htmlFor="confirm-password" className="text-gray-700 block text-lg font-medium">
+          <label htmlFor="confirm-password" className="text-gray-700 block  font-medium">
             Confirm password
           </label>
           <Input
@@ -112,12 +105,12 @@ const ChangePassword = () => {
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full h-14 rounded-md bg-gray-100"
+            className="w-full h-10 rounded-md bg-gray-100"
           />
         </div>
 
         {/* Information text */}
-        <p className="text-gray-700 text-sm">
+        <p className="text-black">
           Changing your password will log you out of all your active sessions
           except the one you're using at this time.
         </p>
@@ -134,7 +127,7 @@ const ChangePassword = () => {
           <Button 
             type="submit" 
             disabled={isLoading}
-            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-8 rounded-full"
+            className="bg-accent cursor-pointer hover:bg-gray-900 text-white py-3 px-8 rounded-full"
           >
             {isLoading ? 'Saving...' : 'Save'}
           </Button>

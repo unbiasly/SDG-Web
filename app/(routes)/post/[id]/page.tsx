@@ -19,7 +19,7 @@ const Page = () => {
     const getPost = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/getPosts/getPostDetails`, {
+            const response = await fetch(`/api/post/details`, {
                 method: 'POST',
                 body: JSON.stringify({ postId: id })
             });
@@ -86,6 +86,7 @@ const Page = () => {
                 <Link href="/" aria-label='back-button' className="mr-4">
                     <ArrowLeft size={20} />
                 </Link>
+                <h1 className="text-lg font-semibold">Post</h1>
             </div>
             <div className="w-full mx-auto mt-8 px-4">
                 <PostCard

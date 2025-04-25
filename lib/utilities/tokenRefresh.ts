@@ -1,13 +1,31 @@
 // Utility to handle token refreshing
 
 export function setupTokenRefresh() {
+  console.log('Setting up token refresh...');
   if (typeof window === 'undefined') return;
   
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', async () => {
+    // Don't wait for window load - this could delay registration
+    (async () => {
       try {
+        // Register service worker with proper update control
         const registration = await navigator.serviceWorker.register('/tokenRefresh-worker.js');
+        
         console.log('Token refresh service worker registered:', registration.scope);
+        
+        // Check if there's an update and handle it
+        registration.onupdatefound = () => {
+          const installingWorker = registration.installing;
+          if (installingWorker) {
+            installingWorker.onstatechange = () => {
+              if (installingWorker.state === 'installed') {
+                if (navigator.serviceWorker.controller) {
+                  console.log('New service worker installed and will activate on reload');
+                }
+              }
+            };
+          }
+        };
         
         // Listen for messages from the service worker
         navigator.serviceWorker.addEventListener('message', (event) => {
@@ -15,17 +33,27 @@ export function setupTokenRefresh() {
             console.log('Token was refreshed by service worker');
           }
         });
+        
+        // Ensure the service worker is activated
+        if (registration.active) {
+          // Force a token refresh to initialize the cycle
+          setTimeout(() => {
+            forceTokenRefresh();
+          }, 1000);
+        }
       } catch (error) {
         console.error('Service worker registration failed:', error);
       }
-    });
+    })();
   } else {
     console.warn('Service workers are not supported in this browser');
     
     // Fallback for browsers without service worker support
     setInterval(async () => {
       try {
-        await fetch('/api/refreshToken', {
+        // Use relative URL that will respect the deployed domain
+        const refreshEndpoint = new URL('/api/refreshToken', window.location.origin).toString();
+        await fetch(refreshEndpoint, {
           method: 'POST',
           credentials: 'include'
         });
@@ -39,7 +67,7 @@ export function setupTokenRefresh() {
 
 // Function to force a token refresh
 export async function forceTokenRefresh() {
-  if (navigator.serviceWorker.controller) {
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({
       type: 'FORCE_REFRESH'
     });

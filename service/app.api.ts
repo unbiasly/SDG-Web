@@ -33,10 +33,6 @@ const BackAPI = {
     
     postSocialLogin : (body: SocialAuthRequest) => fetchClient.post<ManualAuthResponse>(`${baseURL}/auth`, body),
 
-    fetchTokenResponse : async (body: RefreshRequest) => {
-        return fetchClient.post<RefreshResponse>(`${baseURL}/refresh-token`, body);
-    },
-
 };
 
 export default BackAPI;

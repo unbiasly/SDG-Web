@@ -32,9 +32,7 @@ async function refreshToken() {
     const response = await fetch('/api/refreshToken', {
       method: 'POST',
       credentials: 'include'
-    }).then(res => res.json())
-
-    console.log(response);
+    });
     
     if (response.ok) {
       const data = await response.json();

@@ -57,15 +57,11 @@ export function SocialPostDialog({ open, onOpenChange, avatar, name, handle, tim
       const newBookmarkState = !isBookmarkActive;
       setIsBookmarkActive(newBookmarkState);
       
-      const response = await fetch('/api/post/post-action', {
+      const response = await fetch(`/api/post/post-action/?post_id=${_id}&type=bookmark`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-            postId: _id,
-            actionType: 'bookmark', 
-        })
+        }
       });
       
       if (!response.ok) {

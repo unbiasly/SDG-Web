@@ -3,9 +3,16 @@ import { cookies } from "next/headers";
 import { baseURL } from "@/service/app.api";
 
 export async function GET(req: NextRequest) {
-    const cookieStore = await cookies();
-    const jwtToken = cookieStore.get('jwtToken')?.value;
+  const cookieStore = await cookies();
+  const jwtToken = cookieStore.get('jwtToken')?.value;
+
   try {
+    if (!jwtToken) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
     
     // Extract query parameters from the request URL
     const { searchParams } = new URL(req.url);
@@ -16,23 +23,6 @@ export async function GET(req: NextRequest) {
     const recentSearch = searchParams.get("recentSearch");
     const clearSearch = searchParams.get("clearSearch");
     
-    if (!jwtToken) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-
-    // Extract query parameters froqm the request URL
-    let queryString = `q=${q}`;
-        if (type) queryString += `&type=${type}`;
-        if (page) queryString += `&page=${page}`;
-        if (limit) queryString += `&limit=${limit}`;
-        if (recentSearch) queryString += `&recentSearch=${recentSearch}`;
-        if (clearSearch) queryString += `&clearSearch=${clearSearch}`;
-
-
     // Validate parameters based on the operation
     if (!recentSearch && !clearSearch && !q) {
       return NextResponse.json(
@@ -41,17 +31,39 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Construct API URL based on parameters
+    console.log(`Calling search API with params:`, { q, type, page, limit, recentSearch, clearSearch });
 
+    // Construct API URL using URLSearchParams for proper encoding
+    const apiParams = new URLSearchParams();
+    if (q) apiParams.append("q", q);
+    if (type) apiParams.append("type", type);
+    if (page) apiParams.append("page", page);
+    if (limit) apiParams.append("limit", limit);
+    if (recentSearch) apiParams.append("recentSearch", recentSearch);
+    if (clearSearch) apiParams.append("clearSearch", clearSearch);
+
+    const apiUrl = `${baseURL}/search?${apiParams.toString()}`;
+    console.log(`API URL: ${apiUrl}`);
 
     // Make API call
-    const response = await fetch(`${baseURL}/search/${queryString}`, {
+    const response = await fetch(apiUrl, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${jwtToken}`,
         "Content-Type": "application/json",
       }
     });
+
+    // Check content type before parsing
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const text = await response.text();
+      console.error("Non-JSON response:", text);
+      return NextResponse.json(
+        { success: false, message: "Received non-JSON response from API" },
+        { status: 500 }
+      );
+    }
 
     // Parse and return the response
     const data = await response.json();

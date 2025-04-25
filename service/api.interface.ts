@@ -280,6 +280,10 @@ export interface SDGVideoData {
     description?: string;
     status: string;
     type: string;
+    goal_id?: Array<{
+        _id: string;
+        name: string;
+    }>;
     createdAt: string;
     updatedAt: string;
     comments?: number;
@@ -367,4 +371,47 @@ export interface AnalyticsData {
   startDate: string;
   endDate: string;
   views: number;
+}
+export interface SearchResultResponse {
+    success: boolean;
+    data: {
+        news?: any[]; // Add type definition if you have a specific structure
+        users?: {
+            _id: string;
+            username: string;
+            name?: string;
+            profileImage?: string;
+            followerCount?: number;
+            isFollowing?: boolean | null;
+        }[];
+        video?: SDGVideoData[];
+        posts?: Post[];
+    };
+    pagination?: {
+        page: number;
+        limit: number;
+        type: string;
+    };
+}
+
+export interface SessionsResponse {
+    success: boolean;
+    data: {
+        currentSession: {
+            _id: string;
+            userId: string; 
+            deviceId?: string;
+            ipAddress: string;
+            userAgent: string;
+            loginTime: string;
+        };
+        otherSessions: {
+            _id: string;
+            userId: string;
+            deviceId?: string;
+            ipAddress: string;
+            userAgent: string;
+            loginTime: string;
+        }[];
+    }
 }
