@@ -43,7 +43,9 @@ export const SEARCH_RESULT_CATEGORIES = [
     {id: "companies", label: "Companies"},
     {id: "ministries", label: "Videos"},
     {id: "news", label: "News"},
-    {id: "society", label: "Society"}
+    {id: "society", label: "Society"},
+    {id: "podcast", label: "Podcast"},
+    {id: "schemes", label: "Schemes"},
 ]
 
 export const PROFILE_OPTIONS = [
