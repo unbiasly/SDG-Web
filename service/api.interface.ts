@@ -107,7 +107,7 @@ export interface UserResponse {
 }
 
 export interface UserDetailsRequest {
-    username: string;
+    username?: string;
     name: string;
     location: string;
     gender: string;

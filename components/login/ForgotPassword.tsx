@@ -1,18 +1,25 @@
-import React, { useState } from "react";
+'use client'
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+// import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, CheckCircle2 } from "lucide-react";
+import PasswordStrengthMeter from "./PasswordStrengthMeter";
+import Link from "next/link";
+import { serialize } from "v8";
+import { set } from "date-fns";
 
-interface ForgotPasswordFormProps {
-  onBackToSignIn: () => void;
-}
-
-const ForgotPasswordForm = ({ onBackToSignIn }: ForgotPasswordFormProps) => {
+const ForgotPassword = () => {
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-//   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isResend, setIsResend] = useState(false);
+//   const [isSuccess, setIsSuccess] = useState(false);
+  
 
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
@@ -21,7 +28,7 @@ const ForgotPasswordForm = ({ onBackToSignIn }: ForgotPasswordFormProps) => {
     }
     
     try {
-        setLoading(true)
+        setIsLoading(true)
       const response = await fetch('/login/api/forgotPassword', {
         method: 'POST',
         headers: {
@@ -31,7 +38,7 @@ const ForgotPasswordForm = ({ onBackToSignIn }: ForgotPasswordFormProps) => {
       });
       
       const data = await response.json();
-      setLoading(false);
+      setIsLoading(false);
     //   setIsSubmitted(true);
       
       if (!data.success) {
@@ -44,90 +51,81 @@ const ForgotPasswordForm = ({ onBackToSignIn }: ForgotPasswordFormProps) => {
       return;
     }
 
-    toast.success("Recovery email sent!");
+    toast.success(isResend ? "Recovery email resent!" : "Recovery email sent!");
     // Handle password reset logic here
   };
 
-  const handleResend = () => {
+  const handleResend = (e: React.MouseEvent) => {   
+    e.preventDefault();
     if (!email) {
       toast.error("Please enter your email");
       return;
     }
-    toast.success("Recovery email resent!");
-    // Handle resend logic here
+    if (!validateEmail(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    handleSubmit(e as unknown as React.FormEvent);
+    setIsResend(true);
   };
 
-  // Loading spinner component
-  const LoadingSpinner = () => (
-    <div className="flex justify-center items-center">
-      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-      <span className="ml-2">Loading...</span>
-    </div>
-  );
+
 
   return (
-    <div className="w-full max-w-md space-y-6 p-2">
-      <div className="flex items-center gap-2 mb-6">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onBackToSignIn}
-          className="rounded-full"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-3xl font-bold">Reset Password</h1>
-      </div>
-
-      <div className="text-left mb-4">
-        <p className="text-muted-foreground">
-          Sign In to get the best experience of our app.
-          <br />
-          Never miss update turn on notifications.
-        </p>
+    <form onSubmit={handleSubmit} className="max-w-sm space-y-6">
+      <div className="space-y-2 text-center">
+        <h1 className="text-4xl font-bold tracking-tight text-gray-900">Forgot Password</h1>
+        <p className="text-black ">Sign In to get the best experience of our app. Never miss update turn on notifications.</p>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Input
-            type="email"
-            placeholder="Email*"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <Mail className="h-5 w-5 text-gray-400" />
+            </div>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="pl-10 rounded-lg border border-gray-400 bg-white py-6"
+              required
+            />
+          </div>
         </div>
 
-        <p className="text-sm text-muted-foreground">
-          A recovery email will be sent to you, follow the steps to reset your password to gain access to your account.
-        </p>
+        <p className="text-[#a5a5a5] font-medium">A recovery email will be sent to you, follow to steps to reset your password to gain access to your account.</p>
 
-        <Button
-          type="submit"
-          onClick={handleSubmit}
-          className="w-full bg-[#19486A] text-xl  py-6 hover:scale-105 transition-all duration-300 cursor-pointer rounded-full text-white"
-        >
-          {loading ? <LoadingSpinner /> : "Continue"}
-        </Button>
       </div>
 
-      {/* {isSubmitted && (
-        <div className="mt-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            Not received any mail?{" "}
-            <button
-              type="button"
-              onClick={handleResend}
-              className="text-blue-300 hover:underline font-semibold"
-            >
-              Resend again
-            </button>
-          </p>
-        </div>
-      )} */}
-    </div>
+      <Button
+        type="submit"
+        className="w-full rounded-full bg-accent hover:bg-[#1A2530] text-white transition-all shadow-sm"
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <div className="flex items-center justify-center">
+            <div className="animate-spin h-5 w-5 mr-2 border-2 border-white border-t-transparent rounded-full"></div>
+            Resetting Password...
+          </div>
+        ) : (
+          "Continue"
+        )}
+      </Button>
+
+      <div className="text-center">
+        <p className="text-sm text-gray-500">
+          Not received any mail?{" "}
+          <button onClick={handleResend}  className="text-gray-500 hover:text-accent font-medium cursor-pointer hover:underline">
+            Resend again
+          </button>
+        </p>
+      </div>
+    </form>
   );
 };
 
-export default ForgotPasswordForm;
+export default ForgotPassword;

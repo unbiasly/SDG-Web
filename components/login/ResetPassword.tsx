@@ -2,14 +2,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock, CheckCircle2 } from "lucide-react";
 import PasswordStrengthMeter from "./PasswordStrengthMeter";
 import Link from "next/link";
 
-const ResetPassword = () => {
-  const [email, setEmail] = useState("");
+const ResetPassword = ({ token, email }: {
+    token: string | null;
+    email: string | null;
+}) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -17,7 +18,6 @@ const ResetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   
-
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -26,24 +26,14 @@ const ResetPassword = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
-  const validateEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
   const validatePassword = (password: string) => {
     return password.length >= 8;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateEmail(email)) {
-      toast.error("Invalid email", {
-        description: "Please enter a valid email address."
-      });
-      return;
-    }
-
+    // Validate password requirements
     if (!validatePassword(password)) {
       toast.error("Password too short", {
         description: "Password must be at least 8 characters long."
@@ -51,6 +41,7 @@ const ResetPassword = () => {
       return;
     }
 
+    // Validate password confirmation
     if (password !== confirmPassword) {
       toast.error("Passwords don't match", {
         description: "Your password and confirmation password must match."
@@ -58,28 +49,55 @@ const ResetPassword = () => {
       return;
     }
 
+    // Validate token and email
+    if (!token || !email) {
+      toast.error("Invalid token or email", {
+        description: "Please provide a valid token and email."
+      });
+      return;
+    }
+
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSuccess(true);
-      
-      toast.success("Password reset successful", {
-        description: "Your password has been reset successfully."
+    try {
+      // Make API call to reset password
+      const response = await fetch("/api/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ token, email, newPassword: password })
       });
-    }, 1500);
+
+      const data = await response.json();
+
+      if (data.success) {
+        setIsSuccess(true);
+        toast.success("Password reset successful", {
+          description: "Your password has been reset successfully."
+        });
+      } else {
+        toast.error(data.message || "Failed to reset password");
+      }
+    } catch (error) {
+      toast.error("An error occurred", {
+        description: "Unable to reset password. Please try again later."
+      });
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSuccess) {
     return (
-      <div className="form-card bg-[#F0EBFF] text-center py-16">
+      <div className="text-center py-16">
         <div className="flex flex-col items-center justify-center space-y-4">
-          <div className="rounded-full bg-[#E6F7E9] p-3 inline-flex">
-            <CheckCircle2 className="h-12 w-12 text-[#34C759]" />
+          <div className="rounded-full p-3 inline-flex">
+            <CheckCircle2 className="h-12 w-12 text-accent" />
           </div>
           <h2 className="text-2xl font-bold text-gray-800">Password Reset Successful</h2>
-          <p className="text-gray-600 max-w-xs mx-auto">
+          <p className="text-gray-600 max-w-sm mx-auto">
             Your password has been updated successfully. You can now login with your new credentials.
           </p>
           <Button 
@@ -94,34 +112,16 @@ const ResetPassword = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="form-card space-y-6">
+    <form onSubmit={handleSubmit} className="min-w-sm space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Reset Password</h1>
-        <p className="text-gray-500">Enter your email and create a new password</p>
+        <h1 className="text-4xl font-bold tracking-tight text-gray-900">Reset Password</h1>
+        <p className="text-black ">Create your new password</p>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <label htmlFor="email">Email</label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400" />
-            </div>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 bg-white"
-              required
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
           <label htmlFor="password">New Password</label>
-          <div className="relative">
+          <div className="relative ">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <Lock className="h-5 w-5 text-gray-400" />
             </div>
@@ -131,7 +131,7 @@ const ResetPassword = () => {
               placeholder="Create a secure password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 bg-white"
+              className="px-10 py-6 rounded-lg border border-gray-500 bg-white"
               required
             />
             <button
@@ -161,7 +161,7 @@ const ResetPassword = () => {
               placeholder="Confirm your new password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className={`pl-10 bg-white pr-10 ${
+              className={`px-10 py-6 rounded-lg border border-gray-500 bg-white ${
                 confirmPassword && password !== confirmPassword
                   ? "border-red-500 focus:ring-red-500"
                   : ""
@@ -188,7 +188,7 @@ const ResetPassword = () => {
 
       <Button
         type="submit"
-        className="w-full bg-accent hover:bg-[#1A2530] text-white transition-all shadow-sm"
+        className="w-full rounded-full bg-accent hover:bg-[#1A2530] text-white transition-all shadow-sm"
         disabled={isLoading}
       >
         {isLoading ? (

@@ -5,8 +5,8 @@ import { NextRequest } from 'next/server';
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        
-        const response = await fetch(`${baseURL}/forgot-password`, {
+        const { token, email, newPassword } = body;
+        const response = await fetch(`${baseURL}/reset-password`, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
         return Response.json(data);
     } catch (error) {
-        console.error('Forgot Password error:', error);
+        console.error('Reset Password error:', error);
         return Response.json(
             {
                 success: false,

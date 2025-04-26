@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Define paths that don't require authentication
-const publicPaths = ['/login', '/register', '/forgot-password'];
+const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/terms-of-service', '/privacy-policy'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

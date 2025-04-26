@@ -1,31 +1,9 @@
-'use client';
-
-import ResetPassword from '@/components/login/ResetPassword'
+import ForgotPassword from '@/components/login/ForgotPassword'
 import Image from 'next/image'
 import Link from 'next/link'
-import React, { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation';
+import React from 'react'
 
-const Page = () => {
-  const searchParams = useSearchParams();
-  const [resetParams, setResetParams] = useState<{
-    token: string | null;
-    email: string | null;
-  }>({
-    token: null,
-    email: null,
-  });
-
-  useEffect(() => {
-    // Extract token and email from URL parameters
-    const token = searchParams.get('token');
-    const email = searchParams.get('email');
-    
-    setResetParams({ token, email });
-  }, [searchParams]);
-
-  console.log('Reset Params:', resetParams);
-
+const page = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4">
         <div className="w-full max-w-2xl m-30 h-full relative">
@@ -36,8 +14,8 @@ const Page = () => {
                 </div>
               
               <div className="flex flex-col items-center justify-center py-6">
-                {/* Pass token and email to ResetPassword component */}
-                <ResetPassword token={resetParams.token} email={resetParams.email} />
+                
+              <ForgotPassword />
               </div>
               <div className="flex h-10 mt-5 w-full">
                 <div className="flex-1 bg-[#E5243B]"></div>
@@ -64,4 +42,4 @@ const Page = () => {
   )
 }
 
-export default Page
+export default page

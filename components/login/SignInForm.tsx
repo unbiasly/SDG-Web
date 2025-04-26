@@ -3,13 +3,13 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import SocialSignIn from './SocialSignIn';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 interface SignInFormProps {
     className?: string;
-    onForgotPassword: () => void;
 }
 
-const SignInForm: React.FC<SignInFormProps> = ({ className, onForgotPassword }) => {
+const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -89,29 +89,28 @@ const SignInForm: React.FC<SignInFormProps> = ({ className, onForgotPassword }) 
         </div>
         
         <div className="flex justify-end">
-          <span 
+          <Link href={"/forgot-password"} 
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              onForgotPassword();
             }} 
             className="text-sm text-gray-500 hover:text-gray-700 underline cursor-pointer transition-colors"
           >
             Forgot Password?
-          </span>
+          </Link>
         </div>
         
         <button
           type="submit"
           className="w-full cursor-pointer bg-accent text-white font-medium py-3 px-4 rounded-full hover:bg-accent/80 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
         >
-          Sign In / Sign Up
+          Sign In
         </button>
       </form>
       
       <SocialSignIn className="mt-8 animate-slide-up" />
       
-      {/* <div className=" text-center animate-slide-up">
+      <div className=" text-center animate-slide-up">
 
         <a 
           href="#" 
@@ -119,7 +118,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className, onForgotPassword }) 
         >
           Sign up
         </a>
-      </div> */}
+      </div>
     </div>
   );
 };

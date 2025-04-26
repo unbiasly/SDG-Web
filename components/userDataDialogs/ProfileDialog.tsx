@@ -22,7 +22,7 @@ export const UserProfileDialog = ({
   const { user } = useUser();
   const [profileData, setProfileData] = useState<UserDetailsRequest>({
     name: user?.name || "",
-    username: user?.username || "",
+    // username: user?.username || "",
     location: user?.location || "",
     gender: user?.gender || "",
     dob: user?.dob ? new Date(user.dob) : new Date(), // Default to current date if undefined
@@ -77,7 +77,7 @@ export const UserProfileDialog = ({
       const formData = new FormData();
       // Append all necessary fields to FormData
       formData.append('name', `${profileData.fName} ${profileData.lName}`.trim());
-      formData.append('username', profileData.username);
+    //   formData.append('username', profileData.username);
       formData.append('location', profileData.location || '');
       formData.append('gender', profileData.gender || '');
       formData.append('dob', profileData.dob ? profileData.dob.toISOString() : ''); // Convert date to string
@@ -166,7 +166,7 @@ export const UserProfileDialog = ({
             />
           </div>
           {/* Username */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <label htmlFor="username" className="text-sm font-medium">
               Username<span className="text-red-500">*</span>
             </label>
@@ -178,7 +178,7 @@ export const UserProfileDialog = ({
               onChange={handleInputChange}
               required
             />
-          </div>
+          </div> */}
         {/* Headline */}
         <div className="space-y-2">
             <label htmlFor="headline" className="text-sm font-medium">
