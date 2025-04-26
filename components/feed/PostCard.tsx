@@ -54,6 +54,8 @@ export const PostCard: React.FC<PostCardProps> = ({
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [localLikesCount, setLocalLikesCount] = useState(likesCount);
     const [isLocalLiked, setIsLocalLiked] = useState(isLiked);
+    // const [isRepostActive, setIsRepostActive] = useState(isReposted);
+    const [localRepostsCount, setLocalRepostsCount] = useState(repostsCount);
     
     // PostMenu state
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -72,7 +74,9 @@ export const PostCard: React.FC<PostCardProps> = ({
         setIsActive(isLiked);
         setIsLocalLiked(isLiked);
         setLocalLikesCount(likesCount);
-    }, [isLiked, likesCount]);
+        // setIsRepostActive(isReposted);
+        setLocalRepostsCount(repostsCount);
+    }, [isLiked, likesCount, isReposted, repostsCount]);
 
     const toggleComments = () => {
         setIsCommentsOpen(!isCommentsOpen);
@@ -119,9 +123,11 @@ export const PostCard: React.FC<PostCardProps> = ({
     const handleRepost = async () => {
         try {
             // Optimistically update UI
-            const newRepostState = !isActive;
-            setIsActive(newRepostState);
-            setLocalLikesCount(prev => newRepostState ? prev + 1 : prev - 1);const response = await fetch(`/api/post/post-action`, {
+            // const newRepostState = !isRepostActive;
+            // setIsRepostActive(newRepostState);
+            // setLocalRepostsCount(prev => newRepostState ? prev + 1 : prev - 1);
+            
+            const response = await fetch(`/api/post/post-action`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -131,18 +137,20 @@ export const PostCard: React.FC<PostCardProps> = ({
                     postId: _id
                 })
             });
+            
             if (!response.ok) {
                 // Revert changes if API call fails
-                setIsActive(!newRepostState);
-                setLocalLikesCount(prev => newRepostState ? prev - 1 : prev + 1);
+                // setIsRepostActive(!newRepostState);
+                // setLocalRepostsCount(prev => newRepostState ? prev - 1 : prev + 1);
                 throw new Error('Failed to repost');
             }
+            
             // Get updated data from API response
             const data = await response.json();
             if (data.repostsCount !== undefined) {
-                setLocalLikesCount(data.repostsCount);
+                setLocalRepostsCount(data.repostsCount);
             }
-            window.location.reload();
+            
         } catch (error) {
             console.error('Error reposting:', error);
         }
@@ -369,7 +377,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         {[
             { icon: <ThumbsUp size={18}  className={isActive ? "fill-current font-bold" : "text-gray-500"} />, label: "Like", onClick: handleLike, isActive: isActive },
             { icon: <MessageCircle size={18} className={isCommentsOpen ? "fill-current" : "text-gray-500"} />, label: "Comment", onClick: toggleComments, isActive: isCommentsOpen },
-            { icon: <Repeat2 size={18}  />, label: "Repost", onClick: handleRepost, isActive: false },
+            { icon: <Repeat2 size={18} className={ "text-gray-500"} />, label: "Repost", onClick: handleRepost, },
             //   { icon: <Share2 size={18} className="text-gray-500" />, label: "Share", onClick: handleShare, isActive: false }
         ].map((action, index) => (
             <button 

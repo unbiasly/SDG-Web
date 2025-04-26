@@ -3,47 +3,61 @@ import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 
 export async function PATCH(req: NextRequest) {
-    const cookieStore = await cookies(); // Ensure to await the promise
+    const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
-    const { postId, actionType } = await req.json();
-
+    
+    // Parse the request body once
+    const requestBody = await req.json();
+    const { postId, actionType, comment, shareData } = requestBody;
 
     try {
-        const body = (actionType === 'comment' || actionType === 'share') 
-            ? await req.json() : undefined; // No body for other action types
-
+        // Prepare the body based on action type
+        let bodyToSend = {};
+        
+        if (actionType === 'comment') {
+            bodyToSend = { 
+                comment: requestBody.comment 
+            };
+        } else if (actionType === 'share') {
+            bodyToSend = { 
+                shareData: requestBody.shareData 
+            };
+        }
+        
         const response = await fetch(`${baseURL}/post-action/${postId}/${actionType}`, {
             method: 'PATCH',
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(body), // Pass body only if it's defined
+            body: Object.keys(bodyToSend).length > 0 ? JSON.stringify(bodyToSend) : undefined,
         });
         
-        // if (!response.ok) {
-        //     const errorText = await response.text(); // Get the response text for better error handling
-        //     throw new Error(`Failed to fetch posts: ${response.status} ${response.statusText} - ${errorText}`);
-        // }
+        if (!response.ok) {
+            const errorText = await response.text();
+            return Response.json(
+                { error: `Server responded with ${response.status}: ${errorText}` }, 
+                { status: response.status }
+            );
+        }
         
         const data = await response.json();
-        console.log('Posts data:', data);
+        console.log('Action response:', data);
         
         return Response.json(data);
     } catch (error) {
-        console.error("Error fetching posts:", error);
-        return Response.json({ error: "Failed to fetch posts" }, { status: 500 });
+        console.error("Error performing post action:", error);
+        return Response.json({ error: "Failed to perform action on post" }, { status: 500 });
     }
 }
 
 export async function POST(req: NextRequest) {
-    const cookieStore = await cookies(); // Ensure to await the promise
+    const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
     const url = new URL(req.url);
     const limit = url.searchParams.get('limit') || '30';
     const cursor = url.searchParams.get('cursor');
     const { postId, actionType } = await req.json();
-
 
     try {
         const response = await fetch(`${baseURL}/post-action/${postId}/${actionType}?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`, {
@@ -53,6 +67,14 @@ export async function POST(req: NextRequest) {
                 'Content-Type': 'application/json'
             },
         });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            return Response.json(
+                { error: `Server responded with ${response.status}: ${errorText}` }, 
+                { status: response.status }
+            );
+        }
         
         const data = await response.json();
         console.log('Comments data:', data);

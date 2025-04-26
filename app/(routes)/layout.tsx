@@ -1,6 +1,5 @@
 "use client"
 import "../globals.css";
-import Logo from '@/public/Logo.svg';
 import { UserSidebar } from "@/components/feed/UserProfile";
 import { TrendingSection } from "@/components/feed/TrendingNow";
 import Image from "next/image";
@@ -11,6 +10,7 @@ import { fetchUserFailure, fetchUserStart, fetchUserSuccess, setFallbackColor } 
 import Link from "next/link";
 import { getRandomColor } from "@/lib/utilities/generateColor";
 import SearchBar from "@/components/feed/SearchBar";
+import { setupAPIInterceptor } from "@/lib/utilities/interceptor";
 
 export default function RootLayout({
   children,
@@ -22,6 +22,7 @@ export default function RootLayout({
 
     useEffect(() => {
         // Set up the token refresh service worker
+        setupAPIInterceptor();
         fetchUser();
         // setupTokenRefresh();
     }, []);
@@ -35,7 +36,7 @@ export default function RootLayout({
           
           if (!response.ok) {
             // If unauthorized, handle it
-            if (response.status === 401) {
+            if (response.status === 401 || response.status === 403) {
               dispatch(fetchUserFailure('Unauthorized'));
               window.location.href = '/login';
               return null;
@@ -62,16 +63,17 @@ export default function RootLayout({
       <main className="flex-1 flex overflow-y-auto  p-3 gap-6 max-container">
         <aside className="hidden xl:block space-y-3 sticky h-fit">
             <Link href='/' className="flex justify-center items-center gap-2 px-2">    
-                <Image src={Logo} alt='' width={40} height={40}  />
+                <Image src='/Logo.svg' alt='SDG Logo' width={40} height={40}  />
                 <h1 className='text-xl font-bold'>The SDG Story</h1>
             </Link>
             <UserSidebar />
         </aside>
-        {children}
-    <aside className="hidden xl:block sticky space-y-3 ">
-    <SearchBar />
-        <TrendingSection />
-    </aside>
+            {children}
+        <aside className="hidden xl:block sticky space-y-3 ">
+            <SearchBar />
+            <TrendingSection />
+        </aside>
     </main>
   );
 }
+ 

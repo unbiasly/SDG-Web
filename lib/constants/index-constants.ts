@@ -40,10 +40,14 @@ export const BOOKMARKS_TABS = [
 export const SEARCH_RESULT_CATEGORIES = [
     {id: "all", label: "All"},
     {id: "people", label: "People"},
-    {id: "companies", label: "Companies"},
-    {id: "ministries", label: "Videos"},
+    {id: "posts", label: "Posts"},
     {id: "news", label: "News"},
-    {id: "society", label: "Society"}
+    {id: "videos", label: "Videos"},
+    // {id: "ministries", label: "Ministries"},
+    // {id: "company", label: "Company"},
+    // {id: "society", label: "Society"},
+    // {id: "podcast", label: "Podcast"}
+    
 ]
 
 export const PROFILE_OPTIONS = [
@@ -60,7 +64,7 @@ export const PROFILE_OPTIONS = [
   // {route: "/internship", label: "Internship", icon: "/icons/id-card.svg"},
   // {route: "/job", label: "Job", icon: "/icons/briefcase-business.svg"},
 //   {route: "/scheme", label: "Scheme Search", icon: "/icons/chart-no-axes-gantt.svg"},
-  {route: "/notifications", label: "Notifications", icon: "/icons/bell-ring.svg"},
+//   {route: "/notifications", label: "Notifications", icon: "/icons/bell-ring.svg"},
   {
     icon: '/icons/circle-user-round.svg',
     label: 'Profile',

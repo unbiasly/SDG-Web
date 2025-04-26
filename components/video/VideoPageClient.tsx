@@ -242,11 +242,11 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                                     text: isBookmarked ? "Saved" : "Save",
                                     onClick: handleBookmarkToggle 
                                 },
-                                { 
-                                    icon: <Share2 className="w-5 h-5" />,
-                                    text: "Share",
-                                    onClick: () => {} 
-                                }
+                                // { 
+                                //     icon: <Share2 className="w-5 h-5" />,
+                                //     text: "Share",
+                                //     onClick: () => {} 
+                                // }
                             ].map((item, index) => (
                                 <Button key={index} variant="ghost" className="flex items-center p-0 gap-2" onClick={item.onClick}>
                                     {item.icon}

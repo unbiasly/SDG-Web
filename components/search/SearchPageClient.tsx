@@ -6,6 +6,7 @@ import PersonCard, { User } from '../profile/PersonCard';
 import { ArrowLeft, Search } from 'lucide-react';
 import { Post, SearchResultResponse, SDGVideoData } from '@/service/api.interface';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 const SearchPageClient = ({ q }: { q: string }) => {
     const [searchQuery, setSearchQuery] = useState(q);
@@ -174,38 +175,32 @@ const SearchPageClient = ({ q }: { q: string }) => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-gray-300 mb-4">
-            <div className="flex w-full justify-evenly">
-                {SEARCH_RESULT_CATEGORIES.map((tab, index) => (
-                    <React.Fragment key={index}>
-                        <div className={`py-2 ${
-                            activeTab === tab 
-                                ? 'border-b-2 border-b-accent text-accent font-bold' 
-                                : 'border-b-2 text-gray-400 border-b-transparent'
-                        }`}>
+        
+        <div className="flex space-x-2 overflow-x-auto p-2 justify-center">
+                        {SEARCH_RESULT_CATEGORIES.map((tab, index) => (
                             <button
-                                className="flex cursor-pointer justify-center text-xl"
+                                key={tab.id}
                                 onClick={() => setActiveTab(tab)}
+                                className={cn(
+                                    "px-4 py-1 rounded-full cursor-pointer text-lg font-semibold whitespace-nowrap",
+                                    activeTab === tab
+                                    ? "bg-accent text-white"
+                                    : "bg-white text-accent border border-accent"
+                                )}
                             >
                                 {tab.label}
                             </button>
-                        </div>
-                        {index < SEARCH_RESULT_CATEGORIES.length - 1 && (
-                            <div className="my-2 border-r border-l border-gray-300 rounded-full" />
-                        )}
-                    </React.Fragment>
-                ))}
-            </div>
-        </div>
+                        ))}
+                    </div>
         
         {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto py-2">
             {activeTab === SEARCH_RESULT_CATEGORIES[0] && (
-                <div className="mx-auto py-8 space-y-12">
+                <div className="mx-auto  space-y-12">
                     {/* People Section */}
-                    <section>
+                    <section className='border px-5 py-6 rounded-2xl border-gray-300'>
                         <h2 className="text-accent text-2xl font-bold mb-6">People</h2>
-                        <div className="space-y-4">
+                        <div className="space-y-4 ">
                             {users.length > 0 ? (
                                 users.map(user => (
                                     <PersonCard
@@ -222,7 +217,7 @@ const SearchPageClient = ({ q }: { q: string }) => {
                     </section>
 
                     {/* Posts Section */}
-                    <section>
+                    <section className='border p-5 py-6 rounded-2xl border-gray-300'>
                         <h2 className="text-accent text-2xl font-bold mb-6">Posts</h2>
                         <div className="space-y-4">
                             {posts.length > 0 ? (
@@ -234,7 +229,7 @@ const SearchPageClient = ({ q }: { q: string }) => {
                     </section>
 
                     {/* News Section */}
-                    <section>
+                    <section className='border p-5 py-6 rounded-2xl border-gray-300'>
                         <h2 className="text-accent text-2xl font-bold mb-6">News</h2>
                         <div className="space-y-4">
                             {articles.length > 0 ? (
@@ -251,7 +246,7 @@ const SearchPageClient = ({ q }: { q: string }) => {
                     </section>
 
                     {/* Videos Section */}
-                    <section>
+                    <section className='border p-5 py-6 rounded-2xl border-gray-300'>
                         <h2 className="text-accent text-2xl font-bold mb-6">Videos</h2>
                         <div className="space-y-4">
                             {videos.length > 0 ? (
@@ -273,10 +268,64 @@ const SearchPageClient = ({ q }: { q: string }) => {
                 </div>
             )}
             {activeTab === SEARCH_RESULT_CATEGORIES[1] && (
-                <div>
-                    {/* Content for second tab */}
-                    <p className="text-gray-500">No results found for "{searchQuery}" in {activeTab.label}</p>
-                </div>
+                <section className='border px-5 py-6 rounded-2xl border-gray-300'>
+                    <h2 className="text-accent text-2xl font-bold mb-6">People</h2>
+                    <div className="space-y-4 ">
+                        {users.length > 0 ? (
+                            users.map(user => (
+                                <PersonCard
+                                    key={user._id}
+                                    user={user}
+                                    handleFollowToggle={handleFollowToggle}
+                                    followMutation={followMutation}
+                                />
+                            ))
+                        ) : (
+                            <p className="text-gray-500">No people found matching "{searchQuery}"</p>
+                        )}
+                    </div>
+                </section>
+            )}
+            {activeTab === SEARCH_RESULT_CATEGORIES[2] && (
+                <section className='border p-5 py-6 rounded-2xl border-gray-300'>
+                    <h2 className="text-accent text-2xl font-bold mb-6">Posts</h2>
+                    <div className="space-y-4">
+                        {posts.length > 0 ? (
+                            posts.map(post => renderPostItem(post))
+                        ) : (
+                            <p className="text-gray-500">No posts found matching "{searchQuery}"</p>
+                        )}
+                    </div>
+                </section>
+            )}
+            {activeTab === SEARCH_RESULT_CATEGORIES[3] && (
+                <section className='border p-5 py-6 rounded-2xl border-gray-300'>
+                    <h2 className="text-accent text-2xl font-bold mb-6">News</h2>
+                    <div className="space-y-4">
+                        {articles.length > 0 ? (
+                            articles.map(article => (
+                                <ArticleCard
+                                    key={article._id}
+                                    article={article}
+                                />
+                            ))
+                        ) : (
+                            <p className="text-gray-500">No news found matching "{searchQuery}"</p>
+                        )}
+                    </div>
+                </section>
+            )}
+            {activeTab === SEARCH_RESULT_CATEGORIES[4] && (
+                <section className='border p-5 py-6 rounded-2xl border-gray-300'>
+                    <h2 className="text-accent text-2xl font-bold mb-6">Videos</h2>
+                    <div className="space-y-4">
+                        {videos.length > 0 ? (
+                            videos.map(video => renderVideoItem(video))
+                        ) : (
+                            <p className="text-gray-500">No videos found matching "{searchQuery}"</p>
+                        )}
+                    </div>
+                </section>
             )}
             {/* Add similar blocks for other tabs */}
         </div>

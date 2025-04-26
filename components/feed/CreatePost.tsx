@@ -157,7 +157,7 @@ const CreatePost = () => {
               
               <div className="flex flex-col">
                 <span className="font-semibold text-xl">{user?.name || `@${user?.username}`}</span>
-                <button
+                {/* <button
                   className="flex w-fit cursor-pointer items-center gap-1 border-gray-500 border text-sm text-gray-600 hover:bg-gray-100 rounded-full px-4 py-1"
                   onClick={() => {
                     const nextVisibility = visibility === 'Public' ? 'Private' : 'Public';
@@ -168,7 +168,7 @@ const CreatePost = () => {
                   <Globe className="h-4 w-4" />
                   <span>{visibility}</span>
                   <ChevronDown className="h-4 w-4" />
-                </button>
+                </button> */}
               </div>
             </div>
             

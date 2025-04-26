@@ -34,18 +34,96 @@ interface SocialPostDialogProps {
   userId: string;
 }
 
-export function SocialPostDialog({ open, onOpenChange, avatar, name, handle, time, _id, isVerified, content, isLiked, imageUrl, likesCount, commentsCount, repostsCount, comments, isBookmarked, userId }: SocialPostDialogProps) {
+export function SocialPostDialog({ open, onOpenChange, avatar, name, handle, time, _id, content, isLiked, imageUrl, likesCount, commentsCount, repostsCount, comments, isBookmarked, userId }: SocialPostDialogProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isActive, setIsActive] = useState(isLiked);
   const [reportOpen, setReportOpen] = useState(false);
   const [editPostOpen, setEditPostOpen] = useState(false);
   const [deletePostOpen, setDeletePostOpen] = useState(false);
   const [isBookmarkActive, setIsBookmarkActive] = useState(isBookmarked);
+  const [localLikesCount, setLocalLikesCount] = useState(likesCount);
+  const [isLocalLiked, setIsLocalLiked] = useState(isLiked);
+  const [isRepostActive, setIsRepostActive] = useState(false);
+  const [localRepostsCount, setLocalRepostsCount] = useState(repostsCount);
   
   const { user } = useUser();
   const currentUserId = user?._id;
   
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
+
+  const handleLike = async () => {
+    try {
+        // Optimistically update UI
+        const newLikedState = !isLocalLiked;
+        setIsActive(newLikedState);
+        setIsLocalLiked(newLikedState);
+        setLocalLikesCount(prev => newLikedState ? prev + 1 : prev - 1);
+        
+        const response = await fetch(`/api/post/post-action`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                actionType: 'like',
+                postId: _id
+            })
+        });
+        
+        if (!response.ok) {
+            // Revert changes if API call fails
+            setIsActive(isLocalLiked);
+            setIsLocalLiked(!newLikedState);
+            setLocalLikesCount(prev => newLikedState ? prev - 1 : prev + 1);
+            throw new Error('Failed to like post');
+        }
+        
+        // Get updated data from API response
+        const data = await response.json();
+        if (data.likesCount !== undefined) {
+            setLocalLikesCount(data.likesCount);
+        }
+    } catch (error) {
+        console.error('Error liking post:', error);
+    }
+  }
+
+  const handleRepost = async () => {
+    try {
+        // Optimistically update UI
+        const newRepostState = !isRepostActive;
+        setIsRepostActive(newRepostState);
+        setLocalRepostsCount(prev => newRepostState ? prev + 1 : prev - 1);
+        
+        const response = await fetch(`/api/post/post-action`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                actionType: 'repost',
+                postId: _id
+            })
+        });
+        
+        if (!response.ok) {
+            // Revert changes if API call fails
+            setIsRepostActive(!newRepostState);
+            setLocalRepostsCount(prev => newRepostState ? prev - 1 : prev + 1);
+            throw new Error('Failed to repost');
+        }
+        
+        // Get updated data from API response
+        const data = await response.json();
+        if (data.repostsCount !== undefined) {
+            setLocalRepostsCount(data.repostsCount);
+        }
+        
+    } catch (error) {
+        console.error('Error reposting:', error);
+    }
+  }
 
   const handleReportClick = () => {
     setIsMenuOpen(false);
@@ -57,11 +135,15 @@ export function SocialPostDialog({ open, onOpenChange, avatar, name, handle, tim
       const newBookmarkState = !isBookmarkActive;
       setIsBookmarkActive(newBookmarkState);
       
-      const response = await fetch(`/api/post/post-action/?post_id=${_id}&type=bookmark`, {
+      const response = await fetch(`/api/post/post-action`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json'
-        }
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({  
+          actionType: 'bookmark',
+          postId: _id
+        })
       });
       
       if (!response.ok) {
@@ -177,11 +259,11 @@ export function SocialPostDialog({ open, onOpenChange, avatar, name, handle, tim
                 <div className="bg-blue-500 rounded-full w-5 h-5 flex items-center justify-center mr-1">
                     <ThumbsUp size={12} color="white" />
                 </div>
-                <span>{likesCount}</span>
+                <span>{localLikesCount}</span>
                 </div>
                 <div className="flex gap-4">
                 <span>{commentsCount} comments</span>
-                <span>{repostsCount} reposts</span>
+                <span>{localRepostsCount} reposts</span>
                 </div>
             </div>
             <div className="flex h-1 w-full">
@@ -206,14 +288,32 @@ export function SocialPostDialog({ open, onOpenChange, avatar, name, handle, tim
             {/* Action buttons */}
             <div className="flex justify-between my-3">
                 {[
-                  { icon: <ThumbsUp size={16} />, label: "Like" },
-                  { icon: <Repeat2 size={16} />, label: "Repost" },
-                  { icon: <Share size={16} />, label: "Share" }
+                  { 
+                    icon: <ThumbsUp size={16} className={isActive ? "fill-current text-accent" : ""} />, 
+                    label: "Like",
+                    onClick: handleLike,
+                    isActive: isActive
+                  },
+                  { 
+                    icon: <Repeat2 size={16} className={isRepostActive ? "fill-current text-accent" : ""} />, 
+                    label: "Repost",
+                    onClick: handleRepost,
+                    isActive: isRepostActive
+                  },
+                  /* Commenting out the share button
+                  { 
+                    icon: <Share size={16} />, 
+                    label: "Share",
+                    onClick: () => {},
+                    isActive: false
+                  }
+                  */
                 ].map((action, index) => (
                   <button 
                     key={index}
+                    onClick={action.onClick}
                     aria-label={action.label}
-                    className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-gray-100 transition-colors text-gray-600 text-sm"
+                    className={`flex items-center gap-1 px-2 py-1 rounded-md hover:bg-gray-100 transition-colors text-sm ${action.isActive ? "text-accent font-medium" : "text-gray-600"}`}
                   >
                     {action.icon}
                     <span>{action.label}</span>

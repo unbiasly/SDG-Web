@@ -94,14 +94,14 @@ export const SETTINGS_OPTIONS: SettingOption[] = [
         subOptions: SECURITY_OPTIONS,
         // icon: <div />
     },
-    {
-        id: 'notifications',
-        label: 'Notifications',
-        description: 'See information about your account and download an archive of your data or learn more about your deactivation options.',
-        isToggle: true,
-        subOptions: NOTIFICATIONS_OPTIONS,
-        // icon: <div />
-    },
+    // {
+    //     id: 'notifications',
+    //     label: 'Notifications',
+    //     description: 'See information about your account and download an archive of your data or learn more about your deactivation options.',
+    //     isToggle: true,
+    //     subOptions: NOTIFICATIONS_OPTIONS,
+    //     // icon: <div />
+    // },
     {
         id: 'additional-resources',
         label: 'Additional Resources',

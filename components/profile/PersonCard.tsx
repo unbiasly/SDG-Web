@@ -25,7 +25,7 @@ interface PersonCardProps {
 const PersonCard = ({ user, handleFollowToggle, followMutation }: PersonCardProps) => {
   return (
     <div
-      className="flex items-center justify-between p-4"
+      className="flex items-center justify-between p-4 border-b"
     >
       <Link 
         href={`/profile/${user._id}`} 
