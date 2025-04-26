@@ -84,7 +84,7 @@ const SocialSignIn: React.FC<SocialSignInProps> = ({ className }) => {
 
   return (
     <div className={cn("space-y-4", className)}>
-      <p className="text-sm text-center text-gray-600 mb-4">Sign in with:</p>
+      <p className="text-sm text-center text-gray-600 mb-4">Continue with:</p>
       
       <div className="flex justify-center space-x-4">
         {SOCIAL_AUTH_PROVIDERS.map(({ provider, Icon }, index) => (

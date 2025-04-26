@@ -59,8 +59,8 @@ export default function RootLayout({
       };
     
   return (
-      <main className="flex-1 flex overflow-y-auto p-3 gap-6 max-container">
-        <aside className="hidden xl:block space-y-3  sticky h-fit">
+      <main className="flex-1 flex overflow-y-auto  p-3 gap-6 max-container">
+        <aside className="hidden xl:block space-y-3 sticky h-fit">
             <Link href='/' className="flex justify-center items-center gap-2 px-2">    
                 <Image src={Logo} alt='' width={40} height={40}  />
                 <h1 className='text-xl font-bold'>The SDG Story</h1>

@@ -14,7 +14,9 @@ export const UserSidebar = () => {
 
     const handleLogout = async () => {
         try {
-            await fetch('/api/logout');
+            await fetch('/api/logout',{
+                method: 'POST'
+            });
             window.location.href = '/login';
         }
         catch (error) {

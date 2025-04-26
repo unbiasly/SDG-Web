@@ -30,14 +30,14 @@ const Page = () => {
                   registered in our systems.
                 </p>
                 
-                <div className="text-center mb-4">
+                {/* <div className="text-center mb-4">
                   <Link 
                     href="/login" 
                     className="inline-block text-xl font-bold text-gray-700 hover:text-gray-900 hover:underline transition-colors"
                   >
                     Complete your login&gt;
                   </Link>
-                </div>
+                </div> */}
               </div>
               
               <div className="flex h-20 w-full">

@@ -5,15 +5,15 @@ import SocialSignIn from './SocialSignIn';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
-interface SignInFormProps {
+interface SignUpFormProps {
     className?: string;
 }
 
-const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
+const SignUpForm: React.FC<SignUpFormProps> = ({ className }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSignIn = async (e: React.FormEvent) => {
+    const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             const response = await fetch('/login/api', {
@@ -26,7 +26,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
                     password,
                     device_id: 'web',
                     device_token: 'web',
-                    isSignin: true, 
+                    isSignUp: false, 
                 }),
             }).then(res => res.json());
             if (response.jwtToken) {
@@ -62,13 +62,13 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
   return (
     <div className={cn("w-full max-w-lg lg:max-w-md px-6 py-8", className)}>
       <div className="animate-slide-up">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-2">Sign In</h1>
+        <h1 className="text-3xl font-semibold text-gray-900 mb-2">Create Your Account</h1>
         <p className="text-gray-600 mb-8">
-          Sign in to get the best experience of our app. Never miss update turn on notifications.
+          Sign Up to Create your New SDG Story Account.
         </p>
       </div>
 
-      <form onSubmit={handleSignIn} className="space-y-5">
+      <form onSubmit={handleSignUp} className="space-y-5">
         <div className='space-y-2 '>
           <input
             type="email"
@@ -87,12 +87,14 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
             required
           />
         </div>
+        <p className='text-sm'>Must be between 8-14 characters, including an uppercase and lowercase letter, a number and a special character.</p>
         
-        <div className="flex justify-end">
-          <Link href={"/forgot-password"} 
-            className="text-sm text-gray-500 hover:text-gray-700 underline cursor-pointer transition-colors"
+        <div className="flex text-sm  justify-end">
+            Already have an account?
+          <Link href={"/login"} 
+            className="text-sm ml-1 text-gray-500 hover:text-gray-700 underline cursor-pointer transition-colors"
           >
-            Forgot Password?
+            Login
           </Link>
         </div>
         
@@ -100,23 +102,14 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
           type="submit"
           className="w-full cursor-pointer bg-accent text-white font-medium py-3 px-4 rounded-full hover:bg-accent/80 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
         >
-          Sign In
+          Sign Up
         </button>
       </form>
       
       <SocialSignIn className="mt-8 animate-slide-up" />
       
-      <div className=" text-center animate-slide-up">
-
-        <Link 
-          href="/sign-up" 
-          className="block w-full mt-4 text-center py-3 px-4 border border-gray-800 rounded-full text-gray-800 hover:bg-gray-50 transition-colors"
-        >
-          Don't have an Account? Sign up
-        </Link>
-      </div>
     </div>
   );
 };
 
-export default SignInForm;
+export default SignUpForm;
