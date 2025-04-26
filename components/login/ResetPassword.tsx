@@ -91,7 +91,7 @@ const ResetPassword = ({ token, email }: {
 
   if (isSuccess) {
     return (
-      <div className="text-center py-16">
+      <div className="text-center  py-16">
         <div className="flex flex-col items-center justify-center space-y-4">
           <div className="rounded-full p-3 inline-flex">
             <CheckCircle2 className="h-12 w-12 text-accent" />
@@ -112,7 +112,7 @@ const ResetPassword = ({ token, email }: {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="min-w-sm space-y-6">
+    <form onSubmit={handleSubmit} className="min-w-xs lg:min-w-sm space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-4xl font-bold tracking-tight text-gray-900">Reset Password</h1>
         <p className="text-black ">Create your new password</p>
@@ -201,14 +201,14 @@ const ResetPassword = ({ token, email }: {
         )}
       </Button>
 
-      <div className="text-center">
+      {/* <div className="text-center">
         <p className="text-sm text-gray-500">
           Remember your password?{" "}
           <Link href="/login" className="text-accent hover:text-[#2980B9] font-bold hover:underline">
             Back to login
           </Link>
         </p>
-      </div>
+      </div> */}
     </form>
   );
 };

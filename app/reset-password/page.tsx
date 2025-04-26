@@ -35,7 +35,7 @@ const Page = () => {
                     <Image src="/Logo.svg" alt="SDG Logo" width={130} height={130} />
                 </div>
               
-              <div className="flex flex-col items-center justify-center py-6">
+              <div className="flex flex-col items-center justify-center py-6 ">
                 {/* Pass token and email to ResetPassword component */}
                 <ResetPassword token={resetParams.token} email={resetParams.email} />
               </div>
