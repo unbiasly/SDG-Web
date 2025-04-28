@@ -3,7 +3,6 @@ import "../globals.css";
 import { UserSidebar } from "@/components/feed/UserProfile";
 import { TrendingSection } from "@/components/feed/TrendingNow";
 import Image from "next/image";
-import { setupTokenRefresh } from "@/lib/utilities/tokenRefresh";
 import { useEffect } from "react";
 import { useAppDispatch } from "@/lib/redux/hooks";
 import { fetchUserFailure, fetchUserStart, fetchUserSuccess, setFallbackColor } from "@/lib/redux/features/user/userSlice";
@@ -24,6 +23,7 @@ export default function RootLayout({
         // Set up the token refresh service worker
         setupAPIInterceptor();
         fetchUser();
+        refreshToken();
         // setupTokenRefresh();
     }, []);
     
@@ -58,6 +58,29 @@ export default function RootLayout({
           throw error;
         }
       };
+    const refreshToken = async () => {
+      try {
+        const response = await fetch('/api/refreshToken', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+        });
+        
+        if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to refresh token' }));
+        console.error('Token refresh failed:', response.status, errorData);
+        return { success: false, error: errorData };
+        }
+        
+        const data = await response.json();
+        return { success: true, data };
+      } catch (error) {
+        console.error('Token refresh error:', error);
+        return { success: false, error };
+      }
+    };
     
   return (
       <main className="flex-1 flex overflow-hidden p-3 gap-3 lg:gap-6 max-container">

@@ -87,9 +87,9 @@ const Page = () => {
         try {
             const response = await fetch('/api/video/bookmark');
             
-            if (!response.ok) {
-                throw new Error('Failed to fetch video bookmarks');
-            }
+            // if (!response.ok) {
+            //     throw new Error('Failed to fetch video bookmarks');
+            // }
             
             const data = await response.json();
             setVideoBookmarks(data.data || []);
