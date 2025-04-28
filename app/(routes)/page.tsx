@@ -88,52 +88,53 @@ const trackPostImpression = async (postId: string, userId: string) => {
 
   return (
     <div className="flex flex-1 overflow-hidden">
-      <ContentFeed activeTab={activeTab} setActiveTab={setActiveTab} tabs={FEED_TABS}>
-        {FEED_TABS && (
-          <>
-            {activeTab === "For You" && (
-              <>
-                <CreatePost />
-                <div className="px-4 space-y-4">
-                  {posts.filter(post => post !== undefined).map((post) => {
-                    // Create props for the PostWithTracking component
-                    return (
-                      <PostWithTracking 
-                        key={post._id}
-                        post={post}
-                        user={user}
-                        onImpression={trackPostImpression}
-                      />
-                    );
-                  })}
-                  
-                  {/* Loading indicator and ref for intersection observer */}
-                  {(hasNextPage || isFetchingNextPage) && (
-                    <div 
-                      className="flex justify-center py-4" 
-                      ref={ref}
-                    >
-                      {isFetchingNextPage ? (
-                        <div className="w-6 h-6 border-2 border-accent rounded-full border-t-transparent animate-spin"></div>
-                      ) : (
-                        <div className="h-16"></div>
-                      )}
+        <ContentFeed activeTab={activeTab} setActiveTab={setActiveTab} tabs={FEED_TABS}>
+            {FEED_TABS && (
+            <>
+                {activeTab === "For You" && (
+                <>
+                    <CreatePost />
+                    <div className="px-4 space-y-4">
+                    {posts.filter(post => post !== undefined).map((post) => {
+                        // Create props for the PostWithTracking component
+                        return (
+                        <PostWithTracking 
+                            key={post._id}
+                            post={post}
+                            user={user}
+                            onImpression={trackPostImpression}
+                        />
+                        );
+                    })}
+                    
+                    {/* Loading indicator and ref for intersection observer */}
+                    {(hasNextPage || isFetchingNextPage) && (
+                        <div 
+                        className="flex justify-center py-4" 
+                        ref={ref}
+                        >
+                        {isFetchingNextPage ? (
+                            <div className="w-6 h-6 border-2 border-accent rounded-full border-t-transparent animate-spin"></div>
+                        ) : (
+                            <div className="h-16"></div>
+                        )}
+                        </div>
+                    )}
+                    
+                    {/* End of content message */}
+                    {!hasNextPage && posts.length > 0 && (
+                        <div className="text-center py-4 text-gray-500">
+                        ......
+                        </div>
+                    )}
                     </div>
-                  )}
-                  
-                  {/* End of content message */}
-                  {!hasNextPage && posts.length > 0 && (
-                    <div className="text-center py-4 text-gray-500">
-                      ......
-                    </div>
-                  )}
-                </div>
-              </>
+                </>
+                )}
+                {/* {activeTab === "The SDG News" && <SDGNews />} */}
+            </>
             )}
-            {/* {activeTab === "The SDG News" && <SDGNews />} */}
-          </>
-        )}
-      </ContentFeed>
+        </ContentFeed>
+
     </div>
   )
 }

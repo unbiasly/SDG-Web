@@ -3,12 +3,13 @@ import { useUser } from '@/lib/redux/features/user/hooks';
 import { SDGVideoData } from '@/service/api.interface';
 import React, { useEffect, useState } from 'react'
 import ProfileAvatar from '../profile/ProfileAvatar';
-import { Bookmark, MoreHorizontal, PlayCircle, Share2, ThumbsUp, X } from 'lucide-react';
+import { ArrowLeft, Bookmark, MoreHorizontal, PlayCircle, Share2, ThumbsUp, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import YouTube from 'react-youtube';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { da } from 'date-fns/locale';
+import Link from 'next/link';
 
 const VideoPageClient = ({ videoId }: { videoId: string }) => {
     const { user } = useUser();
@@ -150,6 +151,12 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
     // Render consistent UI only after data is loaded
     return (
         <div className="flex-col m-auto px-4 py-6 flex gap-4">
+            <div className="sticky top-0 bg-white z-10 flex items-center p-3 border-b border-gray-200">
+                <Link href="/videos" aria-label='back-button' className="mr-4">
+                    <ArrowLeft size={20} />
+                </Link>
+                <h1 className="text-lg font-semibold flex-1">Video</h1>
+            </div>
             {/* Video Player */}
             <div className="aspect-video w-full bg-blue-500 rounded-lg overflow-hidden mb-4">
                 {isPlaying ? (

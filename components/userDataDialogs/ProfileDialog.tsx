@@ -125,7 +125,7 @@ export const UserProfileDialog = ({
 
   return (
     <Dialog>
-        <DialogTrigger className="rounded-full cursor-pointer px-6 py-2 bg-accent hover:bg-accent/80 text-white border-none backdrop-blur-sm transition-all duration-300 font-medium">
+        <DialogTrigger className="rounded-full cursor-pointer px-6 py-2 bg-accent hover:bg-accent/80 text-white border-none backdrop-blur-sm transition-all duration-300 font-medium text-sm md:text-base">
             Edit Profile
         </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white">

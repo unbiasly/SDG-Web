@@ -1,7 +1,11 @@
 import { Search } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 
-const SearchBar = () => {
+const SearchBar = ({
+    className = '',
+}: {
+    className?: string
+}) => {
   const [isFocused, setIsFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -72,7 +76,7 @@ const SearchBar = () => {
   }
 
   return (
-    <div className="relative rounded-2xl flex-1 w-full">
+    <div className={`relative rounded-2xl flex-1 w-full ${className}`}>
       <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
         <Search className="h-4 w-4 text-gray-400" />
       </div>

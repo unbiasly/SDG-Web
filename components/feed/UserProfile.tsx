@@ -26,12 +26,15 @@ export const UserSidebar = () => {
 
     return (
         <div className="w-full bg-white border-1 border-gray-300 p-4 rounded-2xl flex flex-col h-full">
-            <div className="flex flex-col items-start border-b py-2 border-gray-600">
-                <div className="relative mb-2 w-20">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-100 to-blue-200 flex items-center justify-center overflow-hidden">
+            <Link href='/' className="justify-center items-center gap-2 pb-2 flex lg:hidden">    
+                <Image src='/Logo.svg' alt='SDG Logo' width={35} height={35}  />
+            </Link>
+            <div className="flex-col items-start lg:border-b py-2 border-gray-600 hidden lg:flex">
+                <div className="relative mb-2 w-20 ">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-100 to-blue-200 flex items-center justify-center overflow-hidden ">
                         <ProfileAvatar 
                         src={user?.profileImage || ''}
-                        className='object-contain'
+                        className='object-contain '
                         size='profile'
                         displayName={user?.username}
                         />
@@ -53,7 +56,7 @@ export const UserSidebar = () => {
                 </div> */}
             </div>
             
-            <nav className="pt-2">
+            <nav className="lg:pt-2">
                 <ul className="space-y-1">
                     {PROFILE_OPTIONS.map((option, key) => {
                         let route = option.route;
@@ -80,10 +83,10 @@ export const UserSidebar = () => {
                         <div className="flex flex-col">
                             <button
                                 onClick={handleLogout}
-                                className="flex items-center cursor-pointer space-x-2 p-2 rounded-xl hover:bg-accent/30"
+                                className="flex items-center justify-center lg:justify-start cursor-pointer space-x-2 py-2 lg:p-2 rounded-xl hover:bg-accent/30"
                             >
-                                <LogOut />
-                                <span className="text-md font-regular ml-2">Logout</span>
+                                <LogOut className='m-0'/>
+                                <span className="text-md font-regular lg:ml-2 hidden lg:block">Logout</span>
                             </button>
                         </div>
                     </li>
@@ -106,10 +109,10 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, isActive, route 
       <div className="flex flex-col">
         <Link
           href={route} 
-          className={`flex items-center space-x-2 p-2 rounded-xl hover:bg-accent/30 ${isActive ? ' font-bold text-accent' : ''}`}
+          className={`flex items-center justify-center lg:justify-start space-x-2 py-2 lg:p-2 rounded-xl hover:bg-accent/30 ${isActive ? ' font-bold text-accent' : ''}`}
         >
-          <Image src={icon} alt={label} className='object-contain' width={25} height={25} />
-          <span className="text-md font-regular ml-2">{label}</span>
+          <Image src={icon} alt={label} className='object-fill m-0' width={25} height={25} />
+          <span className="text-md font-regular lg:ml-2 hidden lg:block">{label}</span>
         </Link>
       </div>
     </li>
