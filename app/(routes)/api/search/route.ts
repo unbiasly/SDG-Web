@@ -55,18 +55,19 @@ export async function GET(req: NextRequest) {
     });
 
     // Check content type before parsing
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const text = await response.text();
-      console.error("Non-JSON response:", text);
-      return NextResponse.json(
-        { success: false, message: "Received non-JSON response from API" },
-        { status: 500 }
-      );
-    }
+    // const contentType = response.headers.get("content-type");
+    // if (!contentType || !contentType.includes("application/json")) {
+    //   const text = await response.text();
+    //   console.error("Non-JSON response:", text);
+    //   return NextResponse.json(
+    //     { success: false, message: "Received non-JSON response from API" },
+    //     { status: 500 }
+    //   );
+    // }
 
     // Parse and return the response
     const data = await response.json();
+    console.log("Search API response:", data);
     
     if (!response.ok) {
       return NextResponse.json(

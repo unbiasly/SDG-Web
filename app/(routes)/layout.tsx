@@ -10,6 +10,7 @@ import Link from "next/link";
 import { getRandomColor } from "@/lib/utilities/generateColor";
 import SearchBar from "@/components/feed/SearchBar";
 import { setupAPIInterceptor } from "@/lib/utilities/interceptor";
+import { useTokenRefresh } from "@/lib/hooks/useTokenRefresh";
 
 export default function RootLayout({
   children,
@@ -18,12 +19,12 @@ export default function RootLayout({
 }>) {
 
   const dispatch = useAppDispatch();
+//   useTokenRefresh(9 * 60 * 1000); // Refresh every 9 minutes
 
     useEffect(() => {
         // Set up the token refresh service worker
         setupAPIInterceptor();
         fetchUser();
-        refreshToken();
         // setupTokenRefresh();
     }, []);
     
@@ -58,29 +59,6 @@ export default function RootLayout({
           throw error;
         }
       };
-    const refreshToken = async () => {
-      try {
-        const response = await fetch('/api/refreshToken', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-        });
-        
-        if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to refresh token' }));
-        console.error('Token refresh failed:', response.status, errorData);
-        return { success: false, error: errorData };
-        }
-        
-        const data = await response.json();
-        return { success: true, data };
-      } catch (error) {
-        console.error('Token refresh error:', error);
-        return { success: false, error };
-      }
-    };
     
   return (
       <main className="flex-1 flex overflow-hidden p-3 gap-3 lg:gap-6 max-container">
