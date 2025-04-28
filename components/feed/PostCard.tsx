@@ -273,8 +273,10 @@ export const PostCard: React.FC<PostCardProps> = ({
                 <Link href={`/profile/${userId}`}>
                     <span>{handle}</span>
                 </Link>
-              <span className="mx-1.5">•</span>
-              <span>{time}</span>
+                <div className='hidden md:block'>
+                    <span className="mx-1.5">•</span>
+                    <span>{time}</span>
+                </div>
             </div>
           </div>
         </div>

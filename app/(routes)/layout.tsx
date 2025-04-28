@@ -60,15 +60,18 @@ export default function RootLayout({
       };
     
   return (
-      <main className="flex-1 flex overflow-y-auto  p-3 gap-6 max-container">
-        <aside className="hidden xl:block space-y-3 sticky h-fit">
-            <Link href='/' className="flex justify-center items-center gap-2 px-2">    
+      <main className="flex-1 flex overflow-hidden p-3 gap-3 lg:gap-6 max-container">
+        <aside className="space-y-3 sticky h-fit">
+            <Link href='/' className="justify-center items-center gap-2 px-2 hidden lg:flex">    
                 <Image src='/Logo.svg' alt='SDG Logo' width={40} height={40}  />
                 <h1 className='text-xl font-bold'>The SDG Story</h1>
             </Link>
             <UserSidebar />
         </aside>
+        <div className="lg:gap-0 gap-3 p-2 flex-1 min-w-0 overflow-hidden">
+            <SearchBar className="w-fit mb-2 block lg:hidden"/>
             {children}
+        </div>
         <aside className="hidden xl:block sticky space-y-3 ">
             <SearchBar />
             <TrendingSection />
@@ -76,4 +79,3 @@ export default function RootLayout({
     </main>
   );
 }
- 

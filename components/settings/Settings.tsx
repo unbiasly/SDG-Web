@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Search, ChevronRight } from 'lucide-react';
+import { Search, ChevronRight, ChevronLeft, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SETTINGS_OPTIONS } from '@/lib/constants/settings-constants';
 import ChangePassword from './ChangePassword';
@@ -43,7 +43,8 @@ const Settings: React.FC<SettingsProps> = ({
             : 'expandWidth 0.3s ease-in-out forwards'
         }}
       >
-        <div className="p-2 border-b">
+        <div className="p-2 border-b flex items-center space-x-2">
+            <ArrowLeft size={25} className="cursor-pointer block lg:hidden" onClick={() => window.location.href = '/'} />
           <h1 className="text-xl font-semibold mb-2">Settings & Help Center</h1>
           {/* <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />

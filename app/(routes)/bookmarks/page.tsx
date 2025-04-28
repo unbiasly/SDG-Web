@@ -166,7 +166,7 @@ const Page = () => {
                         key={category}
                         onClick={() => handleTabChange(category)}
                         className={cn(
-                            "px-8 py-1 rounded-full cursor-pointer text-lg font-semibold whitespace-nowrap",
+                            "md:px-8  px-3 py-1 rounded-full cursor-pointer md:text-lg  font-semibold whitespace-nowrap",
                             selectedCategory === category
                             ? "bg-accent text-white"
                             : "bg-white text-accent border border-accent"
