@@ -56,6 +56,7 @@ export const PostCard: React.FC<PostCardProps> = ({
     const [isLocalLiked, setIsLocalLiked] = useState(isLiked);
     // const [isRepostActive, setIsRepostActive] = useState(isReposted);
     const [localRepostsCount, setLocalRepostsCount] = useState(repostsCount);
+    const [isLargeScreen, setIsLargeScreen] = useState(false);
     
     // PostMenu state
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -77,6 +78,22 @@ export const PostCard: React.FC<PostCardProps> = ({
         // setIsRepostActive(isReposted);
         setLocalRepostsCount(repostsCount);
     }, [isLiked, likesCount, isReposted, repostsCount]);
+
+    useEffect(() => {
+      const checkScreenSize = () => {
+        // Tailwind lg breakpoint is 1024px
+        setIsLargeScreen(window.innerWidth >= 1024);
+      };
+      
+      // Set initial value
+      checkScreenSize();
+      
+      // Add event listener for resize
+      window.addEventListener('resize', checkScreenSize);
+      
+      // Cleanup
+      return () => window.removeEventListener('resize', checkScreenSize);
+    }, []);
 
     const toggleComments = () => {
         setIsCommentsOpen(!isCommentsOpen);
@@ -249,6 +266,14 @@ export const PostCard: React.FC<PostCardProps> = ({
             console.error('Error fetching comments:', error);
         }
     } 
+
+    const handleImageClick = () => {
+      if (isLargeScreen) {
+        setIsDialogOpen(true);
+        getComments();
+      }
+      // Do nothing if on smaller screens
+    };
     
   return (
     <div className="w-full border-b  p-2 border-gray-300">
@@ -318,11 +343,8 @@ export const PostCard: React.FC<PostCardProps> = ({
         <p className="text-sm mb-3">{content}</p>
         {imageUrl && imageUrl.length > 0 && (
           <div 
-            className="cursor-pointer rounded-lg overflow-hidden aspect-video bg-gray-50" 
-            onClick={() => {
-              setIsDialogOpen(true);
-              getComments();
-            }}
+            className={`rounded-lg overflow-hidden aspect-video bg-gray-50 ${isLargeScreen ? 'cursor-pointer' : ''}`} 
+            onClick={handleImageClick}
           >
             {imageUrl.length === 1 ? (
               <Image 
@@ -434,6 +456,16 @@ export const PostCard: React.FC<PostCardProps> = ({
         repostsCount={repostsCount}
         comments={comments}
       />
+      {!isLargeScreen && imageUrl && imageUrl.length > 0 && (
+        <div className="text-right mb-2">
+          <Link 
+            href={`/post/${_id}`} 
+            className="text-xs text-accent"
+          >
+            View full post
+          </Link>
+        </div>
+      )}
     </div>
   );
 };
