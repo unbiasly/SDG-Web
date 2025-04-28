@@ -5,9 +5,8 @@ import { VIDEO_TABS } from '@/lib/constants/index-constants';
 import { useUser } from '@/lib/redux/features/user/hooks';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
-import { Filter } from 'lucide-react';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import Loading from '../../loading';
+import Loading from '@/components/Loader';
 import { SDGVideoResponse } from '@/service/api.interface';
 
 const Page = () => {
@@ -15,6 +14,9 @@ const Page = () => {
     const { ref, inView } = useInView();
     const { user } = useUser();
     const queryClient = useQueryClient();
+    
+    // Add state for tracking which video is currently playing
+    const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
     
     const getVideoType = useMemo(() => {
       if (activeTab === "The SDG Talks") return "talk";
@@ -107,6 +109,7 @@ const Page = () => {
   // Refetch when tab changes (only if necessary)
   const handleTabChange = useCallback((newTab: string) => {
     setActiveTab(newTab);
+    setPlayingVideoId(null); // Close any playing videos
     
     // Check if we already have data for this tab
     const newType = newTab === "The SDG Talks" ? "talk" : "podcast";
@@ -127,7 +130,7 @@ const Page = () => {
   // Show loading state
   if (status === 'pending') {
     return (
-      <div className="fixed inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+      <div className="flex-1 bg-white bg-opacity-75 z-50 flex items-center justify-center">
         <Loading />
       </div>
     );
@@ -158,7 +161,11 @@ const Page = () => {
         <div className="grid grid-cols-1 md:grid-cols-1 px-4 gap-4">
           {videos.map((video) => (
             <div className='px-0' key={video._id}>
-              <VideoCard video={video} />
+              <VideoCard 
+                video={video} 
+                playingVideoId={playingVideoId}
+                setPlayingVideoId={setPlayingVideoId}
+              />
             </div>
           ))}
           

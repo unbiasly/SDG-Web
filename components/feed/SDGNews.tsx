@@ -16,41 +16,67 @@ export interface Article {
 //   imageUrl: string;
 }
 
-export const ArticleCard = ({ article }: { article: Article }) => {
-    const [isActive, setIsActive] = useState(false);
+// Update ArticleCard component to add working bookmark functionality
+
+export const ArticleCard = ({ article, onBookmarkToggle }: { article: Article, onBookmarkToggle?: () => void }) => {
+    const [isBookmarked, setIsBookmarked] = useState(article.isBookmarked || false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     
+    const handleBookmarkToggle = async (e: React.MouseEvent) => {
+        e.preventDefault(); // Prevent link navigation
+        e.stopPropagation();
+        
+        try {
+            // Optimistic update
+            setIsBookmarked(!isBookmarked);
+            
+            const response = await fetch('/api/sdgNews', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    newsId: article._id,
+                    actionType: 'bookmark',
+                }),
+            });
+
+            if (!response.ok) {
+                // Revert if failed
+                setIsBookmarked(isBookmarked);
+                throw new Error('Failed to update bookmark status');
+            }
+            
+            // If we're in bookmarks view and unbookmarking, trigger removal
+            if (isBookmarked && onBookmarkToggle) {
+                onBookmarkToggle();
+            }
+            
+        } catch (error) {
+            console.error('Error toggling bookmark:', error);
+        }
+    };
+    
     return (
-        <Link href={formatSDGLink(article.link)} target="_blank" className=" rounded-2xl overflow-hidden shadow-sm  transition-all duration-300 hover:shadow-md mb-4 flex flex-col sm:flex-row">
-            {/* <div className="w-full sm:w-1/3 md:w-1/4 h-40 sm:h-auto">
-              <img 
-                src={article.imageUrl} 
-                alt={article.title} 
-                className="w-full h-full object-cover"
-              />
-            </div> */}
-            {/* sm:w-2/3 md:w-3/4 */}
-            <div className="w-full border rounded-2xl  p-4 flex flex-col justify-between">
-              <div>
-                <h2 className="font-bold text-lg sm:text-xl mb-2">{article.title}</h2>
-                <div className="flex items-center mb-2 font-semibold text-sm text-gray-500">
-                  <span>{article.publisher}</span>
-                  <span className="mx-3">•</span>
-                  <span>{formatDate(article.updatedAt)}</span>
+        <Link href={formatSDGLink(article.link)} target="_blank" className="rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md mb-4 flex flex-col sm:flex-row">
+            <div className="w-full border rounded-2xl p-4 flex flex-col justify-between">
+                <div>
+                    <h2 className="font-bold text-lg sm:text-xl mb-2">{article.title}</h2>
+                    <div className="flex items-center mb-2 font-semibold text-sm text-gray-500">
+                        <span>{article.publisher}</span>
+                        <span className="mx-3">•</span>
+                        <span>{formatDate(article.updatedAt)}</span>
+                    </div>
                 </div>
-              </div>
-              {/* <div className="flex justify-between items-center mt-4" onClick={(e) => e.stopPropagation()}>
-                <button aria-label="bookmark" className="text-gray-400 hover:text-gray-600 transition-colors">
-                  <Bookmark size={20} className={`${isActive ? "fill-current text-accent" : "text-gray-500"}`} />
-                </button>
-                <button 
-                  aria-label="more_options" 
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                >
-                  <MoreVertical size={20} />
-                </button>
-              </div> */}
+                <div className="flex justify-between items-center mt-4">
+                    <button 
+                        aria-label="bookmark" 
+                        onClick={handleBookmarkToggle}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                        <Bookmark size={20} className={`${isBookmarked ? "fill-current text-accent" : "text-gray-500"}`} />
+                    </button>
+                </div>
             </div>
         </Link>
     );

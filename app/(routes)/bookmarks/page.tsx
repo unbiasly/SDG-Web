@@ -4,12 +4,17 @@ import { BOOKMARKS_TABS } from '@/lib/constants/index-constants'
 import { cn } from '@/lib/utils'
 import { formatSDGLink } from '@/lib/utilities/sdgLinkFormat'
 import { PostBookmarkData, SDGArticleData, SDGVideoData } from '@/service/api.interface'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Bookmark } from 'lucide-react'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import VideoCard from '@/components/video/VideoCard'
+import Loader from '@/components/Loader'
+import { toast } from 'sonner'
 
 const Page = () => {
+    // Add state for tracking playing video
+    const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
+    
     const [selectedCategory, setSelectedCategory] = useState<string>("All");
     const [postBookmarks, setPostBookmarks] = useState<PostBookmarkData[]>([]);
     const [newsBookmarks, setNewsBookmarks] = useState<SDGArticleData[]>([]);
@@ -102,6 +107,14 @@ const Page = () => {
         }
     }, [hasFetchedVideos, videoBookmarks.length]);
 
+    // Adapter function to transform SDGVideoData into the format expected by VideoCard
+    const adaptVideoForCard = useCallback((video: SDGVideoData) => {
+        return {
+            ...video,
+            comments: Array.isArray(video.comments) ? video.comments.length : 0,
+        };
+    }, []);
+
     // Combined bookmarks for "All" tab
     const allBookmarks = useMemo(() => {
         const loading = loadingPosts || loadingNews || loadingVideos;
@@ -112,28 +125,60 @@ const Page = () => {
 
     // Fetch data based on selected category
     useEffect(() => {
-        if (selectedCategory === "All" || selectedCategory === "Posts") {
-            getPostBookmarks();
-        }
-        
-        if (selectedCategory === "All" || selectedCategory === "News") {
-            getNewsBookmarks();
-        }
-
-        if (selectedCategory === "All" || selectedCategory === "Videos") {
-            getVideoBookmarks();
-        }
-    }, [selectedCategory, getPostBookmarks, getNewsBookmarks, getVideoBookmarks]);
+        getPostBookmarks();
+        getVideoBookmarks();
+        getNewsBookmarks();
+    }, []);
 
     // Handle tab change
     const handleTabChange = (category: string) => {
         setSelectedCategory(category);
+        setPlayingVideoId(null); // Stop any playing videos when changing tabs
     };
+
+    // Handlers for removing items after unbookmarking
+    
+    // For posts
+    const handlePostUnbookmark = useCallback((postId: string) => {
+        setPostBookmarks(prev => prev.filter(post => post._id !== postId));
+    }, []);
+    
+    // For videos
+    const handleVideoUnbookmark = useCallback((videoId: string) => {
+        setVideoBookmarks(prev => prev.filter(video => video._id !== videoId));
+    }, []);
+    
+    // For news
+    const handleNewsUnbookmark = useCallback(async (newsId: string) => {
+        try {
+            const response = await fetch('/api/sdgNews', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    newsId,
+                    actionType: 'bookmark',
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to unbookmark news');
+            }
+            
+            // Remove the news item from the list
+            setNewsBookmarks(prev => prev.filter(news => news._id !== newsId));
+            toast.success("News removed from bookmarks");
+        } catch (error) {
+            console.error('Error unbookmarking news:', error);
+            toast.error("Failed to remove bookmark");
+        }
+    }, []);
 
     // Render loading state
     const renderLoading = () => (
         <div className="flex justify-center items-center p-8">
-            <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
+            <Loader />
         </div>
     );
 
@@ -199,7 +244,7 @@ const Page = () => {
                                             name={bookmark.user_id.name || bookmark.user_id.username}
                                             handle={bookmark.user_id.username}
                                             time={bookmark.createdAt}
-                                            isVerified={bookmark.user_id.isFollowing || false}
+                                            // isVerified={bookmark.user_id.isFollowing || false}
                                             content={bookmark.content}
                                             isLiked={bookmark.isLiked}
                                             isBookmarked={bookmark.isBookmarked}
@@ -209,6 +254,7 @@ const Page = () => {
                                             commentsCount={bookmark.poststat_id.comments}
                                             repostsCount={bookmark.poststat_id.reposts}
                                             userId={bookmark.user_id._id}
+                                            onPostUpdate={() => handlePostUnbookmark(bookmark._id)}
                                         />
                                     ))}
                                 </>
@@ -220,8 +266,15 @@ const Page = () => {
                                     <h2 className="text-lg font-semibold mt-4">News</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {newsBookmarks.map((news) => (
-                                            <div key={news._id} className="border rounded-lg p-4 shadow-sm">
-                                                <h3 className="font-medium mb-2">{news.title}</h3>
+                                            <div key={news._id} className="border rounded-lg p-4 shadow-sm relative">
+                                                <button 
+                                                    onClick={() => handleNewsUnbookmark(news._id)}
+                                                    className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded-full"
+                                                    aria-label="Remove bookmark"
+                                                >
+                                                    <Bookmark className="h-5 w-5 fill-current text-accent" />
+                                                </button>
+                                                <h3 className="font-medium mb-2 pr-8">{news.title}</h3>
                                                 <p className="text-sm text-gray-600 mb-2">{news.publisher}</p>
                                                 <a 
                                                     href={formatSDGLink(news.link)} 
@@ -243,7 +296,13 @@ const Page = () => {
                                     <h2 className="text-lg font-semibold mt-4">Videos</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {videoBookmarks.map((video) => (
-                                            <VideoCard key={video._id} video={video} />
+                                            <VideoCard 
+                                                key={video._id} 
+                                                video={adaptVideoForCard(video)}
+                                                playingVideoId={playingVideoId}
+                                                setPlayingVideoId={setPlayingVideoId}
+                                                onBookmarkToggle={() => handleVideoUnbookmark(video._id)}
+                                            />
                                         ))}
                                     </div>
                                 </>
@@ -268,7 +327,7 @@ const Page = () => {
                                 name={bookmark.user_id.name || bookmark.user_id.username}
                                 handle={bookmark.user_id.username}
                                 time={bookmark.createdAt}
-                                isVerified={bookmark.user_id.isFollowing || false}
+                                // isVerified={bookmark.user_id.isFollowing || false}
                                 content={bookmark.content}
                                 isLiked={bookmark.isLiked}
                                 isBookmarked={bookmark.isBookmarked}
@@ -278,6 +337,7 @@ const Page = () => {
                                 commentsCount={bookmark.poststat_id.comments}
                                 repostsCount={bookmark.poststat_id.reposts}
                                 userId={bookmark.user_id._id}
+                                onPostUpdate={() => handlePostUnbookmark(bookmark._id)}
                             />
                         ))
                     )}
@@ -294,8 +354,15 @@ const Page = () => {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {newsBookmarks.map((news) => (
-                                <div key={news._id} className="border rounded-lg p-4 shadow-sm">
-                                    <h3 className="font-medium mb-2">{news.title}</h3>
+                                <div key={news._id} className="border rounded-lg p-4 shadow-sm relative">
+                                    <button 
+                                        onClick={() => handleNewsUnbookmark(news._id)}
+                                        className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded-full"
+                                        aria-label="Remove bookmark"
+                                    >
+                                        <Bookmark className="h-5 w-5 fill-current text-accent" />
+                                    </button>
+                                    <h3 className="font-medium mb-2 pr-8">{news.title}</h3>
                                     <p className="text-sm text-gray-600 mb-2">{news.publisher}</p>
                                     <a 
                                         href={formatSDGLink(news.link)} 
@@ -322,7 +389,13 @@ const Page = () => {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {videoBookmarks.map((video) => (
-                                <VideoCard key={video._id} video={video} />
+                                <VideoCard 
+                                    key={video._id} 
+                                    video={adaptVideoForCard(video)}
+                                    playingVideoId={playingVideoId}
+                                    setPlayingVideoId={setPlayingVideoId}
+                                    onBookmarkToggle={() => handleVideoUnbookmark(video._id)}
+                                />
                             ))}
                         </div>
                     )}

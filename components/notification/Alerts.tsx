@@ -1,70 +1,109 @@
+import { Notification } from "@/service/api.interface";
+import { ChevronRight, MessageSquare, Video, UserPlus, BriefcaseBusiness, FileCheck, FileText, FileEdit, Bell } from "lucide-react";
+import ProfileAvatar from "../profile/ProfileAvatar";
 
-import { ChevronRight } from "lucide-react";
-import { BriefcaseBusiness, FileCheck, FileText, FileEdit } from "lucide-react";
 
-interface NotificationIconProps {
-  type: string;
-}
+const Alerts = ({ _id, post, category, type, message, isRead, userProfile }: Notification) => {
+    // Determine the alert style based on type
+    let alertStyle;
+    let Icon;
+    let iconStyle;
+    
+    switch (category) {
+        case "post":
+            alertStyle = !isRead ? "bg-blue-50  border-blue-500" : "bg-white";
+            Icon = MessageSquare;
+            iconStyle = "bg-blue-200";
+            break;
+        case "videos":
+            alertStyle = !isRead ? "bg-pink-50  border-pink-500" : "bg-white";
+            Icon = Video;
+            iconStyle = "bg-[#19484A]";
+            break;
+        case "follow":
+            alertStyle = !isRead ? "bg-purple-50  border-purple-500" : "bg-white";
+            Icon = UserPlus;
+            iconStyle = "bg-[#19484A]";
+            break;
+        default:
+            alertStyle = !isRead ? "bg-gray-50  border-gray-400" : "bg-white";
+            Icon = Bell;
+            iconStyle = "bg-[#19484A]";
+    }
 
-interface NotificationItemProps {
-  type: string;
-  title: string;
-  time: string;
-}
+    const handleClick = () => {
+        if (!isRead) {
+            handleRead(_id);
+        } else {
+            if (type === "post") {
+                window.location.href = `/post/${post}`;
+            } else if(type === "follow") {
+                window.location.href = `/profile/${post}`;
+            } else {
+                // Handle other notification types differently
+                // For now, just refresh the page to show updated notification state
+                window.location.reload();
+            }
+        }
+    };
+    const handleRead = async (notificationId: string) => {
+        try {
+            const response = await fetch(`/api/notifications`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    notificationId
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to mark notification as read: ${response.status} ${response.statusText}`);
+            }
+            
+            const responseData = await response.json();
+            
+            if (responseData.success) {
+                if (type === "post") {
+                    window.location.href = `/post/${post}`;
+                } else if(type === "follow") {
+                    window.location.href = `/profile/${post}`;
+                } else {
+                    // Handle other notification types differently
+                    // For now, just refresh the page to show updated notification state
+                    window.location.reload();
+                }
+            } else {
+                throw new Error("Failed to update notification");
+            }
+        }
+        catch (err) {
+            console.error("Error marking notification as read:", err);
+        }
+    };
 
-const Alerts = ({ type, title, time }: NotificationItemProps) => {
-  return (
-    <div className="flex items-center p-4 border-b border-gray-200 hover:bg-gray-300 cursor-pointer transition-colors animate-slide-up">
-      <NotificationIcon type={type} />
-      <div className="ml-4 flex-grow pr-4 overflow-hidden">
-        <div className="text-xs text-gray-600 mb-1">{type}</div>
-        <div className="text-sm font-medium text-black truncate">{title}</div>
-      </div>
-      <div className="text-xs text-gray-500 ml-2 mr-2">{time}</div>
-      <div className="text-gray-400">
-        <ChevronRight size={20} />
-      </div>
-    </div>
-  );
+    return (
+        <div 
+            className={`flex shadow-sm items-center p-4 mb-2 relative cursor-pointer transition-all animate-slide-up ${alertStyle} ${!isRead ? 'hover:brightness-95' : ''}`}
+            onClick={handleClick}
+        >
+            <div className="flex-shrink-0">
+            <div className={`w-12 h-12 rounded-md flex items-center justify-center ${iconStyle} shadow-xs p-5`}>
+                <ProfileAvatar src={userProfile || ''} size='xs' />
+            </div>
+            </div>
+            <div className="ml-4 flex-grow pr-4 overflow-hidden">
+            <div className="text-sm font-medium text-acent mb-1">
+              {type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()}
+            </div>
+            <div className="text-xs font-medium text-black truncate">{message}</div>
+            </div>
+            <div className="text-gray-400 flex-shrink-0">
+            {!isRead && <ChevronRight size={20} />}
+            </div>
+        </div>
+    );
 };
 
 export default Alerts;
-
-
-
-
-
-const NotificationIcon = ({ type }: NotificationIconProps) => {
-  switch (type) {
-    case "New Job Alert":
-      return (
-        <div className="w-12 h-12 rounded-lg flex items-center justify-center  flex-shrink-0 bg-[#1a4b6e]">
-          <BriefcaseBusiness size={20} />
-        </div>
-      );
-    case "The SDG Talks":
-      return (
-        <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white flex-shrink-0 bg-[#ff7644]">
-          <FileText size={20} />
-        </div>
-      );
-    case "The SDG Event":
-      return (
-        <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white flex-shrink-0 bg-[#4ca551]">
-          <FileCheck size={20} />
-        </div>
-      );
-    case "Followed by you":
-      return (
-        <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white flex-shrink-0 bg-[#a02346]">
-          <FileEdit size={20} />
-        </div>
-      );
-    default:
-      return (
-        <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white flex-shrink-0 bg-gray-500">
-          <FileText size={20} />
-        </div>
-      );
-  }
-};

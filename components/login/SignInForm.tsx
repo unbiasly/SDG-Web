@@ -28,28 +28,38 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
                     device_token: 'web',
                     isSignin: true, 
                 }),
-            }).then(res => res.json());
-            if (response.jwtToken) {
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                toast.error("Login unsuccessful: " + (errorData?.message || 'Failed to login'));
+                return;
+            } 
+            const data = await response.json();
+            if (data.jwtToken) {
                 const cookieResponse = await fetch('/api/setCookieToken', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        jwtToken: response.jwtToken,
-                        refreshToken: response.refreshToken,
-                        sessionId: response.sessionId,
-                        userId: response.userId,
+                        jwtToken: data.jwtToken,
+                        refreshToken: data.refreshToken,
+                        sessionId: data.sessionId,
+                        userId: data.userId,
                     }),
                     credentials: 'include' // Important for cookies to be sent/received
                 });
                 
                 console.log(cookieResponse)
-                console.log("Login Successful, JWT Token:", response.jwtToken)
-            // Redirect to home page or dashboard
-            window.location.href = '/';
+                if (cookieResponse.ok) {
+                    toast.success('Signed in successfully!');
+                    window.location.href = '/';
+                } else {
+                    const cookieError = await cookieResponse.json();
+                    toast.error('Authentication error: ' + (cookieError?.message || 'Failed to set session'));
+                }
             } else {
-                toast.error(response?.message);
+                toast.error(data?.message || data?.error || 'Login failed');
             }
             
         } catch (error) {

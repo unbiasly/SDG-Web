@@ -1,6 +1,6 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { ThumbsUp, MessageCircle, Bookmark, Flag, MoreVertical, Pencil, Trash, Repeat2 } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { ThumbsUp, MessageCircle, Bookmark, Flag, MoreVertical, Pencil, Trash,  UserPlus, Repeat } from 'lucide-react';
 import Image from 'next/image';
 import CommentSection from '../post/CommentSection';
 import { CommentData } from '@/service/api.interface';
@@ -12,13 +12,15 @@ import { useUser } from '@/lib/redux/features/user/hooks';
 import { BentoImageGrid } from '../post/BentoGrid';
 import DeletePostModal from '../post/DeletePostModal';
 import Link from 'next/link';
+import { toast } from 'sonner';
+import ConfirmationDialog from '../ConfirmationDialog';
 
 interface PostCardProps {
   _id: string;
   name: string;
   handle: string;
   time: string;
-  isVerified?: boolean;
+//   isVerified?: boolean;
   content: string;
   isLiked: boolean;
   isReposted?: boolean;
@@ -29,6 +31,8 @@ interface PostCardProps {
   likesCount: number;
   commentsCount: number;
   repostsCount: number;
+  isFollowed?: boolean;
+  onPostUpdate?: () => void; // Add callback for post updates
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
@@ -36,8 +40,8 @@ export const PostCard: React.FC<PostCardProps> = ({
   name,
   handle,
   time,
-  isVerified = false,
-  isReposted = false,
+//   isVerified,
+  isReposted,
   content,
   imageUrl,
   isLiked,
@@ -46,7 +50,9 @@ export const PostCard: React.FC<PostCardProps> = ({
   likesCount,
   commentsCount,
   avatar,
-  repostsCount
+  repostsCount,
+  isFollowed,
+  onPostUpdate
 }) => {
     const [isCommentsOpen, setIsCommentsOpen] = useState(false);
     const [comments, setComments] = useState<CommentData[]>([]);
@@ -60,16 +66,46 @@ export const PostCard: React.FC<PostCardProps> = ({
     
     // PostMenu state
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
     const [reportOpen, setReportOpen] = useState(false);
     const [editPostOpen, setEditPostOpen] = useState(false);
     const [deletePostOpen, setDeletePostOpen] = useState(false);
     const [isBookmarkActive, setIsBookmarkActive] = useState(isBookmarked);
+    const [isFollowedActive, setIsFollowedActive] = useState(isFollowed);   
+    const [repostConfirmOpen, setRepostConfirmOpen] = useState(false);
     
     const { user } = useUser();
     const currentUserId = user?._id;
     
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
     const closeMenu = () => setIsMenuOpen(false);
+
+    // Add click outside listener to close the menu
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            // Check if the click was outside both the menu and the toggle button
+            if (
+                isMenuOpen && 
+                menuRef.current && 
+                buttonRef.current && 
+                !menuRef.current.contains(event.target as Node) && 
+                !buttonRef.current.contains(event.target as Node)
+            ) {
+                closeMenu();
+            }
+        };
+        
+        // Add event listener when menu is open
+        if (isMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        
+        // Clean up event listener
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isMenuOpen]);
 
     useEffect(() => {
         setIsActive(isLiked);
@@ -137,13 +173,18 @@ export const PostCard: React.FC<PostCardProps> = ({
         }
     }
 
-    const handleRepost = async () => {
+    const handleRepost = () => {
+        // Check if the post belongs to the current user
+        if (userId === currentUserId) {
+            toast.error("You cannot repost your own content");
+            return;
+        }
+        // Open the confirmation dialog
+        setRepostConfirmOpen(true);
+    };
+
+    const performRepost = async () => {
         try {
-            // Optimistically update UI
-            // const newRepostState = !isRepostActive;
-            // setIsRepostActive(newRepostState);
-            // setLocalRepostsCount(prev => newRepostState ? prev + 1 : prev - 1);
-            
             const response = await fetch(`/api/post/post-action`, {
                 method: 'PATCH',
                 headers: {
@@ -156,9 +197,6 @@ export const PostCard: React.FC<PostCardProps> = ({
             });
             
             if (!response.ok) {
-                // Revert changes if API call fails
-                // setIsRepostActive(!newRepostState);
-                // setLocalRepostsCount(prev => newRepostState ? prev - 1 : prev + 1);
                 throw new Error('Failed to repost');
             }
             
@@ -168,11 +206,19 @@ export const PostCard: React.FC<PostCardProps> = ({
                 setLocalRepostsCount(data.repostsCount);
             }
             
+            // Invalidate query to fetch updated posts including the new repost
+            if (onPostUpdate) {
+                onPostUpdate();
+            }
+            
         } catch (error) {
             console.error('Error reposting:', error);
+            toast.error("Failed to repost. Please try again later.");
         }
-    }
-
+        
+        // Close the dialog
+        setRepostConfirmOpen(false);
+    };
     
     // PostMenu handlers
     const handleReportClick = () => {
@@ -221,27 +267,78 @@ export const PostCard: React.FC<PostCardProps> = ({
       setDeletePostOpen(true);
     }
     
-    const menuOptions = [
-      { icon: <Flag className="h-5 w-5 text-gray-500" />, label: "Report post", onClick: handleReportClick },
-      { icon: <Bookmark className={`h-5 w-5 ${isBookmarkActive ? "fill-current text-accent" : "text-gray-500"}`} />, label: isBookmarked ? "Saved" : "Save", onClick: handleBookmark },
-      ...(userId === currentUserId ? [
-        { icon: <Pencil className="h-5 w-5 text-gray-500" />, label: "Edit post", onClick: handleEditPost },
-        { icon: <Trash className="h-5 w-5 text-gray-500" />, label: "Delete post", onClick: handleDeletePost },
-      ] : []),
-    ];
-
-    const handleShare = () => {
-        if (navigator.share) {
-            navigator.share({
-                title: name,
-                text: content,
-                url: window.location.href,
-            }).catch((error) => console.error('Error sharing:', error));
-        } else {
-            console.log('Web Share API not supported in this browser');
-            // Fallback sharing mechanism could be implemented here
+    const handleFollow = async () => {
+        try {
+            // Optimistically update UI
+            const newFollowState = !isFollowedActive;
+            setIsFollowedActive(newFollowState);
+            
+            // Close the menu after action is taken
+            setIsMenuOpen(false);
+            
+            // Make the API call
+            const response = await fetch('/api/follow', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    followingId: userId, 
+                    userId: currentUserId, 
+                    action: newFollowState ? 'follow' : 'unfollow' 
+                }),
+            });
+            
+            if (!response.ok) {
+                // If API fails, revert UI change
+                setIsFollowedActive(!newFollowState);
+                throw new Error('Failed to update follow status');
+            }
+            
+            const data = await response.json();
+            console.log('Follow status updated successfully', data);
+            
+        } catch (error) {
+            console.error('Error updating follow status:', error);
+            // Consider showing a toast notification here for error feedback
         }
-    }
+    };
+
+    // Handle report submission completion
+    const handleReportSubmitted = () => {
+      // Refresh posts data after successful report
+      if (onPostUpdate) {
+        onPostUpdate();
+      }
+    };
+
+    // const handleShare = () => {
+    //     if (navigator.share) {
+    //         navigator.share({
+    //             title: name,
+    //             text: content,
+    //             url: window.location.href,
+    //         }).catch((error) => console.error('Error sharing:', error));
+    //     } else {
+    //         console.log('Web Share API not supported in this browser');
+    //         // Fallback sharing mechanism could be implemented here
+    //     }
+    // }
+    const menuOptions = [
+        
+        { icon: <Bookmark className={`h-5 w-5 ${isBookmarkActive ? "fill-current text-accent" : "text-gray-500"}`} />, label: isBookmarkActive ? "Saved" : "Save", onClick: handleBookmark },
+        
+        ...(userId !== currentUserId ? [
+            { icon: <UserPlus className={`h-5 w-5 ${isFollowedActive ? "fill-current text-accent" : "text-gray-500"}`} />, label: isFollowedActive ? "Unfollow" : "Follow", onClick: handleFollow },
+            { icon: <Flag className="h-5 w-5 text-gray-500" />, label: "Report post", onClick: handleReportClick },
+        ] : []),
+        
+        ...(userId === currentUserId ? [
+            { icon: <Pencil className="h-5 w-5 text-gray-500" />, label: "Edit post", onClick: handleEditPost },
+            { icon: <Trash className="h-5 w-5 text-gray-500" />, label: "Delete post", onClick: handleDeletePost },
+        ] : []),
+
+    ];
     
     const getComments = async () => {
         try {
@@ -277,11 +374,11 @@ export const PostCard: React.FC<PostCardProps> = ({
     
   return (
     <div className="w-full border-b  p-2 border-gray-300">
-        {isReposted && (
+        {/* {isReposted && (
           <div className=" py-2 border-b px-4 mb-2  text-sm text-gray-500">
             <Link href={`/profile/${userId}`} className="font-bold hover:underline">{name}</Link> reposted this
           </div>
-        )}
+        )} */}
       <div className="flex justify-between mb-3">
         <div className="flex items-center">
             <Link href={`/profile/${userId}`}>
@@ -292,7 +389,8 @@ export const PostCard: React.FC<PostCardProps> = ({
                 <Link href={`/profile/${userId}`}>
                     <h4 className="font-semibold text-sm">{name}</h4>
                 </Link>
-              {/* <span className="text-xs text-gray-500 ml-1.5">• Reposted</span> */}
+                {isFollowedActive && <span className="text-xs text-gray-500 ml-1.5">• Following</span> }
+              
             </div>
             <div className="flex items-center text-xs text-gray-500">
                 <Link href={`/profile/${userId}`}>
@@ -309,6 +407,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           {/* Post Menu */}
           <div className="relative">
             <button 
+              ref={buttonRef} // Add ref to the button
               onClick={toggleMenu}
               className="p-2 rounded-full cursor-pointer hover:bg-gray-100 transition-colors"
               aria-label="More options"
@@ -318,6 +417,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
             {isMenuOpen && (
               <div 
+                ref={menuRef} // Add ref to the menu
                 className="absolute right-0 mt-2 w-64 rounded-lg bg-white shadow-lg z-50 border border-gray-100 overflow-hidden"
                 onClick={closeMenu}
               >
@@ -326,7 +426,10 @@ export const PostCard: React.FC<PostCardProps> = ({
                     <button 
                       key={index}
                       className="w-full cursor-pointer text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-100 transition-colors"
-                      onClick={item.onClick}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        item.onClick();
+                      }}
                     >
                       {item.icon}
                       <span className="text-gray-700">{item.label}</span>
@@ -377,36 +480,21 @@ export const PostCard: React.FC<PostCardProps> = ({
         </div>
       </div>
       
-      <div className="flex h-1 w-full my-2">
-        <div className="flex-1 bg-[#E5243B]/60"></div>
-        <div className="flex-1 bg-[#DDA63A]/60"></div>
-        <div className="flex-1 bg-[#4C9F38]/60"></div>
-        <div className="flex-1 bg-[#C5192D]/60"></div>
-        <div className="flex-1 bg-[#FF3A21]/60"></div>
-        <div className="flex-1 bg-[#26BDE2]/60"></div>
-        <div className="flex-1 bg-[#FCC30B]/60"></div>
-        <div className="flex-1 bg-[#A21942]/60"></div>
-        <div className="flex-1 bg-[#FD6925]/60"></div>
-        <div className="flex-1 bg-[#DD1367]/60"></div>
-        <div className="flex-1 bg-[#FD9D24]/60"></div>
-        <div className="flex-1 bg-[#BF8B2E]/60"></div>
-        <div className="flex-1 bg-[#3F7E44]/60"></div>
-        <div className="flex-1 bg-[#0A97D9]/60"></div>
-        <div className="flex-1 bg-[#56C02B]/60"></div>
-        <div className="flex-1 bg-[#00689D]/60"></div>
-        <div className="flex-1 bg-[#19486A]/60"></div>
-      </div>
+      
+      <div className='w-full border border-gray-200' />
       
       <div className="flex justify-evenly pt-2 ">
         {[
-            { icon: <ThumbsUp size={18}  className={isActive ? "fill-current font-bold" : "text-gray-500"} />, label: "Like", onClick: handleLike, isActive: isActive },
+            { icon: <ThumbsUp size={18}  className={isActive ? "fill-current font-bold" : "text-gray-500"} />, label: isActive ? "Liked" : "Like" , onClick: handleLike, isActive: isActive },
             { icon: <MessageCircle size={18} className={isCommentsOpen ? "fill-current" : "text-gray-500"} />, label: "Comment", onClick: toggleComments, isActive: isCommentsOpen },
-            { icon: <Repeat2 size={18} className={ "text-gray-500"} />, label: "Repost", onClick: handleRepost, },
+            ...(userId !== currentUserId ? [
+            { icon: <Repeat size={18} className={isReposted ? "fill-current" : "text-gray-500"} />, label: isReposted ? "Reposted" : "Repost", onClick: handleRepost, }
+            ] : []),
             //   { icon: <Share2 size={18} className="text-gray-500" />, label: "Share", onClick: handleShare, isActive: false }
         ].map((action, index) => (
             <button 
             key={index}
-            className={`w-50 flex items-center cursor-pointer justify-center gap-2 py-1.5 rounded-xl transition-colors duration-200 ${action.isActive ?  "font-bold bg-gray-300" : "font-medium hover:bg-gray-200 "}`}
+            className={`w-50 flex items-center cursor-pointer justify-center gap-2 py-1.5 rounded-xl transition-colors duration-200 ${action.isActive ?  "font-bold" : "font-medium hover:bg-gray-200 "}`}
             onClick={action.onClick}
             >
             {action.icon}
@@ -424,7 +512,12 @@ export const PostCard: React.FC<PostCardProps> = ({
       </div>
       
       {/* Modals and Popovers */}
-      <ReportPopover open={reportOpen} onOpenChange={setReportOpen} postId={_id} />
+      <ReportPopover 
+        open={reportOpen} 
+        onOpenChange={setReportOpen} 
+        id={_id} 
+        onReportSubmitted={handleReportSubmitted}
+      />
       <EditPost 
         open={editPostOpen} 
         onOpenChange={setEditPostOpen} 
@@ -436,6 +529,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         open={deletePostOpen}
         onOpenChange={setDeletePostOpen}
         postId={_id}
+        onPostUpdate={onPostUpdate} // Pass the callback here
       />
       <SocialPostDialog 
         open={isDialogOpen}
@@ -445,7 +539,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         handle={handle}
         userId={userId}
         time={time}
-        isVerified={isVerified}
+        // isVerified={isVerified}
         content={content}
         isLiked={isLiked}
         isBookmarked={isBookmarked}
@@ -455,6 +549,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         commentsCount={commentsCount}
         repostsCount={repostsCount}
         comments={comments}
+        onPostUpdate={onPostUpdate} // Pass the callback here
       />
       {!isLargeScreen && imageUrl && imageUrl.length > 0 && (
         <div className="text-right mb-2">
@@ -466,6 +561,14 @@ export const PostCard: React.FC<PostCardProps> = ({
           </Link>
         </div>
       )}
+      {/* Add this near the bottom of your component, with the other dialogs */}
+      <ConfirmationDialog 
+        open={repostConfirmOpen}
+        onOpenChange={setRepostConfirmOpen}
+        clickFunc={performRepost}
+        subject="Repost"
+        object="post"
+      />
     </div>
   );
 };

@@ -1,22 +1,26 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, SmartphoneIcon, LaptopIcon } from 'lucide-react';
 import ConfirmationDialog from '../ConfirmationDialog';
 import { useRouter } from 'next/navigation';
+import { is } from 'date-fns/locale';
 
 interface SessionItemProps {
-session: {
+  session: {
     _id: string;
     userId: string;
     ipAddress: string;
     userAgent: string;
     loginTime: string;
-};
+    deviceId?: string;
+    deviceName?: string;
+  };
   onSessionRemoved: () => void;
+  isCurrentSession?: boolean;
 }
 
-const SessionItem: React.FC<SessionItemProps> = ({ session, onSessionRemoved }) => {
+const SessionItem: React.FC<SessionItemProps> = ({ session, onSessionRemoved, isCurrentSession }) => {
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const router = useRouter();
 
@@ -44,38 +48,36 @@ const SessionItem: React.FC<SessionItemProps> = ({ session, onSessionRemoved }) 
   };
 
   // Parse user agent to get browser and device info
-  const getBrowserInfo = (userAgent: string) => {
-    // Simple user agent parsing
-    const isMobile = /mobile|android|iphone|ipad|ipod/i.test(userAgent.toLowerCase());
-    let browser = "Unknown browser";
-    
-    if (userAgent.includes("Firefox")) browser = "Firefox";
-    else if (userAgent.includes("Chrome")) browser = "Chrome";
-    else if (userAgent.includes("Safari")) browser = "Safari";
-    else if (userAgent.includes("Edge")) browser = "Edge";
-    else if (userAgent.includes("MSIE") || userAgent.includes("Trident/")) browser = "Internet Explorer";
-    
-    return {
-      deviceType: isMobile ? "Mobile" : "Desktop",
-      browser
-    };
-  };
   
-  const { deviceType, browser } = getBrowserInfo(session.userAgent);
+  
   const loginDate = new Date(session.loginTime).toLocaleString();
+
+  // Get the appropriate icon based on deviceId
+  const getDeviceIcon = () => {
+    if (session.deviceId === "web") {
+      return <LaptopIcon className="h-6 w-6 text-gray-500 mr-3" />;
+    } else {    
+      return <SmartphoneIcon className="h-6 w-6 text-gray-500 mr-3" />;
+    }
+  };
+
+  const deviceType = session.deviceId === "web" ? "Web" : "Mobile";
 
   return (
     <div className="flex justify-between items-center p-4 border rounded-md mb-3">
-      <div>
-        <div className="flex items-center">
-          <span className="font-bold">{deviceType}</span>
-          <span className="ml-2 text-sm text-gray-500">{browser}</span>
+      <div className="flex items-center">
+        {getDeviceIcon()}
+        <div>
+          <div className="flex items-center">
+            <span className="font-bold">{deviceType}</span>
+            <span className="ml-2 text-sm text-gray-500">{session?.deviceName}</span>
+          </div>
+          <p className="text-sm text-gray-500">
+            Login time: {loginDate}
+          </p>
         </div>
-        <p className="text-sm text-gray-500">
-          IP: {session.ipAddress} · Login time: {loginDate}
-        </p>
       </div>
-      
+      {!isCurrentSession && (
       <button
         aria-label='Remove session'
         onClick={() => setIsConfirmationOpen(true)}
@@ -83,6 +85,7 @@ const SessionItem: React.FC<SessionItemProps> = ({ session, onSessionRemoved }) 
       >
         <X size={18} />
       </button>
+      )}
 
       <ConfirmationDialog
         open={isConfirmationOpen}

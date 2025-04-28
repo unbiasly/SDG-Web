@@ -4,6 +4,8 @@ import ProfileAvatar from "../profile/ProfileAvatar";
 import { cn } from "@/lib/utils";
 import { CommentData } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
+import { SendHorizonal } from "lucide-react";
+import Link from "next/link";
 
 interface CommentSectionProps {
     post_id: string;
@@ -15,6 +17,7 @@ interface CommentSectionProps {
 }
 
 interface CommentProps {
+    _id: string;
     userName: string;
     content: string;
     userAvatar?: string;
@@ -91,7 +94,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       {/* Comment input area */}
       <div className="flex gap-3 mb-4">
         <ProfileAvatar src={user?.profileImage || ''} size="xs" />
-        <div className="flex-1 relative">
+        <div className="flex-1 flex items-center relative">
           <input
             type="text"
             value={comment}
@@ -104,6 +107,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               }
             }}
           />
+          <SendHorizonal className="ml-2 cursor-pointer " onClick={handleComment}/>
         </div>
           {/* <div className=" flex gap-2 ">
             <button aria-label="add-image" className="text-gray-500 cursor-pointer hover:text-gray-700">
@@ -145,6 +149,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
           comments.map(comment => (
             <Comment
               key={comment._id}
+                _id={comment.user_id._id}
               userName={comment.user_id.username}
               content={comment.comment}
               userAvatar={comment.user_id.profileImage}
@@ -159,6 +164,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 };
 
 const Comment: React.FC<CommentProps> = ({
+    _id,
     userName,
     content,
     userAvatar,
@@ -173,7 +179,7 @@ const Comment: React.FC<CommentProps> = ({
       
       <div className="flex-1">
         <div className="flex justify-between items-start">
-            <h4 className="font-bold text-sm">{userName}</h4>
+            <Link href={`/profile/${_id}`} className="font-bold text-sm"><span>{userName}</span></Link>
         {/* <div className="flex items-center gap-2">
             <button aria-label="more-optionss" className="text-gray-500 hover:text-gray-700">
               <MoreVertical size={16} />

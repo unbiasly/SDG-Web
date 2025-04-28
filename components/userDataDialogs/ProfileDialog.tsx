@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+'use client'
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,28 +21,81 @@ export const UserProfileDialog = ({
 }) => {
   const [calendarOpen, setCalendarOpen] = useState<boolean>(false);
   const { user } = useUser();
+  // Store the original user data for comparison
+  const [originalData, setOriginalData] = useState<UserDetailsRequest | null>(null);
   const [profileData, setProfileData] = useState<UserDetailsRequest>({
-    name: user?.name || "",
-    // username: user?.username || "",
-    location: user?.location || "",
-    gender: user?.gender || "",
-    dob: user?.dob ? new Date(user.dob) : new Date(), // Default to current date if undefined
-    portfolioLink: user?.portfolioLink || "",
-    bio: user?.bio || "",
+    name: user?.fName && user?.lName ? `${user.fName} ${user.lName}` : undefined,
+    location: user?.location,
+    gender: user?.gender || undefined,
+    dob: user?.dob ? new Date(user.dob) : undefined,
+    portfolioLink: user?.portfolioLink || undefined,
+    bio: user?.bio || undefined,
     education: user?.education || [],
     experience: user?.experience || [],
-    fName: user?.fName || "",
-    lName: user?.lName || "",
-    occupation: user?.occupation || "",
-    pronouns: user?.pronouns || "",
-    headline: user?.headline || "",
-    profileImage: user?.profileImage || "", // Added missing property
-    profileBackgroundImage: user?.profileBackgroundImage || "" // Added missing property
+    fName: user?.fName || undefined,
+    lName: user?.lName || undefined,
+    occupation: user?.occupation || undefined,
+    pronouns: user?.pronouns || undefined,
+    headline: user?.headline || undefined,
+    profileImage: user?.profileImage || undefined,
+    profileBackgroundImage: user?.profileBackgroundImage || undefined
   });
   
   // Add file state for image uploads
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [backgroundImageFile, setBackgroundImageFile] = useState<File | null>(null);
+  // Track if data has been modified
+  const [isDataModified, setIsDataModified] = useState(false);
+  const [dobError, setDobError] = useState<string | null>(null);
+
+  // Initialize original data when component mounts
+  useEffect(() => {
+    if (user) {
+      const initialData = {
+        name: user?.fName && user?.lName ? `${user.fName} ${user.lName}` : undefined,
+        location: user.location || undefined,
+        gender: user.gender || undefined,
+        dob: user.dob ? new Date(user.dob) : undefined,
+        portfolioLink: user.portfolioLink || undefined,
+        bio: user.bio || undefined,
+        education: user.education || [],
+        experience: user.experience || [],
+        fName: user.fName || undefined,
+        lName: user.lName || undefined,
+        occupation: user.occupation || undefined,
+        pronouns: user.pronouns || undefined,
+        headline: user.headline || undefined,
+        profileImage: user.profileImage || undefined,
+        profileBackgroundImage: user.profileBackgroundImage || undefined
+      };
+      setOriginalData(initialData);
+    }
+  }, [user]);
+
+  // Check for modifications whenever profileData, profileImageFile, or backgroundImageFile changes
+  useEffect(() => {
+    if (!originalData) return;
+    
+    // Compare fields between current form data and original data
+    const isTextDataChanged = 
+      originalData.fName !== profileData.fName ||
+      originalData.lName !== profileData.lName ||
+      originalData.location !== profileData.location ||
+      originalData.gender !== profileData.gender ||
+      originalData.portfolioLink !== profileData.portfolioLink ||
+      originalData.bio !== profileData.bio ||
+      originalData.occupation !== profileData.occupation ||
+      originalData.pronouns !== profileData.pronouns ||
+      originalData.headline !== profileData.headline;
+    
+    // Compare dates (accounting for potential timezone differences)
+    const isDateChanged = originalData.dob?.toDateString() !== profileData.dob?.toDateString();
+    
+    // Check if any file was selected
+    const isFileChanged = profileImageFile !== null || backgroundImageFile !== null;
+    
+    setIsDataModified(isTextDataChanged || isDateChanged || isFileChanged);
+  }, [profileData, profileImageFile, backgroundImageFile, originalData]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -53,6 +107,7 @@ export const UserProfileDialog = ({
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
       setProfileData((prev) => ({ ...prev, dob: date }));
+      setDobError(null); // Clear error when date is manually selected
     }
   };
 
@@ -72,22 +127,29 @@ export const UserProfileDialog = ({
     }
   };
 
+  // Fix the handleProfileUpdate function to only send non-empty values
   const handleProfileUpdate = async () => {
     try {
       const formData = new FormData();
-      // Append all necessary fields to FormData
-      formData.append('name', `${profileData.fName} ${profileData.lName}`.trim());
-    //   formData.append('username', profileData.username);
-      formData.append('location', profileData.location || '');
-      formData.append('gender', profileData.gender || '');
-      formData.append('dob', profileData.dob ? profileData.dob.toISOString() : ''); // Convert date to string
-      formData.append('portfolioLink', profileData.portfolioLink || '');
-      formData.append('bio', profileData.bio || ''); // Add bio field
-      formData.append('fName', profileData.fName || ''); // Add first name field
-      formData.append('lName', profileData.lName || ''); // Add last name field
-      formData.append('occupation', profileData.occupation || ''); // Add occupation field
-      formData.append('pronouns', profileData.pronouns || ''); // Add pronouns field
-      formData.append('headline', profileData.headline || ''); // Add headline field
+      
+      // Only append fields that have actual values - don't send empty strings
+      if (profileData.fName && profileData.fName.trim()) formData.append('fName', profileData.fName);
+      if (profileData.lName && profileData.lName.trim()) formData.append('lName', profileData.lName);
+      
+      // Only create name if both first and last name exist
+      if (profileData.fName && profileData.lName) {
+        formData.append('name', `${profileData.fName} ${profileData.lName}`.trim());
+      }
+      
+      // Only append fields with actual values
+      if (profileData.location && profileData.location.trim()) formData.append('location', profileData.location);
+      if (profileData.gender) formData.append('gender', profileData.gender);
+      if (profileData.dob) formData.append('dob', profileData.dob.toISOString());
+      if (profileData.portfolioLink && profileData.portfolioLink.trim()) formData.append('portfolioLink', profileData.portfolioLink);
+      if (profileData.bio && profileData.bio.trim()) formData.append('bio', profileData.bio);
+      if (profileData.occupation && profileData.occupation.trim()) formData.append('occupation', profileData.occupation);
+      if (profileData.pronouns) formData.append('pronouns', profileData.pronouns);
+      if (profileData.headline && profileData.headline.trim()) formData.append('headline', profileData.headline);
       
       // Handle file uploads properly
       if (profileImageFile) {
@@ -102,7 +164,7 @@ export const UserProfileDialog = ({
         formData.append('profileBackgroundImage', profileData.profileBackgroundImage.toString());
       }
 
-      const response = await fetch('/profile/userDetailsUpdate', {
+      const response = await fetch('/api', {
         method: "PUT",
         body: formData,
       });
@@ -286,42 +348,69 @@ export const UserProfileDialog = ({
 
           {/* Date of Birth */}
           <div className="space-y-2">
-            <label htmlFor="dob" className="text-sm font-medium">
-              Date of Birth
-            </label>
-            <div className="relative">
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !profileData.dob && "text-muted-foreground"
-                )}
-                onClick={() => setCalendarOpen(!calendarOpen)}
-              >
-                {profileData.dob ? (
-                  format(profileData.dob, "PPP")
-                ) : (
-                  <span>Select date of birth</span>
-                )}
-                <CalendarIcon className="ml-auto h-4 w-4" />
-              </Button>
-              {calendarOpen && (
-                <div className="absolute z-50 right-1 bottom-1 mb-1 bg-white rounded-2xl shadow-md">
-                  <Calendar
-                    mode="single"
-                    selected={profileData.dob ? new Date(profileData.dob) : undefined}
-                    onSelect={(date) => {
-                      handleDateChange(date);
-                      setCalendarOpen(false);
-                    }}
-                    initialFocus
-                    disabled={(date) => date > new Date()}
-                    className="p-3 pointer-events-auto"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+  <label htmlFor="dob" className="text-sm font-medium">
+    Date of Birth
+  </label>
+  <div className="relative">
+    <Button
+      variant="outline"
+      className={cn(
+        "w-full justify-start text-left font-normal",
+        !profileData.dob && "text-muted-foreground",
+        dobError && "border-red-500"
+      )}
+      onClick={() => setCalendarOpen(!calendarOpen)}
+    >
+      {profileData.dob ? (
+        format(profileData.dob, "PPP")
+      ) : (
+        <span>Select date of birth</span>
+      )}
+      <CalendarIcon className="ml-auto h-4 w-4" />
+    </Button>
+    {calendarOpen && (
+      <div className="absolute z-50 right-1 bottom-1 mb-1 bg-white rounded-2xl shadow-md">
+        <Calendar
+          mode="single"
+          selected={profileData.dob && new Date(profileData.dob)}
+          onSelect={(date) => {
+            handleDateChange(date);
+            setCalendarOpen(false);
+          }}
+          disabled={(date) => {
+            // Disable future dates
+            if (date > new Date()) return true;
+            
+            // Disable dates for users under minimum age (13)
+            const minAge = 13;
+            const today = new Date();
+            const minAgeDate = new Date(
+              today.getFullYear() - minAge,
+              today.getMonth(),
+              today.getDate()
+            );
+            if (date > minAgeDate) return true;
+            
+            // Disable unreasonably old dates
+            const maxAge = 120;
+            const maxAgeDate = new Date(
+              today.getFullYear() - maxAge,
+              today.getMonth(),
+              today.getDate()
+            );
+            if (date < maxAgeDate) return true;
+            
+            return false;
+          }}
+          className="p-3 pointer-events-auto"
+        />
+      </div>
+    )}
+    {dobError && (
+      <p className="text-red-500 text-xs mt-1">{dobError}</p>
+    )}
+  </div>
+</div>
             {/* Pronouns */}
             <div className="space-y-2">
             <label htmlFor="pronouns" className="text-sm font-medium">
@@ -394,8 +483,8 @@ export const UserProfileDialog = ({
         <div className="border-t pt-4 flex justify-end">
           <Button 
             onClick={handleProfileUpdate} 
-            className="bg-gray-200 hover:bg-gray-100 text-black cursor-pointer px-8"
-            disabled={ !profileData.username }
+            className="bg-accent hover:bg-accent text-white cursor-pointer px-8"
+            disabled={!isDataModified}
           >
             Save
           </Button>

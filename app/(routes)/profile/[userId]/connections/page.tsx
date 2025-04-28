@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { 
@@ -7,6 +7,7 @@ import {
   useMutation, 
   useQueryClient 
 } from "@tanstack/react-query";
+import { AnalyticsResponseData } from "@/service/api.interface";
 
 type UserType = {
   _id: string;
@@ -29,10 +30,8 @@ export default function Page({ params }: ConnectionsPageProps) {
   const userId = resolvedParams.userId;
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"followers" | "following">("followers");
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [sortOption, setSortOption] = useState("Most Relevant");
   const [profileData, setProfileData] = useState<{name?: string, username?: string}>({});
-
+  const [analytics, setAnalytics] = useState<AnalyticsResponseData | null>(null);
   // Function to fetch followers with cursor-based pagination
   const fetchFollowers = async ({ pageParam = null }) => {
     const response = await fetch(`/api/follow`, {
@@ -95,7 +94,7 @@ export default function Page({ params }: ConnectionsPageProps) {
       const userData = await response.json();
       if (userData?.data) {
         setProfileData({
-          name: userData.data.name || userData.data.fName + ' ' + userData.data.lName,
+          name: userData.data.name  ,
           username: userData.data.username
         });
       }
@@ -106,9 +105,11 @@ export default function Page({ params }: ConnectionsPageProps) {
 
   useEffect(() => {
     fetchUserProfile();
+    getAnalytics();
   }, [userId]);
 
   // Set up infinite queries for followers and following
+  // The key change: enabled is always true to prefetch both
   const {
     data: followersData,
     fetchNextPage: fetchNextFollowers,
@@ -121,7 +122,9 @@ export default function Page({ params }: ConnectionsPageProps) {
     getNextPageParam: (lastPage) => 
       lastPage.pagination?.hasMore ? lastPage.pagination.nextCursor : undefined,
     initialPageParam: null,
-    enabled: activeTab === "followers"
+    enabled: true, // Always fetch regardless of active tab
+    staleTime: 5 * 60 * 1000, // 5 minutes before refetch
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   const {
@@ -136,7 +139,9 @@ export default function Page({ params }: ConnectionsPageProps) {
     getNextPageParam: (lastPage) => 
       lastPage.pagination?.hasMore ? lastPage.pagination.nextCursor : undefined,
     initialPageParam: null,
-    enabled: activeTab === "following"
+    enabled: true, // Always fetch regardless of active tab
+    staleTime: 5 * 60 * 1000, // 5 minutes before refetch
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   // Mutation for follow/unfollow
@@ -166,20 +171,43 @@ export default function Page({ params }: ConnectionsPageProps) {
       queryClient.invalidateQueries({ queryKey: ['following', userId] });
     },
   });
+  const getAnalytics = async () => {
+    try {
+        const response = await fetch(`/api/analytics`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'get',
+                userId: userId,
+                startDate: "2025-03-15",
+                endDate: "2025-04-15"
+            }),
+        });
+            const analyticsData = await response.json();
+            setAnalytics(analyticsData);
+            console.log("Analytics Data \n", analytics);
+        return analyticsData;
+    } catch(error) {
+        console.error("Analytics Fetch Error \n", error);
+        return null;
+    }
+}
 
-  const handleFollowToggle = (user: UserType) => {
-    const action = user.following ? 'unfollow' : 'follow';
-    followMutation.mutate({ 
-      targetUserId: user._id, 
-      action 
-    });
-  };
+//   const handleFollowToggle = useCallback((user: UserType) => {
+//     const action = user.following ? 'unfollow' : 'follow';
+//     followMutation.mutate({ 
+//       targetUserId: user._id, 
+//       action 
+//     });
+//   }, [followMutation]);
 
-  // Flatten pages data for rendering
+  // Flatten pages data for rendering - memoized to prevent recalculations
   const followers = followersData?.pages.flatMap(page => 
     page.data?.map((user: UserType) => ({
       ...user,
-      following: true // Assume we're already following these users
+      following: true // Followers of this profile are users we follow
     })) || []
   ) || [];
 
@@ -191,28 +219,35 @@ export default function Page({ params }: ConnectionsPageProps) {
   ) || [];
 
   // Get total counts
-  const followersCount = followersData?.pages[0]?.pagination?.totalItems || 0;
-  const followingCount = followingData?.pages[0]?.pagination?.totalItems || 0;
+  const followersCount = analytics?.data?.followCounts?.followerCount;
+  const followingCount = analytics?.data?.followCounts?.followingCount;
 
   // Function to load more data based on active tab
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     if (activeTab === "followers" && hasMoreFollowers) {
       fetchNextFollowers();
     } else if (activeTab === "following" && hasMoreFollowing) {
       fetchNextFollowing();
     }
-  };
+  }, [activeTab, hasMoreFollowers, hasMoreFollowing, fetchNextFollowers, fetchNextFollowing]);
 
-  const isLoading = (activeTab === "followers" && isLoadingFollowers) || 
-                   (activeTab === "following" && isLoadingFollowing);
+  // Determine loading states only for visible content
+  const isActiveTabLoading = 
+    (activeTab === "followers" && isLoadingFollowers && followers.length === 0) || 
+    (activeTab === "following" && isLoadingFollowing && following.length === 0);
   
-  const hasError = (activeTab === "followers" && followersError) || 
-                   (activeTab === "following" && followingError);
+  const isLoadingMore = 
+    (activeTab === "followers" && isLoadingFollowers && followers.length > 0) || 
+    (activeTab === "following" && isLoadingFollowing && following.length > 0);
+  
+  const hasError = 
+    (activeTab === "followers" && followersError) || 
+    (activeTab === "following" && followingError);
 
-//   const filteredUsers = (activeTab === "followers" ? followers : following).filter(
-//     (user) => user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-//              user.username.toLowerCase().includes(searchTerm.toLowerCase())
-//   );
+  // Handle tab change
+  const handleTabChange = useCallback((tab: "followers" | "following") => {
+    setActiveTab(tab);
+  }, []);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -237,7 +272,7 @@ export default function Page({ params }: ConnectionsPageProps) {
               ? "text-blue-900 border-b-2 border-blue-900"
               : "text-gray-500"
           }`}
-          onClick={() => setActiveTab("followers")}
+          onClick={() => handleTabChange("followers")}
         >
           {followersCount} Followers
         </button>
@@ -248,7 +283,7 @@ export default function Page({ params }: ConnectionsPageProps) {
               ? "text-blue-900 border-b-2 border-blue-900"
               : "text-gray-500"
           }`}
-          onClick={() => setActiveTab("following")}
+          onClick={() => handleTabChange("following")}
         >
           {followingCount} Following
         </button>
@@ -285,8 +320,7 @@ export default function Page({ params }: ConnectionsPageProps) {
           </div>
         )}
         
-        {isLoading && !((activeTab === "followers" && followers.length > 0) || 
-                      (activeTab === "following" && following.length > 0)) ? (
+        {isActiveTabLoading ? (
           <div className="p-4 text-center">Loading...</div>
         ) : (
           <div className="divide-y divide-gray-100">
@@ -300,7 +334,7 @@ export default function Page({ params }: ConnectionsPageProps) {
                   className="flex items-center flex-1"
                 >
                   <img
-                    src={user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`}
+                    src={user.profileImage}
                     alt={user.name || user.username}
                     className="w-12 h-12 rounded-full mr-3 object-cover"
                   />
@@ -309,7 +343,7 @@ export default function Page({ params }: ConnectionsPageProps) {
                     <p className="text-gray-600">{user.occupation || user.email}</p>
                   </div>
                 </Link>
-                <button
+                {/* <button
                   onClick={() => handleFollowToggle(user)}
                   className={`font-medium py-2 px-6 rounded-full transition-colors ${
                     user.following 
@@ -319,9 +353,9 @@ export default function Page({ params }: ConnectionsPageProps) {
                   disabled={followMutation.isPending}
                 >
                   {followMutation.isPending && followMutation.variables?.targetUserId === user._id
-                    ? 'Loading...'
+                    ? 'Unfollow...'
                     : user.following ? 'Following' : 'Follow'}
-                </button>
+                </button> */}
               </div>
             ))}
             
@@ -331,10 +365,10 @@ export default function Page({ params }: ConnectionsPageProps) {
               <div className="p-4">
                 <button
                   onClick={loadMore}
-                  disabled={isLoading}
+                  disabled={isLoadingMore}
                   className="w-full py-3 border border-gray-300 rounded-lg text-blue-600 font-medium hover:bg-gray-50 transition-colors"
                 >
-                  {isLoading ? 'Loading...' : 'Load More'}
+                  {isLoadingMore ? 'Loading...' : 'Load More'}
                 </button>
               </div>
             )}

@@ -23,22 +23,23 @@ export default function Page() {
 
         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 p-2">
             {sdgGoals.map((goal) => {
-              const goalSlug = slugify(goal.title);
-              return (
-                <Link 
-                  key={goal.id} 
-                  href={`/goals/${goalSlug}`} 
-                  className="aspect-square relative hover:scale-105 transition-all"
-                >
-                  <Image 
-                    src={goal.titleCard} 
-                    alt={`SDG Goal ${goal.id}: ${goal.title}`}
-                    className="w-full h-full object-cover"
-                    width={500}
-                    height={500}
-                  />
-                </Link>
-              )
+                const goalSlug = slugify(goal.title);
+                return (
+                    <Link 
+                        key={goal.id} 
+                        href={`/goals/${goalSlug}`} 
+                        className="aspect-square relative hover:scale-105 transition-all"
+                    >
+                        <Image 
+                        src={goal.titleCard} 
+                        alt={`SDG Goal ${goal.id}: ${goal.title}`}
+                        className="w-full h-full object-cover"
+                        width={500}
+                        height={500}
+                        priority
+                        />
+                    </Link>
+                )
             })}
         </div>
         </div>

@@ -136,7 +136,6 @@ const EditPost = ({ open, onOpenChange, postId, initialContent = '', images = []
         onOpenChange(false);
         
         console.log('Post updated successfully');
-        window.location.reload();
       } catch (error) {
         console.error('Error in handlePost:', error);
       } finally {

@@ -18,14 +18,11 @@ export default function RootLayout({
 }>) {
 
   const dispatch = useAppDispatch();
-
-    useEffect(() => {
-        // Set up the token refresh service worker
-        setupAPIInterceptor();
-        fetchUser();
-        refreshToken();
-        // setupTokenRefresh();
-    }, []);
+  
+  useEffect(() => {
+    setupAPIInterceptor();
+    fetchUser();
+  }, []);
     
     const fetchUser = async () => {
         dispatch(fetchUserStart());
@@ -34,14 +31,6 @@ export default function RootLayout({
             credentials: 'include'
           });
           
-          if (!response.ok) {
-            // If unauthorized, handle it
-            if (response.status === 401 || response.status === 403) {
-              dispatch(fetchUserFailure('Unauthorized'));
-              window.location.href = '/login';
-              return null;
-            }
-          }
           const data = await response.json();
           if (data.data && data.data._id) {
             // Set fallback color for new users
@@ -58,44 +47,29 @@ export default function RootLayout({
           throw error;
         }
       };
-    const refreshToken = async () => {
-      try {
-        const response = await fetch('/api/refreshToken', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-        });
-        
-        if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to refresh token' }));
-        console.error('Token refresh failed:', response.status, errorData);
-        return { success: false, error: errorData };
-        }
-        
-        const data = await response.json();
-        return { success: true, data };
-      } catch (error) {
-        console.error('Token refresh error:', error);
-        return { success: false, error };
-      }
-    };
     
   return (
-      <main className="flex-1 flex overflow-hidden p-3 gap-3 lg:gap-6 max-container">
+      <main className="flex-1 flex overflow-hidden md:p-3 md:gap-3 lg:gap-6 max-container">
         <aside className="space-y-3 sticky h-fit">
             <Link href='/' className="justify-center items-center gap-2 px-2 hidden lg:flex">    
                 <Image src='/Logo.svg' alt='SDG Logo' width={40} height={40}  />
                 <h1 className='text-xl font-bold'>The SDG Story</h1>
             </Link>
-            <UserSidebar />
+            <div className="hidden md:block"><UserSidebar /></div>
         </aside>
-        <div className="lg:gap-0 gap-3 p-2 flex-1 min-w-0 overflow-hidden">
-            <SearchBar className="w-fit mb-2 block lg:hidden"/>
-            {children}
+        
+        {/* Optimized main content div */}
+        <div className="lg:gap-0 gap-2 p-2 flex-1 min-w-0 overflow-y-auto">
+            <div className="flex space-x-2 items-center mb-3 justify-between md:hidden sticky top-0 z-10 bg-white/95 py-1">
+                <UserSidebar />
+                <SearchBar className="w-fit"/>
+            </div>
+            <div className="pb-4">
+                {children}
+            </div>
         </div>
-        <aside className="hidden xl:block sticky space-y-3 ">
+        
+        <aside className="hidden xl:block sticky space-y-3">
             <SearchBar />
             <TrendingSection />
         </aside>

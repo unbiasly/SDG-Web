@@ -2,7 +2,7 @@
 import { SEARCH_RESULT_CATEGORIES } from '@/lib/constants/index-constants';
 import React, { useEffect, useState } from 'react'
 import { Article, ArticleCard } from '../feed/SDGNews';
-import PersonCard, { User } from '../profile/PersonCard';
+import PersonCard, { User } from './PersonCard';
 import { ArrowLeft, Search } from 'lucide-react';
 import { Post, SearchResultResponse, SDGVideoData } from '@/service/api.interface';
 import Link from 'next/link';
@@ -69,11 +69,6 @@ const SearchPageClient = ({ q }: { q: string }) => {
     }
 
     
-    // Mock follow mutation object
-    const followMutation = {
-      isPending: false,
-      variables: undefined
-    };
     
     // Handler for follow/unfollow toggle
     const handleFollowToggle = (user: User) => {
@@ -83,14 +78,14 @@ const SearchPageClient = ({ q }: { q: string }) => {
 
     // Handler for rendering video items
     const renderVideoItem = (video: SDGVideoData) => (
-        <div key={video._id} className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+        <div key={video._id} className="bg-white rounded-lg p-4 md:p-6 shadow-sm border border-gray-100">
             <Link href={`/videos/${video._id}`}>
-                <div className="flex items-start">
-                    <div className="flex-shrink-0 mr-4">
+                <div className="flex flex-col sm:flex-row items-start">
+                    <div className="w-full sm:w-auto sm:flex-shrink-0 mb-3 sm:mb-0 sm:mr-4">
                         <img 
                             src={video.thumbnail_url} 
                             alt={video.title} 
-                            className="w-32 h-24 object-cover rounded-md"
+                            className="w-full h-48 sm:w-32 sm:h-24 object-cover rounded-md"
                         />
                     </div>
                     <div className="flex-1">
@@ -112,7 +107,7 @@ const SearchPageClient = ({ q }: { q: string }) => {
 
     // Handler for rendering post items
     const renderPostItem = (post: Post) => (
-        <div key={post._id} className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+        <div key={post._id} className="bg-white rounded-lg p-4 md:p-6 shadow-sm border border-gray-100">
             <Link href={`/post/${post._id}`}>
             <div className="flex items-start">
                 <div className="flex-shrink-0 mr-4">
@@ -134,11 +129,11 @@ const SearchPageClient = ({ q }: { q: string }) => {
                                     key={index} 
                                     src={image} 
                                     alt={`Post image ${index+1}`}
-                                    className="w-20 h-20 object-cover rounded-md"
+                                    className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-md"
                                 />
                             ))}
                             {post.images.length > 3 && (
-                                <div className="w-20 h-20 bg-gray-200 rounded-md flex items-center justify-center">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-md flex items-center justify-center">
                                     <span className="text-gray-600">+{post.images.length - 3}</span>
                                 </div>
                             )}
@@ -158,56 +153,55 @@ const SearchPageClient = ({ q }: { q: string }) => {
     );
 
   return (
-    <div className='flex flex-col flex-1 overflow-hidden p-4'>
+    <div className='flex flex-col flex-1 overflow-hidden p-2 sm:p-4'>
         <div className="flex w-full h-fit items-center mb-2">
-            <ArrowLeft size={30} className='mr-5 cursor-pointer'onClick={() => window.location.href = '/'}/>
+            <ArrowLeft size={30} className='mr-2 sm:mr-5 cursor-pointer' onClick={() => window.location.href = '/'}/>
             <div className="w-full h-fit mx-auto relative">
                 <input
                     type="text"
                     value={searchQuery}
                     onKeyDown={handleSearch}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full border border-gray-600 py-2 px-4 rounded-full text-lg "
+                    className="w-full border border-gray-600 py-1 sm:py-2 px-3 sm:px-4 rounded-full text-base sm:text-lg"
                     placeholder="Search..."
                 />
-                <Search color='black' className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <Search color='black' className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             </div>
         </div>
 
         {/* Tab Navigation */}
-        
-        <div className="flex space-x-2 overflow-x-auto p-2 justify-center">
-                        {SEARCH_RESULT_CATEGORIES.map((tab, index) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab)}
-                                className={cn(
-                                    "px-4 py-1 rounded-full cursor-pointer text-lg font-semibold whitespace-nowrap",
-                                    activeTab === tab
-                                    ? "bg-accent text-white"
-                                    : "bg-white text-accent border border-accent"
-                                )}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
+        <div className="flex space-x-1 sm:space-x-2 overflow-x-auto py-2 px-1 justify-start sm:justify-center">
+            {SEARCH_RESULT_CATEGORIES.map((tab) => (
+                <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab)}
+                    className={cn(
+                        "px-2 sm:px-4 py-1 rounded-full cursor-pointer text-sm sm:text-lg font-semibold whitespace-nowrap",
+                        activeTab === tab
+                        ? "bg-accent text-white"
+                        : "bg-white text-accent border border-accent"
+                    )}
+                >
+                    {tab.label}
+                </button>
+            ))}
+        </div>
         
         {/* Tab Content */}
         <div className="flex-1 overflow-y-auto py-2">
             {activeTab === SEARCH_RESULT_CATEGORIES[0] && (
-                <div className="mx-auto  space-y-12">
+                <div className="mx-auto space-y-6 sm:space-y-12">
                     {/* People Section */}
-                    <section className='border px-5 py-6 rounded-2xl border-gray-300'>
-                        <h2 className="text-accent text-2xl font-bold mb-6">People</h2>
-                        <div className="space-y-4 ">
+                    <section className='border px-3 sm:px-5 py-4 sm:py-6 rounded-2xl border-gray-300'>
+                        <h2 className="text-accent text-xl sm:text-2xl font-bold mb-4 sm:mb-6">People</h2>
+                        <div className="space-y-4">
                             {users.length > 0 ? (
                                 users.map(user => (
                                     <PersonCard
                                         key={user._id}
                                         user={user}
-                                        handleFollowToggle={handleFollowToggle}
-                                        followMutation={followMutation}
+                                        // handleFollowToggle={handleFollowToggle}
+                                        // followMutation={followMutation}
                                     />
                                 ))
                             ) : (
@@ -217,8 +211,8 @@ const SearchPageClient = ({ q }: { q: string }) => {
                     </section>
 
                     {/* Posts Section */}
-                    <section className='border p-5 py-6 rounded-2xl border-gray-300'>
-                        <h2 className="text-accent text-2xl font-bold mb-6">Posts</h2>
+                    <section className='border px-3 sm:px-5 py-4 sm:py-6 rounded-2xl border-gray-300'>
+                        <h2 className="text-accent text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Posts</h2>
                         <div className="space-y-4">
                             {posts.length > 0 ? (
                                 posts.map(post => renderPostItem(post))
@@ -229,8 +223,8 @@ const SearchPageClient = ({ q }: { q: string }) => {
                     </section>
 
                     {/* News Section */}
-                    <section className='border p-5 py-6 rounded-2xl border-gray-300'>
-                        <h2 className="text-accent text-2xl font-bold mb-6">News</h2>
+                    <section className='border px-3 sm:px-5 py-4 sm:py-6 rounded-2xl border-gray-300'>
+                        <h2 className="text-accent text-xl sm:text-2xl font-bold mb-4 sm:mb-6">News</h2>
                         <div className="space-y-4">
                             {articles.length > 0 ? (
                                 articles.map(article => (
@@ -246,8 +240,8 @@ const SearchPageClient = ({ q }: { q: string }) => {
                     </section>
 
                     {/* Videos Section */}
-                    <section className='border p-5 py-6 rounded-2xl border-gray-300'>
-                        <h2 className="text-accent text-2xl font-bold mb-6">Videos</h2>
+                    <section className='border px-3 sm:px-5 py-4 sm:py-6 rounded-2xl border-gray-300'>
+                        <h2 className="text-accent text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Videos</h2>
                         <div className="space-y-4">
                             {videos.length > 0 ? (
                                 videos.map(video => renderVideoItem(video))
@@ -256,28 +250,19 @@ const SearchPageClient = ({ q }: { q: string }) => {
                             )}
                         </div>
                     </section>
-
-                    {/* Schemes Section */}
-                    {/* <section>
-                        <h2 className="text-accent text-2xl font-bold mb-6">Schemes</h2>
-                        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
-                            <h3 className="text-xl font-medium text-gray-900 mb-4">Assistance under SC/ST Prevention of Atrocities Act</h3>
-                            <p className="text-gray-600 leading-relaxed">The scheme 'Assistance under SC/ST Prevention of Atrocities Act' was introduced by the Adi Dravidar Welfare Department, Government of Puducherry. The objective of the scheme is to...</p>
-                        </div>
-                    </section> */}
                 </div>
             )}
             {activeTab === SEARCH_RESULT_CATEGORIES[1] && (
-                <section className='border px-5 py-6 rounded-2xl border-gray-300'>
-                    <h2 className="text-accent text-2xl font-bold mb-6">People</h2>
-                    <div className="space-y-4 ">
+                <section className='border px-3 sm:px-5 py-4 sm:py-6 rounded-2xl border-gray-300'>
+                    <h2 className="text-accent text-xl sm:text-2xl font-bold mb-4 sm:mb-6">People</h2>
+                    <div className="space-y-4">
                         {users.length > 0 ? (
                             users.map(user => (
                                 <PersonCard
                                     key={user._id}
                                     user={user}
-                                    handleFollowToggle={handleFollowToggle}
-                                    followMutation={followMutation}
+                                    // handleFollowToggle={handleFollowToggle}
+                                    // followMutation={followMutation}
                                 />
                             ))
                         ) : (
@@ -287,8 +272,8 @@ const SearchPageClient = ({ q }: { q: string }) => {
                 </section>
             )}
             {activeTab === SEARCH_RESULT_CATEGORIES[2] && (
-                <section className='border p-5 py-6 rounded-2xl border-gray-300'>
-                    <h2 className="text-accent text-2xl font-bold mb-6">Posts</h2>
+                <section className='border px-3 sm:px-5 py-4 sm:py-6 rounded-2xl border-gray-300'>
+                    <h2 className="text-accent text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Posts</h2>
                     <div className="space-y-4">
                         {posts.length > 0 ? (
                             posts.map(post => renderPostItem(post))
@@ -299,8 +284,8 @@ const SearchPageClient = ({ q }: { q: string }) => {
                 </section>
             )}
             {activeTab === SEARCH_RESULT_CATEGORIES[3] && (
-                <section className='border p-5 py-6 rounded-2xl border-gray-300'>
-                    <h2 className="text-accent text-2xl font-bold mb-6">News</h2>
+                <section className='border px-3 sm:px-5 py-4 sm:py-6 rounded-2xl border-gray-300'>
+                    <h2 className="text-accent text-xl sm:text-2xl font-bold mb-4 sm:mb-6">News</h2>
                     <div className="space-y-4">
                         {articles.length > 0 ? (
                             articles.map(article => (
@@ -316,8 +301,8 @@ const SearchPageClient = ({ q }: { q: string }) => {
                 </section>
             )}
             {activeTab === SEARCH_RESULT_CATEGORIES[4] && (
-                <section className='border p-5 py-6 rounded-2xl border-gray-300'>
-                    <h2 className="text-accent text-2xl font-bold mb-6">Videos</h2>
+                <section className='border px-3 sm:px-5 py-4 sm:py-6 rounded-2xl border-gray-300'>
+                    <h2 className="text-accent text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Videos</h2>
                     <div className="space-y-4">
                         {videos.length > 0 ? (
                             videos.map(video => renderVideoItem(video))

@@ -7,7 +7,7 @@ export const sdgGoals = [
     titleCard: '/goals/E-WEB-Goal-01.png',
     goal_header: "/goals/goal-headers/Goal-1-Elements.svg",
     description:
-      "Eradicating poverty is not a task of charity, it's an act of justice and the key to unlocking an enormous human potential. Still, nearly half of the world's population lives in poverty, and lack of food and clean water is killing thousands every single day of the year. Together, we can feed the hungry, wipe out disease and give everyone in the world a chance to prosper and live a productive and rich life.",
+      "Eradicating poverty is not a task of charity, it’s an act of justice and the key to unlocking an enormous human potential. Still, nearly half of the world’s population lives in poverty, and lack of food and clean water is killing thousands every single day of the year. Together, we can feed the hungry, wipe out disease and give everyone in the world a chance to prosper and live a productive and rich life. ",
     targets: [
       {
         id: "1.1",
@@ -27,7 +27,7 @@ export const sdgGoals = [
         id: "1.3",
         title: "IMPLEMENT SOCIAL PROTECTION SYSTEMS",
         description:
-          "Implement nationally appropriate social protection systems and measures for all, by 2030 achieve substantial coverage of the poor and the vulnerable.",
+          "Implement nationally appropriate social protection systems and measures for all, including floors, and by 2030 achieve substantial coverage of the poor and the vulnerable.",
         card: "/goals/targets/Goal-1/GOAL_1_TARGET_1.3.svg",
       },
       {
@@ -68,7 +68,7 @@ export const sdgGoals = [
     titleCard: '/goals/E-WEB-Goal-02.png',
     goal_header: "/goals/goal-headers/Goal-2-Elements.svg",
     description:
-      "Hunger is the leading cause of death in the world. Our planet has provided us with tremendous resources, but unequal access and inefficient handling leaves millions of people malnourished. If we promote sustainable agriculture with modern technologies and fair distribution systems, we can sustain the whole world's population and make sure that nobody will ever suffer from hunger again.",
+      "Hunger is the leading cause of death in the world. Our planet has provided us with tremendous resources, but unequal access and inefficient handling leaves millions of people malnourished. If we promote sustainable agriculture with modern technologies and fair distribution systems, we can sustain the whole world’s population and make sure that nobody will ever suffer from hunger again.",
     targets: [
       {
         id: "2.1",
@@ -136,7 +136,7 @@ export const sdgGoals = [
     titleCard: '/goals/E-WEB-Goal-03.png',
     goal_header: "/goals/goal-headers/Goal-3-Elements.svg",
     description:
-      "Ensuring healthy lives and promoting well-being at all ages is essential to sustainable development. Currently, the world is facing a global health crisis unlike any other — COVID-19 is spreading human suffering, destabilizing the global economy and upending the lives of billions of people around the globe. Before the pandemic, major progress was made in improving the health of millions of people. Significant strides were made in increasing life expectancy and reducing some of the common killers associated with child and maternal mortality. But more efforts are needed to fully eradicate a wide range of diseases and address many different persistent and emerging health issues.",
+      "Over the last 15 years, the number of childhood deaths has been cut in half. This proves that it is possible to win the fight against almost every disease. Still, we are spending an astonishing amount of money and resources on treating illnesses that are surprisingly easy to prevent. The new goal for worldwide Good Health promotes healthy lifestyles, preventive measures and modern, efficient healthcare for everyone.",
     targets: [
       {
         id: "3.1",
@@ -149,7 +149,7 @@ export const sdgGoals = [
         id: "3.2",
         title: "END ALL PREVENTABLE DEATHS UNDER 5 YEARS OF AGE",
         description:
-          "By 2030, end preventable deaths of newborns and children under 5 years of age, with all countries aiming to reduce neonatal mortality to at least as low as 12 per 1,000 live births and under-5 mortality to at least as low as 25 per 1,000 live births.",
+          "By 2030, end preventable deaths of new-borns and children under 5 years of age, with all countries aiming to reduce neonatal mortality to at least as low as 12 per 1,000 live births and under‑5 mortality to at least as low as 25 per 1,000 live births..",
         card: "/goals/targets/Goal-3/GOAL_3_TARGET_3.2.svg",
       },
       {
@@ -245,7 +245,7 @@ export const sdgGoals = [
         id: "4.1",
         title: "FREE PRIMARY AND SECONDARY EDUCATION",
         description:
-          "By 2030, ensure that all girls and boys complete free, equitable and quality primary and secondary education leading to relevant and effective learning outcomes.",
+          "By 2030, ensure that all girls and boys complete free, equitable and quality primary and secondary education leading to relevant and effective learning outcomes. ",
         card: "/goals/targets/Goal-4/GOAL_4_TARGET_4.1.svg",
       },
       {
@@ -287,7 +287,7 @@ export const sdgGoals = [
         id: "4.7",
         title: "EDUCATION FOR SUSTAINABLE DEVELOPMENT AND GLOBAL CITIZENSHIP",
         description:
-          "By 2030, ensure that all learners acquire the knowledge and skills needed to promote sustainable development, including, among others, through education for sustainable development and sustainable lifestyles, human rights, gender equality, promotion of a culture of peace and non-violence, global citizenship and appreciation of cultural diversity and of culture's contribution to sustainable development.",
+          "By 2030, ensure that all learners acquire the knowledge and skills needed to promote sustainable development, including, among others, through education for sustainable development and sustainable lifestyles, human rights, gender equality, promotion of a culture of peace and non-violence, global citizenship and appreciation of cultural diversity and of culture’s contribution to sustainable development",
         card: "/goals/targets/Goal-4/GOAL_4_TARGET_4.7.svg",
       },
       {
@@ -321,7 +321,7 @@ export const sdgGoals = [
     titleCard: '/goals/E-WEB-Goal-05.png',
     goal_header: "/goals/goal-headers/Goal-5-Elements.svg",
     description:
-      "Gender bias is undermining our social fabric and devalues all of us. It is not just a human rights issue; it is a tremendous waste of the world's human potential. By denying women equal rights, we deny half the population a chance to live life at its fullest. Political, economic and social equality for women will benefit all the world's citizens. Together we can eradicate prejudice and work for equal rights and respect for all.",
+      "Gender bias is undermining our social fabric and devalues all of us. It is not just a human rights issue; it is a tremendous waste of the world’s human potential. By denying women equal rights, we deny half the population a chance to live life at its fullest. Political, economic and social equality for women will benefit all the world’s citizens. Together we can eradicate prejudice and work for equal rights and respect for all.",
     targets: [
       {
         id: "5.1",
@@ -354,7 +354,7 @@ export const sdgGoals = [
         id: "5.5",
         title: "ENSURE FULL PARTICIPATION IN LEADERSHIP AND DECISION-MAKING",
         description:
-          "Ensure women's full and effective participation and equal opportunities for leadership at all levels of decision-making in political, economic and public life.",
+          "Ensure women’s full and effective participation and equal opportunities for leadership at all levels of decision-making in political, economic and public life.",
         card: "/goals/targets/Goal-5/GOAL_5_TARGET_5.5.svg",
       },
       {
@@ -407,7 +407,7 @@ export const sdgGoals = [
         id: "6.2",
         title: "END OPEN DEFECATION AND PROVIDE ACCESS TO SANITATION AND HYGIENE",
         description:
-          "By 2030, achieve access to adequate and equitable sanitation and hygiene for all and end open defecation, paying special attention to the needs of women and girls and those in vulnerable situations.",
+          "By 2030, achieve access to adequate and equitable sanitation and hygiene for all and end open defecation, paying special attention to the needs of women and girls and those in vulnerable situations..",
         card: "/goals/targets/Goal-6/GOAL_6_TARGET_6.2.svg",
       },
       {
@@ -493,7 +493,7 @@ export const sdgGoals = [
         id: "7.B",
         title: "EXPAND AND UPGRADE ENERGY SERVICES FOR DEVELOPING COUNTRIES",
         description:
-          "By 2030, expand infrastructure and upgrade technology for supplying modern and sustainable energy services for all in developing countries, in particular least developed countries, small island developing States, and land-locked developing countries, in accordance with their respective programmes of support.",
+          "By 2030, expand infrastructure and upgrade technology for supplying modern and sustainable energy services for all in developing countries, in particular least developed countries, small island developing States and landlocked developing countries, in accordance with their respective programmes of support.",
         card: "/goals/targets/Goal-7/GOAL_7_TARGET_7.B.svg",
       },
     ],
@@ -533,7 +533,7 @@ export const sdgGoals = [
         id: "8.4",
         title: "IMPROVE RESOURCE EFFICIENCY IN CONSUMPTION AND PRODUCTION",
         description:
-          "Improve progressively, through 2030, global resource efficiency in consumption and production and endeavour to decouple economic growth from environmental degradation, in accordance with the 10-year framework of programmes on sustainable consumption and production, with developed countries taking the lead.",
+          "Improve progressively, through 2030, global resource efficiency in consumption and production and endeavour to decouple economic growth from environmental degradation, in accordance with the 10‑Year Framework of Programmes on Sustainable Consumption and Production, with developed countries taking the lead.",
         card: "/goals/targets/Goal-8/GOAL_8_TARGET_8.4.svg",
       },
       {
@@ -582,7 +582,7 @@ export const sdgGoals = [
         id: "8.A",
         title: "INCREASE AID FOR TRADE SUPPORT",
         description:
-          "Increase Aid for Trade support for developing countries, in particular least developed countries, including through the Enhanced Integrated Framework for Trade-Related Technical Assistance to Least Developed Countries.",
+          "Increase Aid for Trade support for developing countries, in particular least developed countries, including through the Enhanced Integrated Framework for Trade-related Technical Assistance to Least Developed Countries.",
         card: "/goals/targets/Goal-8/GOAL_8_TARGET_8.A.svg",
       },
       {
@@ -616,7 +616,7 @@ export const sdgGoals = [
         id: "9.2",
         title: "PROMOTE INCLUSIVE AND SUSTAINABLE INDUSTRIALIZATION",
         description:
-          "Promote inclusive and sustainable industrialization and, by 2030, significantly raise industry's share of employment and gross domestic product, in line with national circumstances, and double its share in least developed countries.",
+          "Promote inclusive and sustainable industrialization and, by 2030, significantly raise industry’s share of employment and gross domestic product, in line with national circumstances, and double its share in least developed countries.",
         card: "/goals/targets/Goal-9/GOAL_9_TARGET_9.2.svg",
       },
       {
@@ -670,7 +670,7 @@ export const sdgGoals = [
     color: "#DD1367",
     titleCard: '/goals/E-WEB-Goal-10.png',
     goal_header: "/goals/goal-headers/Goal-10-Elements.svg",
-    description: "Too much of the world's wealth is held by a very small group of people. This often leads to financial and social discrimination. In order for nations to flourish, equality and prosperity must be available to everyone - regardless of gender, race, religious beliefs or economic status. When every individual is self sufficient, the entire world prospers.",
+    description: "Too much of the world’s wealth is held by a very small group of people. This often leads to financial and social discrimination. In order for nations to flourish, equality and prosperity must be available to everyone – regardless of gender, race, religious beliefs or economic status. When every individual is self sufficient, the entire world prospers.",
     targets: [
       {
         id: "10.1",
@@ -692,7 +692,7 @@ export const sdgGoals = [
       },
       {
         id: "10.4",
-        title: "ADOPT FISCAL AND SOCIAL POLICIES THAT PROMOTES EQUALITY",
+        title: "ADOPT FISCAL AND SOCIAL POLICIES THAT PROMOTE EQUALITY",
         description: "Adopt policies, especially fiscal, wage and social protection policies, and progressively achieve greater equality.",
         card: "/goals/targets/Goal-10/GOAL_10_TARGET_10.4.svg",
       },
@@ -741,7 +741,7 @@ export const sdgGoals = [
     color: "#FD9D24",
     titleCard: '/goals/E-WEB-Goal-11.png',
     goal_header: "/goals/goal-headers/Goal-11-Elements.svg",
-    description: "More than half of the world's population now live in urban areas. By 2050, that figure will have risen to 6.5 billion people – two-thirds of all humanity. Sustainable development cannot be achieved without significantly transforming the way we build and manage our urban spaces. The rapid growth of cities in the developing world, coupled with increasing rural to urban migration, has led to a boom in mega-cities. In 1990, there were ten mega-cities with 10 million inhabitants or more. In 2014, there are 28 mega-cities, home to a total 453 million people. Extreme poverty is often concentrated in urban spaces, and national and city governments struggle to accommodate the rising population in these areas. Making cities safe and sustainable means ensuring access to safe and affordable housing, and upgrading slum settlements. It also involves investment in public transport, creating green public spaces, and improving urban planning and management in a way that is both participatory and inclusive.",
+    description: "The world’s population is constantly increasing. To accommodate everyone, we need to build modern, sustainable cities. For all of us to survive and prosper, we need new, intelligent urban planning that creates safe, affordable and resilient cities with green and culturally inspiring living conditions.",
     targets: [
       {
         id: "11.1",
@@ -764,7 +764,7 @@ export const sdgGoals = [
       {
         id: "11.4",
         title: "PROTECT THE WORLD'S CULTURAL AND NATURAL HERITAGE",
-        description: "Strengthen efforts to protect and safeguard the world's cultural and natural heritage.",
+        description: "Strengthen efforts to protect and safeguard the world’s cultural and natural heritage.",
         card: "/goals/targets/Goal-11/GOAL_11_TARGET_11.4.svg",
       },
       {
@@ -794,7 +794,7 @@ export const sdgGoals = [
       {
         id: "11.B",
         title: "IMPLEMENT POLICIES FOR INCLUSION, RESOURCE EFFICIENCY AND DISASTER RISK REDUCTION",
-        description: "By 2020, substantially increase the number of cities and human settlements adopting and implementing integrated policies and plans towards inclusion, resource efficiency, mitigation and adaptation to climate change, resilience to disasters, and develop and implement, in line with the Sendai Framework for Disaster Risk Reduction 2015-2030, holistic disaster risk management at all levels.",
+        description: "By 2020, substantially increase the number of cities and human settlements adopting and implementing integrated policies and plans towards inclusion, resource efficiency, mitigation and adaptation to climate change, resilience to disasters, and develop and implement, in line with the Sendai Framework for Disaster Risk Reduction 2015–2030, holistic disaster risk management at all levels.",
         card: "/goals/targets/Goal-11/GOAL_11_TARGET_11.B.svg",
       },
       {
@@ -812,7 +812,7 @@ export const sdgGoals = [
     color: "#BF8B2E",
     titleCard: '/goals/E-WEB-Goal-12.png',
     goal_header: "/goals/goal-headers/Goal-12-Elements.svg",
-    description: "Achieving economic growth and sustainable development requires that we urgently reduce our ecological footprint by changing the way we produce and consume goods and resources. Agriculture is the biggest user of water worldwide, and irrigation now claims close to 70 percent of all freshwater for human use. The efficient management of our shared natural resources, and the way we dispose of toxic waste and pollutants, are important targets to achieve this goal. Encouraging industries, businesses and consumers to recycle and reduce waste is equally important, as is supporting developing countries to move towards more sustainable patterns of consumption by 2030. A large share of the world population is still consuming far too little to meet even their basic needs. Halving the per capita global food waste at the retailer and consumer levels is also important for creating more efficient production and supply chains. This can help with food security and shift us towards a more resource efficient economy.",
+    description: "Our planet has provided us with an abundance of natural resources. But we have not utilized them responsibly and currently consume far beyond what our planet can provide. We must learn how to use and produce in sustainable ways that will reverse the harm that we have inflicted on the planet.",
     targets: [
       {
         id: "12.1",
@@ -864,7 +864,7 @@ export const sdgGoals = [
       },
       {
         id: "12.A",
-        title: "SUPPORT DEVELOPING COUNTRIES' SCIENTIFIC AND TECHNOLOGICAL CAPACITY FOR SUSTAINABLE CONSUMPTION AND PRODUCTION",
+        title: "SUPPORT DEVELOPING COUNTRIES’ SCIENTIFIC AND TECHNOLOGICAL CAPACITY FOR SUSTAINABLE CONSUMPTION AND PRODUCTION",
         description: "Support developing countries to strengthen their scientific and technological capacity to move towards more sustainable patterns of consumption and production.",
         card: "/goals/targets/Goal-12/GOAL_12_TARGET_12.A.svg",
       },
@@ -889,7 +889,7 @@ export const sdgGoals = [
     color: "#3F7E44",
     titleCard: '/goals/E-WEB-Goal-13.png',
     goal_header: "/goals/goal-headers/Goal-13-Elements.svg",
-    description: "There is no country in the world that is not experiencing first-hand the drastic effects of climate change. Greenhouse gas emissions continue to rise, and are now more than 50 percent higher than their 1990 level. Further, global warming is causing long-lasting changes to our climate system, which threatens irreversible consequences if we do not take action now. The annual average economic losses from climate-related disasters are in the hundreds of billions of dollars. This is not to mention the human impact of geo-physical disasters, which are 91 percent climate-related, and which between 1998 and 2017 killed 1.3 million people, and left 4.4 billion injured. The goal aims to mobilize $100 billion annually by 2020 to address the needs of developing countries and help mitigate climate-related disasters.",
+    description: "Climate change is a real and undeniable threat to our entire civilization. The effects are already visible and will be catastrophic unless we act now. Through education, innovation and adherence to our climate commitments, we can make the necessary changes to protect the planet. These changes also provide huge opportunities to modernize our infrastructure which will create new jobs and promote greater prosperity across the globe.",
     targets: [
       {
         id: "13.1",
@@ -917,7 +917,7 @@ export const sdgGoals = [
       },
       {
         id: "13.B",
-        title: "PROMOTE MECHANISMS TO RAISE CAPACITY FOR CLIMATE PLANNING AND MANAGEMENT",
+        title: "PROMOTE MECHANISMS TO RAISE CAPACITY FOR PLANNING AND MANAGEMENT",
         description: "Promote mechanisms for raising capacity for effective climate change-related planning and management in least developed countries and small island developing States, including focusing on women, youth and local and marginalized communities.",
         card: "/goals/targets/Goal-13/GOAL_13_TARGET_13.B.svg",
       }
@@ -930,7 +930,7 @@ export const sdgGoals = [
     color: "#0A97D9",
     titleCard: '/goals/E-WEB-Goal-14.png',
     goal_header: "/goals/goal-headers/Goal-14-Elements.svg",
-    description: "The world's oceans – their temperature, chemistry, currents and life – drive global systems that make the Earth habitable for humankind. Our rainwater, drinking water, weather, climate, coastlines, much of our food, and even the oxygen in the air we breathe, are all ultimately provided and regulated by the sea. Throughout history, oceans and seas have been vital conduits for trade and transportation. Careful management of this essential global resource is a key feature of a sustainable future.",
+    description: "Healthy oceans and seas are essential to our existence. They cover 70 percent of our planet and we rely on them for food, energy and water. Yet, we have managed to do tremendous damage to these precious resources. We must protect them by eliminating pollution and overfishing and immediately start to responsibly manage and protect all marine life around the world.",
     targets: [
       {
         id: "14.1",
@@ -989,7 +989,7 @@ export const sdgGoals = [
     //   {
     //     id: "14.C",
     //     title: "IMPLEMENT AND ENFORCE INTERNATIONAL SEA LAW",
-    //     description: "Enhance the conservation and sustainable use of oceans and their resources by implementing international law as reflected in the United Nations Convention on the Law of the Sea, which provides the legal framework for the conservation and sustainable use of oceans and their resources, as recalled in paragraph 158 of "The future we want"."
+    //     description: "Enhance the conservation and sustainable use of oceans and their resources by implementing international law as reflected in the United Nations Convention on the Law of the Sea, which provides the legal framework for the conservation and sustainable use of oceans and their resources, as recalled in paragraph 158 of “The future we want”."
     //   }
     ]
   },
@@ -1000,7 +1000,7 @@ export const sdgGoals = [
     color: "#56C02B",
     titleCard: '/goals/E-WEB-Goal-15.png',
     goal_header: "/goals/goal-headers/Goal-15-Elements.svg",
-    description: "Forests cover 30.7 per cent of the Earth's surface and, in addition to providing food security and shelter, they are key to combating climate change, protecting biodiversity and the homes of the indigenous population. By protecting forests, we will also be able to strengthen natural resource management and increase land productivity. At the current time, thirteen million hectares of forests are being lost every year while the persistent degradation of drylands has led to the desertification of 3.6 billion hectares. Even though up to 15% of land is currently under protection, biodiversity is still at risk. Deforestation and desertification – caused by human activities and climate change – pose major challenges to sustainable development and have affected the lives and livelihoods of millions of people in the fight against poverty.",
+    description: "A flourishing life on land is the foundation for our life on this planet. We are all part of the planet’s ecosystem and we have caused severe damage to it through deforestation, loss of natural habitats and land degradation. Promoting a sustainable use of our ecosystems and preserving biodiversity is not a cause. It is the key to our own survival.",
     targets: [
       {
         id: "15.1",
@@ -1052,7 +1052,7 @@ export const sdgGoals = [
       },
       {
         id: "15.9",
-        title: "INTEGRATE ECOSYSTEM AND BIODIVERSITY VALUES INTO GOVERNMENTAL PLANNING",
+        title: "INTEGRATE ECOSYSTEM AND BIODIVERSITY IN GOVERNMENTAL PLANNING",
         description: "By 2020, integrate ecosystem and biodiversity values into national and local planning, development processes, poverty reduction strategies and accounts.",
         card: "/goals/targets/Goal-15/GOAL_15_TARGET_15.9.svg",
       },
@@ -1083,7 +1083,7 @@ export const sdgGoals = [
     color: "#00689D",
     titleCard: '/goals/E-WEB-Goal-16.png',
     goal_header: "/goals/goal-headers/Goal-16-Elements.svg",
-    description: "Peace, stability, human rights and effective governance based on the rule of law are important conduits for sustainable development. We are living in a world that is increasingly divided. Some regions enjoy sustained levels of peace, security and prosperity while others fall into seemingly endless cycles of conflict and violence. This is by no means inevitable and must be addressed. High levels of armed violence and insecurity have a destructive impact on a country's development, affecting economic growth and often resulting in long-standing grievances among communities that can last for generations. Sexual violence, crime, exploitation and torture are also prevalent where there is conflict or no rule of law, and countries must take measures to protect those who are most at risk.",
+    description: "Compassion and a strong moral compass is essential to every democratic society. Yet, persecution, injustice and abuse still runs rampant and is tearing at the very fabric of civilization. We must ensure that we have strong institutions, global standards of justice, and a commitment to peace everywhere.",
     targets: [
       {
         id: "16.1",
@@ -1147,7 +1147,7 @@ export const sdgGoals = [
       },
       {
         id: "16.A",
-        title: "STRENGTHEN NATIONAL INSTITUTIONS TO PREVENT VIOLENCE AND COMBAT CRIME AND TERRORISM",
+        title: "STRENGTHEN NATIONAL INSTITUTIONS TO PREVENT VIOLENCE AND COMBAT TERRORISM AND CRIME",
         description: "Strengthen relevant national institutions, including through international cooperation, for building capacity at all levels, in particular in developing countries, to prevent violence and combat terrorism and crime.",
         card: "/goals/targets/Goal-16/GOAL_16_TARGET_16.A.svg",
       },
@@ -1166,7 +1166,7 @@ export const sdgGoals = [
     color: "#19486A",
     titleCard: '/goals/E-WEB-Goal-17.png',
     goal_header: "/goals/goal-headers/Goal-17-Elements.svg",
-    description: "The SDGs can only be realized with strong global partnerships and cooperation. Official Development Assistance remained steady but below target, at US$147 billion in 2017. While humanitarian crises brought on by conflict or natural disasters continue to demand more financial resources and aid. Many countries also require Official Development Assistance to encourage growth and trade.",
+    description: "The Global Goals can only be met if we work together. International investments and support is needed to ensure innovative technological development, fair trade and market access, especially for developing countries. To build a better world, we need to be supportive, empathetic, inventive, passionate, and above all, cooperative.",
     targets: [
       {
         id: "17.1",
@@ -1194,14 +1194,14 @@ export const sdgGoals = [
       },
       {
         id: "17.5",
-        title: "INVEST IN LEAST-DEVELOPED COUNTRIES",
+        title: "INVEST IN LEAST DEVELOPED COUNTRIES",
         description: "Adopt and implement investment promotion regimes for least developed countries.",
         card: "/goals/targets/Goal-17/GOAL_17_TARGET_17.5.svg",
       },
       {
         id: "17.6",
         title: "KNOWLEDGE SHARING AND COOPERATION FOR ACCESS TO SCIENCE, TECHNOLOGY AND INNOVATION",
-        description: "Enhance North-South, South-South and triangular regional and international cooperation on and access to science, technology and innovation and enhance knowledge-sharing on mutually agreed terms, including through improved coordination among existing mechanisms, in particular at the United Nations level, and through a global technology facilitation mechanism.",
+        description: "Enhance North-South, South-South and triangular regional and international cooperation on and access to science, technology and innovation and enhance knowledge sharing on mutually agreed terms, including through improved coordination among existing mechanisms, in particular at the United Nations level, and through a global technology facilitation mechanism.",
         card: "/goals/targets/Goal-17/GOAL_17_TARGET_17.6.svg",
       },
       {
@@ -1212,7 +1212,7 @@ export const sdgGoals = [
       },
       {
         id: "17.8",
-        title: "STRENGTHEN THE SCIENCE, TECHNOLOGY AND INNOVATION CAPACITY FOR LEAST-DEVELOPED COUNTRIES",
+        title: "STRENGTHEN THE SCIENCE, TECHNOLOGY AND INNOVATION CAPACITY FOR LEAST DEVELOPED COUNTRIES",
         description: "Fully operationalize the technology bank and science, technology and innovation capacity-building mechanism for least developed countries by 2017 and enhance the use of enabling technology, in particular information and communications technology.",
         card: "/goals/targets/Goal-17/GOAL_17_TARGET_17.8.svg",
       },
@@ -1231,12 +1231,12 @@ export const sdgGoals = [
       {
         id: "17.11",
         title: "INCREASE THE EXPORTS OF DEVELOPING COUNTRIES",
-        description: "Significantly increase the exports of developing countries, in particular with a view to doubling the least developed countries' share of global exports by 2020.",
+        description: "Significantly increase the exports of developing countries, in particular with a view to doubling the least developed countries’ share of global exports by 2020.",
         card: "/goals/targets/Goal-17/GOAL_17_TARGET_17.11.svg",
       },
       {
         id: "17.12",
-        title: "REMOVE TRADE RESTRICTIONS FOR LEAST-DEVELOPED COUNTRIES",
+        title: "REMOVE TRADE BARRIERS FOR LEAST DEVELOPED COUNTRIES",
         description: "Realize timely implementation of duty-free and quota-free market access on a lasting basis for all least developed countries, consistent with World Trade Organization decisions, including by ensuring that preferential rules of origin applicable to imports from least developed countries are transparent and simple, and contribute to facilitating market access.",
         card: "/goals/targets/Goal-17/GOAL_17_TARGET_17.12.svg",
       },
@@ -1255,7 +1255,7 @@ export const sdgGoals = [
       {
         id: "17.15",
         title: "RESPECT NATIONAL LEADERSHIP TO IMPLEMENT POLICIES FOR THE SUSTAINABLE DEVELOPMENT GOALS",
-        description: "Respect each country's policy space and leadership to establish and implement policies for poverty eradication and sustainable development.",
+        description: "Respect each country’s policy space and leadership to establish and implement policies for poverty eradication and sustainable development.",
         card: "/goals/targets/Goal-17/GOAL_17_TARGET_17.15.svg",
       },
       {
