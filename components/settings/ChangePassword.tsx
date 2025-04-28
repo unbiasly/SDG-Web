@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-const ChangePassword = () => {
+interface ChangePasswordProps {
+  onBack: () => void;
+}
+
+const ChangePassword: React.FC<ChangePasswordProps> = ({ onBack }) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -59,7 +63,7 @@ const ChangePassword = () => {
   return (
     <div className="w-full mx-auto p-4">
       <div className="flex items-center space-x-2 mb-6">
-            <ArrowLeft size={25} onClick={() => window.location.href = '/settings'} />
+            <ArrowLeft size={25} onClick={onBack} className="cursor-pointer" />
         <h1 className="text-2xl font-bold">Change your password</h1>
       </div>
 

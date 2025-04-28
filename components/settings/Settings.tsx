@@ -22,6 +22,10 @@ const Settings: React.FC<SettingsProps> = ({
     setActiveSection(id === activeSection ? null : id);
   };
 
+  const handleBackToSettings = () => {
+    setActiveSection(null);
+  };
+
   const filteredItems = SETTINGS_OPTIONS;
 //   .filter(item => 
 //     item.label.toLowerCase().includes(searchTerm.toLowerCase())
@@ -46,16 +50,6 @@ const Settings: React.FC<SettingsProps> = ({
         <div className="p-2 border-b flex items-center space-x-2">
             <ArrowLeft size={25} className="cursor-pointer block lg:hidden" onClick={() => window.location.href = '/'} />
           <h1 className="text-xl font-semibold mb-2">Settings & Help Center</h1>
-          {/* <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="text"
-              placeholder="Search"
-              className="w-full pl-10 py-2 pr-4 bg-gray-100 rounded-full border border-transparent focus:outline-none focus:border-gray-300 transition-all"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div> */}
         </div>
         
         <div className="">
@@ -105,9 +99,9 @@ const Settings: React.FC<SettingsProps> = ({
         </div>
       )}
 
-      {activeSection && !activeItem?.subOptions && activeSection == 'Change_Passord' && <ChangePassword />}
-      {activeSection && !activeItem?.subOptions && activeSection == 'Deactivate' && <Deactivate />}
-      {activeSection && !activeItem?.subOptions && activeSection == 'Sessions' && <Sessions />}
+      {activeSection && !activeItem?.subOptions && activeSection == 'Change_Passord' && <ChangePassword onBack={handleBackToSettings} />}
+      {activeSection && !activeItem?.subOptions && activeSection == 'Deactivate' && <Deactivate onBack={handleBackToSettings} />}
+      {activeSection && !activeItem?.subOptions && activeSection == 'Sessions' && <Sessions onBack={handleBackToSettings} />}
       
     </div>
   );

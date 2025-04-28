@@ -2,12 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ChevronRight, SmartphoneIcon, LaptopIcon, MonitorIcon, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { SessionsResponse } from '@/service/api.interface';
 import SessionItem from './SessionItem';
 
-const Sessions = () => {
-  const router = useRouter();
+interface SessionsProps {
+  onBack: () => void;
+}
+
+const Sessions: React.FC<SessionsProps> = ({ onBack }) => {
   const [sessions, setSessions] = useState<SessionsResponse['data'] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -130,9 +132,9 @@ const Sessions = () => {
     return ip;
   };
 
-    const handleSessionRemoved = () => {
-        fetchSessions();
-    };
+  const handleSessionRemoved = () => {
+      fetchSessions();
+  };
   
   if (isLoading && !sessions) {
     return (
@@ -159,7 +161,7 @@ const Sessions = () => {
         <Button 
           variant="ghost" 
           className="p-0 mr-4"
-          onClick={() => router.back()}
+          onClick={onBack}
         >
           <ArrowLeft size={24} />
         </Button>

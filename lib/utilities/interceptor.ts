@@ -12,7 +12,14 @@ export const setupAPIInterceptor = () => {
     // If the response status is 403, redirect to login page
     if (response.status === 403) {
       console.log('Access forbidden (403) detected, redirecting to login');
-      window.location.href = '/login';
+      try {
+        await fetch('/api/logout',{
+            method: 'POST'
+        });
+        window.location.href = '/login';
+        } catch (error) {
+            console.error('Error during logout:', error);
+        }
       return response;
     }
     
