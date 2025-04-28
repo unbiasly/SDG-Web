@@ -20,7 +20,6 @@ export async function POST() {
                 { status: 401 }
             );
         }
-        console.log("cookieSessionId:", cookieSessionId);
 
         const refreshBody = { 
             "refresh_token": cookieRefreshToken,
@@ -45,8 +44,6 @@ export async function POST() {
         }
         
         const tokenData = await tokenResponse.json();
-        const { jwtToken, refreshToken, userId } = tokenData;
-        
         // Create a new response with the refreshed token
         const response = new NextResponse(
             JSON.stringify({ 
@@ -64,9 +61,9 @@ export async function POST() {
         
         response.cookies.set({
             name: 'jwtToken',
-            value: jwtToken,
+            value: tokenData.jwtToken,
             httpOnly: true,
-            secure: process.env.NODE_ENV !== 'development', // Enable for HTTPS environments
+            secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
             sameSite: 'strict',
             maxAge: 10 * 60, // 10 minutes in seconds
             path: '/'
@@ -74,9 +71,9 @@ export async function POST() {
         
         response.cookies.set({
             name: 'refreshToken',
-            value: refreshToken,
+            value: tokenData.refreshToken,
             httpOnly: true,
-            secure: process.env.NODE_ENV !== 'development', // Enable for HTTPS environments
+            secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
             sameSite: 'strict',
             maxAge: 60 * 60, // 1 hour in seconds
             path: '/'

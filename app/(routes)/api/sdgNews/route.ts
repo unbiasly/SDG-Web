@@ -24,8 +24,8 @@ export async function POST(req: NextRequest) {
 
     return Response.json({ 
         success: true, 
-        data: data.data || [],
-        pagination: data.pagination || {}
+        data: data.data,
+        pagination: data.pagination
     });
 }
 
