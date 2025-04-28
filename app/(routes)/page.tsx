@@ -5,18 +5,38 @@ import { PostCard } from '@/components/feed/PostCard';
 import SDGNews from '@/components/feed/SDGNews';
 import { FEED_TABS } from '@/lib/constants/index-constants'
 import { formatDate } from '@/lib/utilities/formatDate';
-import { fetchPosts } from '@/service/posts.service';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import React, { useEffect, useRef } from 'react'
 import { useInView } from 'react-intersection-observer';
 import Loading from '../loading';
 import { useUser } from '@/lib/redux/features/user/hooks';
+import { PostsFetchResponse } from '@/service/api.interface';
+
 
 export default function Home() {
   const [activeTab, setActiveTab] = React.useState("For You");
   const { ref, inView } = useInView();
   const { user } = useUser();
 
+  async function fetchPosts(cursor?: string): Promise<PostsFetchResponse> {
+    const url = cursor 
+      ? `/api/post?cursor=${cursor}` 
+      : '/api/post';
+      
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch posts');
+    }
+    
+    return response.json();
+  }
   // Set up infinite query
   const {
     data,
