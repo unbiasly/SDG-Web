@@ -1,21 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { X, CalendarIcon, Plus } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Education } from "@/service/api.interface";
-import { useUser } from "@/lib/redux/features/user/hooks";
+import { toast } from "sonner";
 
 interface EducationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (education: Education, index?: number) => void;
+  onSave: (education: Education, id?: string, isDeleted?: boolean) => void;
   education?: Education;
-  index?: number;
+  id?: string;
 }
 
 export const EducationDialog: React.FC<EducationDialogProps> = ({
@@ -23,25 +22,41 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
   onOpenChange,
   onSave,
   education,
-  index,
+  id,
 }) => {
-  const [educationData, setEducationData] = useState<Education>(
-    education || {
-      school: "",
-      degree: "",
-      startDate: new Date().toISOString(),
-      endDate: new Date().toISOString(),
-    }
-  );
+  // Initialize education data with provided education or new default
+  const [educationData, setEducationData] = useState<Education>({
+    _id: "",
+    school: "",
+    degree: "",
+    startDate: new Date().toISOString(),
+    endDate: new Date().toISOString(),
+  });
   const [startDateCalendarOpen, setStartDateCalendarOpen] = useState<boolean>(false);
   const [endDateCalendarOpen, setEndDateCalendarOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
-  const {
-    user,
-  } = useUser()
-
   
+  // Update local state when education prop changes
+  useEffect(() => {
+    if (education) {
+      setEducationData({
+        _id: education._id || id || "",
+        school: education.school || "",
+        degree: education.degree || "",
+        startDate: education.startDate || new Date().toISOString(),
+        endDate: education.endDate || new Date().toISOString(),
+      });
+    } else {
+      setEducationData({
+        _id: id || crypto.randomUUID(),
+        school: "",
+        degree: "",
+        startDate: new Date().toISOString(),
+        endDate: new Date().toISOString(),
+      });
+    }
+  }, [education, id, open]);
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -58,113 +73,28 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
   const handleSave = async () => {
     setIsSubmitting(true);
     try {
-      // First update the education entry via API
-      await updateEducation();
-      // Then call the parent component's onSave callback
-      onSave(educationData, index);
+      // Call the parent's onSave function passing the education data
+      onSave(educationData, educationData._id);
       onOpenChange(false);
-    //   ({
-    //     title: education?._id ? "Education updated" : "Education added",
-    //     description: "Your education details have been saved successfully.",
-    //   });
+      toast.success("Education saved successfully");
     } catch (error) {
       console.error('Error saving education:', error);
-    //   toast({
-    //     title: "Error",
-    //     description: "Failed to save education details. Please try again.",
-    //     variant: "destructive",
-    //   });
+      toast.error("Failed to save education");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const updateEducation = async () => {
-    const endpoint = '/api/careerUpdate';
-    const method = "PUT";
-    
-    // Prepare the updated education array
-    let updatedEducations = [...(user?.education || [])];
-    
-    if (index !== undefined) {
-      // Edit existing education
-      updatedEducations[index] = educationData;
-    } else {
-      // Add new education
-      updatedEducations.push(educationData);
-    }
-    
-    // Prepare the request body
-    const requestBody = {
-      username: user?.username,
-      name: user?.name,
-      location: user?.location,
-      gender: user?.gender,
-      dob: user?.dob,
-      bio: user?.bio,
-      portfolioLink: user?.portfolioLink,
-      education: updatedEducations,
-      experience: user?.experience || []
-    };
-    
-    const response = await fetch(endpoint, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody)
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to update education');
-    }
-    
-    return await response.json();
-  };
-
-  // Delete function using array index
   const handleDelete = async () => {
-    if (index === undefined) return;
-    
     setIsSubmitting(true);
     try {
-      // Create a copy of the education array
-      let updatedEducations = [...(user?.education || [])];
-      
-      // Remove the education at the specified index
-      updatedEducations.splice(index, 1);
-      
-      // Prepare request body
-      const requestBody = {
-        username: user?.username,
-        name: user?.name,
-        location: user?.location,
-        gender: user?.gender,
-        dob: user?.dob,
-        bio: user?.bio,
-        portfolioLink: user?.portfolioLink,
-        education: updatedEducations,
-        experience: user?.experience || []
-      };
-      
-      // Send API request
-      const response = await fetch('/api/careerUpdate', {
-        method: "PUT",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete education');
-      }
-      
-      // Close dialog and notify parent with the deleted index
+      // Call the parent's onSave function with the isDeleted flag
+      onSave({} as Education, educationData._id, true);
       onOpenChange(false);
-      onSave(educationData, index);
+      toast.success("Education deleted successfully");
     } catch (error) {
       console.error('Error deleting education:', error);
+      toast.error("Failed to delete education");
     } finally {
       setIsSubmitting(false);
     }
@@ -176,15 +106,12 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
     }
   };
 
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="border-b pb-4">
-          {/* <div className="flex justify-between items-center w-full">
-          </div> */}
             <DialogTitle className="text-xl font-bold">
-              {index !== undefined ? "Edit education" : "Add education"}
+              {education?._id ? "Edit education" : "Add education"}
             </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">* Indicates required</p>
         </DialogHeader>
@@ -202,6 +129,7 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
               value={educationData.school}
               onChange={handleInputChange}
               required
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -217,6 +145,7 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
               value={educationData.degree}
               onChange={handleInputChange}
               required
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -233,6 +162,7 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
                   !educationData.startDate && "text-muted-foreground"
                 )}
                 onClick={() => setStartDateCalendarOpen(!startDateCalendarOpen)}
+                type="button"
               >
                 {educationData.startDate ? (
                   format(new Date(educationData.startDate), "PPP")
@@ -271,6 +201,7 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
                   !educationData.endDate && "text-muted-foreground"
                 )}
                 onClick={() => setEndDateCalendarOpen(!endDateCalendarOpen)}
+                type="button"
               >
                 {educationData.endDate ? (
                   format(new Date(educationData.endDate), "PPP")
@@ -298,17 +229,18 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
         </div>
 
         <div className="border-t pt-4 flex justify-between">
-          {index !== undefined && (
+          {education?._id && (
             <Button 
               onClick={handleDelete}
               variant="outline"
               className="text-red-600 border-red-600 hover:bg-red-50"
               disabled={isSubmitting}
+              type="button"
             >
               Delete
             </Button>
           )}
-          <div className={index !== undefined ? "" : "ml-auto"}>
+          <div className={education?._id ? "" : "ml-auto"}>
             <Button 
               onClick={handleSave} 
               className="bg-red-600 hover:bg-red-700 text-white px-8"
@@ -319,6 +251,7 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
                 !educationData.startDate || 
                 !educationData.endDate
               }
+              type="button"
             >
               {isSubmitting ? "Saving..." : "Save"}
             </Button>

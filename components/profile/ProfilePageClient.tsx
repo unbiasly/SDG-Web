@@ -4,20 +4,21 @@ import { Eye, LinkIcon } from 'lucide-react';
 import ProfileAvatar from '@/components/profile/ProfileAvatar';
 import ProfileTabs from '@/components/profile/ProfileTabs';
 import ProfileAnalyticsCard from '@/components/profile/ProfileAnalyticsCard';
-import { CareerSection } from '@/components/profile/ExperienceCard';
 import { PROFILE_ANALYTICS, PROFILE_TABS } from '@/lib/constants/index-constants';
 import { useUser } from '@/lib/redux/features/user/hooks';
 import { AnalyticsResponseData, Education, PostsFetchResponse, UserData, Experience } from '@/service/api.interface';
 import { PostCard } from '@/components/feed/PostCard';
 import { UserProfileDialog } from '@/components/userDataDialogs/ProfileDialog';
 import Link from 'next/link';
-import { EducationDialog } from '@/components/userDataDialogs/EducationDialog';
 import { formatDate } from '@/lib/utilities/formatDate';
 import Image from 'next/image';
-import { ExperienceDialog } from '@/components/userDataDialogs/ExperienceDialog';
+import { CareerSection } from '@/components/profile/CareerSection';
 import ExperienceCard from '@/components/profile/ExperienceCard';
 import EducationCard from '@/components/profile/EducationCard';
+import { EducationDialog } from '@/components/userDataDialogs/EducationDialog';
+import { ExperienceDialog } from '@/components/userDataDialogs/ExperienceDialog';
 import FollowButton from '@/components/profile/FollowButton';
+import Loader from '../Loader';
 
 const ProfilePageClient = ({ userId }: { userId: string }) => {
     const [activeTab, setActiveTab] = useState('about');
@@ -25,6 +26,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
     const [profileUser, setProfileUser] = useState<UserData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [analytics, setAnalytics] = useState<AnalyticsResponseData | null>(null);
+
     // Education dialog state
     const [educationDialogOpen, setEducationDialogOpen] = useState(false);
     const [selectedEducation, setSelectedEducation] = useState<Education | undefined>(undefined);
@@ -34,8 +36,9 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
     const [selectedExperience, setSelectedExperience] = useState<Experience | undefined>(undefined);
     const [selectedExperienceIndex, setSelectedExperienceIndex] = useState<number | undefined>(undefined);
     
-    const { user, userLoading } = useUser();
+    const { user } = useUser();
     const isOwnProfile = user?._id === profileUser?._id;
+
     // Fetch user data by userId
     const fetchUserById = async (id: string) => {
         setIsLoading(true);
@@ -109,28 +112,36 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             return null;
         }
     }
-    const initializeProfile = async () => {
-        if (!userId) return;
-        
-        const userData = await fetchUserById(userId);
-        
-        if (userData?._id) {
-            getUserPosts(userData._id);
-            
-            
-            if (isOwnProfile) {
-                // Only fetch analytics if viewing own profile
-                getAnalytics();
-            } else if (!isOwnProfile) {
-                // Only track profile view if viewing someone else's profile
-                trackProfileView(userData._id);
-            }
+
+    const trackProfileView = async (userId: string) => {
+        try {
+            const response =await fetch('/api/analytics', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'track',
+                    userId: userId,
+                    type: 'profile_view',
+                    viewerId: user?._id
+                }),
+            });
+            const data = await response.json();
+        } catch (error) {
+        console.error("Failed to track post impression:", error);
         }
     };
+
     useEffect(() => {
-        
-        initializeProfile();
-    }, [isOwnProfile]);
+        // Only run initialization once
+        fetchUserById(userId)
+        getAnalytics();
+        getUserPosts(userId);
+        if (!isOwnProfile) {
+            trackProfileView(userId);
+        }
+    }, []); // Add userId to dependencies to reset state when it changes
 
     // Function to open dialog for adding new education
     const handleAddEducation = () => {
@@ -146,11 +157,48 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
     };
 
     // Function to handle saving education data
-    const handleSaveEducation = async (education: Education, index?: number, isDeleted?: boolean) => {
-        // If item was deleted or edited, we need to refresh user data
-        if (isDeleted || index !== undefined) {
-            // Refresh user data
+    const handleSaveEducation = async (education: Education, id?: string, isDeleted?: boolean) => {
+        try {
+            // Get current user data to work with the complete education array
+            const currentUserData = await fetchUserById(userId);
+            if (!currentUserData) return;
+            
+            let updatedEducation = [...(currentUserData.education || [])];
+            
+            if (isDeleted && id) {
+                // Remove the education entry if it's deleted
+                updatedEducation = updatedEducation.filter(edu => edu._id !== id);
+            } else if (id) {
+                // Update existing education entry
+                const index = updatedEducation.findIndex(edu => edu._id === id);
+                if (index !== -1) {
+                    updatedEducation[index] = education;
+                }
+            } else {
+                // Add new education entry with a temporary ID
+                updatedEducation.push({
+                    ...education,
+                    _id: crypto.randomUUID()
+                });
+            }
+            
+            // Call the API to update the education data
+            const response = await fetch('/api/career', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ education: updatedEducation }),
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to update education');
+            }
+            
+            // Refresh user data to show the updates
             await fetchUserById(userId);
+        } catch (error) {
+            console.error("Failed to save education:", error);
         }
     };
 
@@ -168,44 +216,56 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
     };
 
     // Function to handle saving experience data
-    const handleSaveExperience = async (experience: Experience, index?: number, isDeleted?: boolean) => {
-        // If item was deleted or edited, we need to refresh user data
-        if (isDeleted || index !== undefined) {
-            // Refresh user data
+    const handleSaveExperience = async (experience: Experience, id?: string, isDeleted?: boolean) => {
+        try {
+            // Get current user data to work with the complete experience array
+            const currentUserData = await fetchUserById(userId);
+            if (!currentUserData) return;
+            
+            let updatedExperience = [...(currentUserData.experience || [])];
+            
+            if (isDeleted && id) {
+                // Remove the experience entry if it's deleted
+                updatedExperience = updatedExperience.filter(exp => exp._id !== id);
+            } else if (id) {
+                // Update existing experience entry
+                const index = updatedExperience.findIndex(exp => exp._id === id);
+                if (index !== -1) {
+                    updatedExperience[index] = experience;
+                }
+            } else {
+                // Add new experience entry with a temporary ID
+                updatedExperience.push({
+                    ...experience,
+                    _id: crypto.randomUUID()
+                });
+            }
+            
+            // Call the API to update the experience data
+            const response = await fetch('/api/career', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ experience: updatedExperience }),
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to update experience');
+            }
+            
+            // Refresh user data to show the updates
             await fetchUserById(userId);
+        } catch (error) {
+            console.error("Failed to save experience:", error);
         }
     };
-    // {
-    //     "action": "track",
-    //     "userId": "507f1f77bcf86cd799439012",
-    //     "type": "profile_view"
-    //   }
-    const trackProfileView = async (userId: string) => {
-        try {
-          const response =await fetch('/api/analytics', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              action: 'track',
-              userId: userId,
-              type: 'profile_view',
-              viewerId: user?._id
-            }),
-          });
-          const data = await response.json();
-        } catch (error) {
-          console.error("Failed to track post impression:", error);
-        }
-      };
-
 
     // Show loading state while fetching profile data
     if (isLoading) {
         return (
             <div className="w-full min-h-screen flex flex-1 justify-center items-center">
-                <div className="animate-pulse text-xl">Loading profile...</div>
+                <Loader />
             </div>
         );
     }
@@ -340,8 +400,9 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                   >
                     {profileUser?.experience && profileUser.experience.length > 0 ? (
                       profileUser.experience.map((exp, index) => (
-                        <div key={index} className="relative">
+                        <div key={exp._id || index} className="relative">
                           <ExperienceCard 
+                            id={exp._id}
                             position={exp.role}
                             company={exp.company}
                             handleEditClick={isOwnProfile ? () => handleEditExperience(exp, index) : undefined}
@@ -364,7 +425,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                   >
                     {profileUser?.education && profileUser.education.length > 0 ? (
                       profileUser.education.map((edu, index) => (
-                        <div key={index} className="relative">
+                        <div key={edu._id || index} className="relative">
                           <EducationCard 
                             institution={edu.school}
                             degree={edu.degree}
@@ -423,7 +484,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
               onOpenChange={setEducationDialogOpen}
               onSave={handleSaveEducation}
               education={selectedEducation}
-              index={selectedEducationIndex}
+              id={selectedEducation?._id}
             />
           )}
 

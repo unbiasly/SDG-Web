@@ -1,6 +1,7 @@
 
 import React, { Suspense } from 'react'
 import ProfilePageClient from '@/components/profile/ProfilePageClient';
+import Loader from '@/components/Loader';
 
 // Define the params type
 type Params = Promise<{ userId: string }>;
@@ -16,9 +17,7 @@ const ProfileContent = async ({ params }: { params: Params }) => {
 // Main page component that wraps the ProfileContent in a Suspense boundary
 export default function Page({ params }: { params: Params }) {
   return (
-    <Suspense fallback={<div className="w-full min-h-screen flex justify-center items-center">
-      <div className="animate-pulse text-xl">Loading...</div>
-    </div>}>
+    <Suspense fallback={<Loader />}>
       <ProfileContent params={params} />
     </Suspense>
   );

@@ -5,7 +5,7 @@ import { PostCard } from '@/components/feed/PostCard';
 import SDGNews from '@/components/feed/SDGNews';
 import { FEED_TABS } from '@/lib/constants/index-constants'
 import { formatDate } from '@/lib/utilities/formatDate';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useRef } from 'react'
 import { useInView } from 'react-intersection-observer';
 import Loading from '../loading';
@@ -91,7 +91,7 @@ const trackPostImpression = async (postId: string, userId: string) => {
   // Show loading state
   if (status === 'pending') {
     return (
-      <div className="fixed inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+      <div className="flex-1 bg-white bg-opacity-75 z-50 flex items-center justify-center">
         <Loading />
       </div>
     );
@@ -161,26 +161,36 @@ const trackPostImpression = async (postId: string, userId: string) => {
 
 // Separate component for the post with tracking
 interface PostWithTrackingProps {
-  post: {
+post: {
     _id: string;
     user_id: {
-      _id: string;
-      name?: string;
-      username: string;
-      profileImage?: string;
+        _id: string;
+        name?: string;
+        username: string;
+        profileImage?: string;
+        followerCount?: number;
+        isFollowing?: boolean | null;
     };
     content: string;
     images?: string[];
-    updatedAt: string;
-    isLiked?: boolean;
-    isBookmarked?: boolean;
+    status?: string;
+    visibility?: string;
     original_post_id: string | null;
     poststat_id?: {
-      likes: number;
-      comments: number;
-      reposts: number;
+        _id?: string;
+        likes: number;
+        views?: number;
+        bookmarks?: number;
+        comments: number;
+        reposts: number;
     } | null;
-  };
+    createdAt?: string;
+    updatedAt: string;
+    __v?: number;
+    isLiked?: boolean;
+    isBookmarked?: boolean;
+    isReposted?: boolean;
+};
   user: {
     _id?: string;
   } | null | undefined;
@@ -193,6 +203,9 @@ function PostWithTracking({ post, user, onImpression }: PostWithTrackingProps) {
     triggerOnce: true, // Only trigger once when post becomes visible
   });
   
+  // Get access to the queryClient to invalidate queries
+  const queryClient = useQueryClient();
+  
   // Track impression only when post comes into view
   useEffect(() => {
     if (inView && user?._id && post._id && post.user_id._id) {
@@ -200,6 +213,12 @@ function PostWithTracking({ post, user, onImpression }: PostWithTrackingProps) {
       onImpression(post._id, post.user_id._id);
     }
   }, [inView, post._id, post.user_id._id, user?._id, onImpression]);
+
+  // Handle post updates (after reporting, etc.)
+  const handlePostUpdate = () => {
+    // Invalidate the posts query to refetch data
+    queryClient.invalidateQueries({ queryKey: ['posts'] });
+  };
 
   return (
     <div ref={ref}>
@@ -216,9 +235,11 @@ function PostWithTracking({ post, user, onImpression }: PostWithTrackingProps) {
         isBookmarked={post.isBookmarked || false}
         content={post.content}
         imageUrl={post.images|| []}
+        isFollowed={post.user_id.isFollowing || undefined}
         likesCount={post.poststat_id?.likes || 0}
         commentsCount={post.poststat_id?.comments || 0}
         repostsCount={post.poststat_id?.reposts || 0}
+        onPostUpdate={handlePostUpdate} // Add the onPostUpdate prop
       />
     </div>
   );

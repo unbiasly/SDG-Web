@@ -4,14 +4,21 @@ import type { NextRequest } from 'next/server';
 // Define paths that don't require authentication
 const publicPaths = ['/login', '/sign-up', '/forgot-password', '/reset-password', '/terms-of-service', '/privacy-policy', '/email-verified'];
 
-const authPaths = ['/login', '/sign-up']
+const authPaths = ['/login', '/sign-up', '/reset-password' ]
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Skip middleware for API routes and Next.js internals
+  // Modify this condition to ensure proper CORS headers are applied
   if (pathname.startsWith('/api/') || pathname.startsWith('/_next/')) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    // Add CORS headers for API routes to improve debuggability
+    if (pathname.startsWith('/api/') && process.env.NODE_ENV === 'development') {
+      response.headers.set('Access-Control-Allow-Origin', '*');
+      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    }
+    return response;
   }
   
   // Check for JWT token

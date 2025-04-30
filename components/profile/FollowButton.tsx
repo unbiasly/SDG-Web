@@ -5,13 +5,13 @@ import { Button } from '../ui/button'
 interface FollowButtonProps {
     targetId?: string;
     userId: string;
-    followed?: boolean;
+    followed?: boolean| null;
 
 }
 
-const FollowButton = ({ targetId, userId }: FollowButtonProps) => {
+const FollowButton = ({ targetId, userId, followed }: FollowButtonProps) => {
 
-    const [isFollowing, setIsFollowing] = useState(false);
+    const [isFollowing, setIsFollowing] = useState(followed);
 
     const handleFollow = async () => {
         

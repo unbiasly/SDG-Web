@@ -8,13 +8,14 @@ import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Experience } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
+import { toast } from "sonner";
 
 interface ExperienceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (experience: Experience, index?: number, isDeleted?: boolean) => void;
+  onSave: (experience: Experience, id?: string, isDeleted?: boolean) => void;
   experience?: Experience;
-  index?: number;
+  index?: number; // We'll convert this to use _id instead of index
 }
 
 export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
@@ -26,6 +27,7 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
 }) => {
   const [experienceData, setExperienceData] = useState<Experience>(
     experience || {
+      _id: crypto.randomUUID(), // Generate a temporary ID for new entries
       company: "",
       role: "",
       startDate: new Date().toISOString(),
@@ -54,104 +56,96 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
   const handleSave = async () => {
     setIsSubmitting(true);
     try {
-      // First update the experience entry via API
-      await updateExperience();
+      // First update the experience via API
+      await updateUserWithExperience(false);
+      
       // Then call the parent component's onSave callback
-      onSave(experienceData, index);
+      onSave(experienceData, experienceData._id);
       onOpenChange(false);
+      toast.success("Experience saved successfully");
     } catch (error) {
       console.error('Error saving experience:', error);
+      toast.error("Failed to save experience");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const updateExperience = async () => {
-    const endpoint = '/api/careerUpdate';
-    const method = "PUT";
+  const updateUserWithExperience = async (isDelete: boolean) => {
+    if (!user) return;
     
-    // Prepare the updated experience array
-    let updatedExperiences = [...(user?.experience || [])];
+    // Create a copy of the user's existing experience array or empty array
+    let updatedExperiences = [...(user.experience || [])];
     
-    if (index !== undefined) {
-      // Edit existing experience
-      updatedExperiences[index] = experienceData;
+    if (isDelete && experience?._id) {
+      // For delete operations, filter out by ID
+      updatedExperiences = updatedExperiences.filter(exp => exp._id !== experience._id);
+    } else if (experience?._id) {
+      // For edit operations, find by ID and update
+      const idx = updatedExperiences.findIndex(exp => exp._id === experience._id);
+      if (idx !== -1) {
+        updatedExperiences[idx] = experienceData;
+      } else {
+        // If not found, add it
+        updatedExperiences.push(experienceData);
+      }
     } else {
-      // Add new experience
+      // For new entries, push to array
       updatedExperiences.push(experienceData);
     }
     
-    // Prepare the request body
-    const requestBody = {
-      username: user?.username,
-      name: user?.name,
-      location: user?.location,
-      gender: user?.gender,
-      dob: user?.dob,
-      bio: user?.bio,
-      portfolioLink: user?.portfolioLink,
-      education: user?.education || [],
+    // Prepare complete user data for the API
+    const userData = {
+      // Include all required user fields
+      name: user.name || "",
+      fName: user.fName || "",
+      lName: user.lName || "",
+      username: user.username || "",
+      location: user.location || "",
+      gender: user.gender || "",
+      dob: user.dob || new Date().toISOString(),
+      bio: user.bio || "",
+      occupation: user.occupation || "",
+      pronouns: user.pronouns || "",
+      headline: user.headline || "",
+      portfolioLink: user.portfolioLink || "",
+      // Update the experience array, keep education the same
+      education: user.education || [],
       experience: updatedExperiences
     };
     
-    const response = await fetch(endpoint, {
-      method: method,
+    // Call the User Details API
+    const response = await fetch('/api/career', {
+      method: "PUT",
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(userData)
     });
     
     if (!response.ok) {
-      throw new Error('Failed to update experience');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to update experience');
     }
     
     return await response.json();
   };
   
-  // Delete function using array index
   const handleDelete = async () => {
-    if (index === undefined) return;
+    if (!experience?._id) return;
     
     setIsSubmitting(true);
     try {
-      // Create a copy of the experience array
-      let updatedExperiences = [...(user?.experience || [])];
+      // Update user details by removing this experience entry
+      await updateUserWithExperience(true);
       
-      // Remove the experience at the specified index
-      updatedExperiences.splice(index, 1);
-      
-      // Prepare request body
-      const requestBody = {
-        username: user?.username,
-        name: user?.name,
-        location: user?.location,
-        gender: user?.gender,
-        dob: user?.dob,
-        bio: user?.bio,
-        portfolioLink: user?.portfolioLink,
-        education: user?.education || [],
-        experience: updatedExperiences
-      };
-      
-      // Send API request
-      const response = await fetch('/api/careerUpdate', {
-        method: "PUT",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete experience');
-      }
-      
-      // Close dialog and notify parent with the deleted index
+      // Call parent's callback with deleted flag
       onOpenChange(false);
-      onSave(experienceData, index, true);
+      onSave(experienceData, experience._id, true);
+      toast.success("Experience deleted successfully");
     } catch (error) {
       console.error('Error deleting experience:', error);
+      toast.error("Failed to delete experience");
     } finally {
       setIsSubmitting(false);
     }
@@ -162,7 +156,7 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="border-b pb-4">
           <DialogTitle className="text-xl font-bold">
-            {index !== undefined ? "Edit experience" : "Add experience"}
+            {experience?._id ? "Edit experience" : "Add experience"}
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">* Indicates required</p>
         </DialogHeader>
@@ -276,7 +270,7 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
         </div>
 
         <div className="border-t pt-4 flex justify-between">
-          {index !== undefined && (
+          {experience?._id && (
             <Button 
               onClick={handleDelete}
               variant="outline"
@@ -286,7 +280,7 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
               Delete
             </Button>
           )}
-          <div className={index !== undefined ? "" : "ml-auto"}>
+          <div className={experience?._id ? "" : "ml-auto"}>
             <Button 
               onClick={handleSave} 
               className="bg-red-600 hover:bg-red-700 text-white px-8"

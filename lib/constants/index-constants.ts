@@ -14,7 +14,7 @@ export const NOTIFICATION_TABS = [
 
 export const SCHEME_TABS = [
     "Categories",
-    "State/UTs",
+    // "State/UTs",
     "Central Ministeries",
 ];
 

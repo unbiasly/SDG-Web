@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+'use client'
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,8 @@ export const UserProfileDialog = ({
 }) => {
   const [calendarOpen, setCalendarOpen] = useState<boolean>(false);
   const { user } = useUser();
+  // Store the original user data for comparison
+  const [originalData, setOriginalData] = useState<UserDetailsRequest | null>(null);
   const [profileData, setProfileData] = useState<UserDetailsRequest>({
     name: user?.name || "",
     // username: user?.username || "",
@@ -42,6 +45,57 @@ export const UserProfileDialog = ({
   // Add file state for image uploads
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [backgroundImageFile, setBackgroundImageFile] = useState<File | null>(null);
+  // Track if data has been modified
+  const [isDataModified, setIsDataModified] = useState(false);
+
+  // Initialize original data when component mounts
+  useEffect(() => {
+    if (user) {
+      const initialData = {
+        name: user.name || "",
+        location: user.location || "",
+        gender: user.gender || "",
+        dob: user.dob ? new Date(user.dob) : new Date(),
+        portfolioLink: user.portfolioLink || "",
+        bio: user.bio || "",
+        education: user.education || [],
+        experience: user.experience || [],
+        fName: user.fName || "",
+        lName: user.lName || "",
+        occupation: user.occupation || "",
+        pronouns: user.pronouns || "",
+        headline: user.headline || "",
+        profileImage: user.profileImage || "",
+        profileBackgroundImage: user.profileBackgroundImage || ""
+      };
+      setOriginalData(initialData);
+    }
+  }, [user]);
+
+  // Check for modifications whenever profileData, profileImageFile, or backgroundImageFile changes
+  useEffect(() => {
+    if (!originalData) return;
+    
+    // Compare fields between current form data and original data
+    const isTextDataChanged = 
+      originalData.fName !== profileData.fName ||
+      originalData.lName !== profileData.lName ||
+      originalData.location !== profileData.location ||
+      originalData.gender !== profileData.gender ||
+      originalData.portfolioLink !== profileData.portfolioLink ||
+      originalData.bio !== profileData.bio ||
+      originalData.occupation !== profileData.occupation ||
+      originalData.pronouns !== profileData.pronouns ||
+      originalData.headline !== profileData.headline;
+    
+    // Compare dates (accounting for potential timezone differences)
+    const isDateChanged = originalData.dob?.toDateString() !== profileData.dob?.toDateString();
+    
+    // Check if any file was selected
+    const isFileChanged = profileImageFile !== null || backgroundImageFile !== null;
+    
+    setIsDataModified(isTextDataChanged || isDateChanged || isFileChanged);
+  }, [profileData, profileImageFile, backgroundImageFile, originalData]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -395,7 +449,7 @@ export const UserProfileDialog = ({
           <Button 
             onClick={handleProfileUpdate} 
             className="bg-gray-200 hover:bg-gray-100 text-black cursor-pointer px-8"
-            disabled={ !profileData.username }
+            disabled={!isDataModified}
           >
             Save
           </Button>

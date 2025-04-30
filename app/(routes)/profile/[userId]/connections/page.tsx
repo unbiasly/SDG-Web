@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { 
@@ -29,8 +29,6 @@ export default function Page({ params }: ConnectionsPageProps) {
   const userId = resolvedParams.userId;
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"followers" | "following">("followers");
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [sortOption, setSortOption] = useState("Most Relevant");
   const [profileData, setProfileData] = useState<{name?: string, username?: string}>({});
 
   // Function to fetch followers with cursor-based pagination
@@ -109,6 +107,7 @@ export default function Page({ params }: ConnectionsPageProps) {
   }, [userId]);
 
   // Set up infinite queries for followers and following
+  // The key change: enabled is always true to prefetch both
   const {
     data: followersData,
     fetchNextPage: fetchNextFollowers,
@@ -121,7 +120,9 @@ export default function Page({ params }: ConnectionsPageProps) {
     getNextPageParam: (lastPage) => 
       lastPage.pagination?.hasMore ? lastPage.pagination.nextCursor : undefined,
     initialPageParam: null,
-    enabled: activeTab === "followers"
+    enabled: true, // Always fetch regardless of active tab
+    staleTime: 5 * 60 * 1000, // 5 minutes before refetch
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   const {
@@ -136,7 +137,9 @@ export default function Page({ params }: ConnectionsPageProps) {
     getNextPageParam: (lastPage) => 
       lastPage.pagination?.hasMore ? lastPage.pagination.nextCursor : undefined,
     initialPageParam: null,
-    enabled: activeTab === "following"
+    enabled: true, // Always fetch regardless of active tab
+    staleTime: 5 * 60 * 1000, // 5 minutes before refetch
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   // Mutation for follow/unfollow
@@ -167,19 +170,19 @@ export default function Page({ params }: ConnectionsPageProps) {
     },
   });
 
-  const handleFollowToggle = (user: UserType) => {
+  const handleFollowToggle = useCallback((user: UserType) => {
     const action = user.following ? 'unfollow' : 'follow';
     followMutation.mutate({ 
       targetUserId: user._id, 
       action 
     });
-  };
+  }, [followMutation]);
 
-  // Flatten pages data for rendering
+  // Flatten pages data for rendering - memoized to prevent recalculations
   const followers = followersData?.pages.flatMap(page => 
     page.data?.map((user: UserType) => ({
       ...user,
-      following: true // Assume we're already following these users
+      following: true // Followers of this profile are users we follow
     })) || []
   ) || [];
 
@@ -195,24 +198,31 @@ export default function Page({ params }: ConnectionsPageProps) {
   const followingCount = followingData?.pages[0]?.pagination?.totalItems || 0;
 
   // Function to load more data based on active tab
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     if (activeTab === "followers" && hasMoreFollowers) {
       fetchNextFollowers();
     } else if (activeTab === "following" && hasMoreFollowing) {
       fetchNextFollowing();
     }
-  };
+  }, [activeTab, hasMoreFollowers, hasMoreFollowing, fetchNextFollowers, fetchNextFollowing]);
 
-  const isLoading = (activeTab === "followers" && isLoadingFollowers) || 
-                   (activeTab === "following" && isLoadingFollowing);
+  // Determine loading states only for visible content
+  const isActiveTabLoading = 
+    (activeTab === "followers" && isLoadingFollowers && followers.length === 0) || 
+    (activeTab === "following" && isLoadingFollowing && following.length === 0);
   
-  const hasError = (activeTab === "followers" && followersError) || 
-                   (activeTab === "following" && followingError);
+  const isLoadingMore = 
+    (activeTab === "followers" && isLoadingFollowers && followers.length > 0) || 
+    (activeTab === "following" && isLoadingFollowing && following.length > 0);
+  
+  const hasError = 
+    (activeTab === "followers" && followersError) || 
+    (activeTab === "following" && followingError);
 
-//   const filteredUsers = (activeTab === "followers" ? followers : following).filter(
-//     (user) => user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-//              user.username.toLowerCase().includes(searchTerm.toLowerCase())
-//   );
+  // Handle tab change
+  const handleTabChange = useCallback((tab: "followers" | "following") => {
+    setActiveTab(tab);
+  }, []);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -237,7 +247,7 @@ export default function Page({ params }: ConnectionsPageProps) {
               ? "text-blue-900 border-b-2 border-blue-900"
               : "text-gray-500"
           }`}
-          onClick={() => setActiveTab("followers")}
+          onClick={() => handleTabChange("followers")}
         >
           {followersCount} Followers
         </button>
@@ -248,7 +258,7 @@ export default function Page({ params }: ConnectionsPageProps) {
               ? "text-blue-900 border-b-2 border-blue-900"
               : "text-gray-500"
           }`}
-          onClick={() => setActiveTab("following")}
+          onClick={() => handleTabChange("following")}
         >
           {followingCount} Following
         </button>
@@ -285,8 +295,7 @@ export default function Page({ params }: ConnectionsPageProps) {
           </div>
         )}
         
-        {isLoading && !((activeTab === "followers" && followers.length > 0) || 
-                      (activeTab === "following" && following.length > 0)) ? (
+        {isActiveTabLoading ? (
           <div className="p-4 text-center">Loading...</div>
         ) : (
           <div className="divide-y divide-gray-100">
@@ -331,10 +340,10 @@ export default function Page({ params }: ConnectionsPageProps) {
               <div className="p-4">
                 <button
                   onClick={loadMore}
-                  disabled={isLoading}
+                  disabled={isLoadingMore}
                   className="w-full py-3 border border-gray-300 rounded-lg text-blue-600 font-medium hover:bg-gray-50 transition-colors"
                 >
-                  {isLoading ? 'Loading...' : 'Load More'}
+                  {isLoadingMore ? 'Loading...' : 'Load More'}
                 </button>
               </div>
             )}

@@ -66,7 +66,7 @@ export interface PostCreateResponse {
 }
 
 export interface Experience {
-    // _id: string;
+    _id: string;
     company: string;
     role: string;
     startDate: string;
@@ -74,7 +74,7 @@ export interface Experience {
 }
 
 export interface Education {
-    // _id: string;
+    _id: string;
     school: string;
     degree: string;
     startDate: string;
@@ -91,6 +91,7 @@ export interface UserData {
     education?: Education[];
     dob?: Date;
     bio?: string;
+    isFollowing?: boolean | null;
     portfolioLink?: string;
     profileImage?: File;
     profileBackgroundImage?: File;

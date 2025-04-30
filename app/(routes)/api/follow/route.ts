@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
     const cookieStore = await cookies();
-    const jwtToken = cookieStore.get('jwtToken')?.value;;
+    const jwtToken = cookieStore.get('jwtToken')?.value;
     const { userId, followingId, action, cursor, limit } = await request.json();
 
     type action = 'follow' | 'unfollow' | 'following' | 'followers' | 'all';

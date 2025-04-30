@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { ThumbsUp, MessageCircle, Bookmark, Flag, MoreVertical, Pencil, Trash, Repeat2 } from 'lucide-react';
+import { ThumbsUp, MessageCircle, Bookmark, Flag, MoreVertical, Pencil, Trash, Repeat2, UserPlus } from 'lucide-react';
 import Image from 'next/image';
 import CommentSection from '../post/CommentSection';
 import { CommentData } from '@/service/api.interface';
@@ -12,6 +12,7 @@ import { useUser } from '@/lib/redux/features/user/hooks';
 import { BentoImageGrid } from '../post/BentoGrid';
 import DeletePostModal from '../post/DeletePostModal';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 interface PostCardProps {
   _id: string;
@@ -29,6 +30,8 @@ interface PostCardProps {
   likesCount: number;
   commentsCount: number;
   repostsCount: number;
+  isFollowed?: boolean;
+  onPostUpdate?: () => void; // Add callback for post updates
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
@@ -46,7 +49,9 @@ export const PostCard: React.FC<PostCardProps> = ({
   likesCount,
   commentsCount,
   avatar,
-  repostsCount
+  repostsCount,
+  isFollowed,
+  onPostUpdate
 }) => {
     const [isCommentsOpen, setIsCommentsOpen] = useState(false);
     const [comments, setComments] = useState<CommentData[]>([]);
@@ -64,6 +69,7 @@ export const PostCard: React.FC<PostCardProps> = ({
     const [editPostOpen, setEditPostOpen] = useState(false);
     const [deletePostOpen, setDeletePostOpen] = useState(false);
     const [isBookmarkActive, setIsBookmarkActive] = useState(isBookmarked);
+    const [isFollowedActive, setIsFollowedActive] = useState(isFollowed);   
     
     const { user } = useUser();
     const currentUserId = user?._id;
@@ -138,12 +144,13 @@ export const PostCard: React.FC<PostCardProps> = ({
     }
 
     const handleRepost = async () => {
+        // Check if the post belongs to the current user
+        if (userId === currentUserId) {
+            toast.error("You cannot repost your own content");
+            return;
+        }
+    
         try {
-            // Optimistically update UI
-            // const newRepostState = !isRepostActive;
-            // setIsRepostActive(newRepostState);
-            // setLocalRepostsCount(prev => newRepostState ? prev + 1 : prev - 1);
-            
             const response = await fetch(`/api/post/post-action`, {
                 method: 'PATCH',
                 headers: {
@@ -156,9 +163,6 @@ export const PostCard: React.FC<PostCardProps> = ({
             });
             
             if (!response.ok) {
-                // Revert changes if API call fails
-                // setIsRepostActive(!newRepostState);
-                // setLocalRepostsCount(prev => newRepostState ? prev - 1 : prev + 1);
                 throw new Error('Failed to repost');
             }
             
@@ -168,8 +172,11 @@ export const PostCard: React.FC<PostCardProps> = ({
                 setLocalRepostsCount(data.repostsCount);
             }
             
+            toast.success("Post reposted successfully");
+            
         } catch (error) {
             console.error('Error reposting:', error);
+            toast.error("Failed to repost. Please try again later.");
         }
     }
 
@@ -221,27 +228,78 @@ export const PostCard: React.FC<PostCardProps> = ({
       setDeletePostOpen(true);
     }
     
-    const menuOptions = [
-      { icon: <Flag className="h-5 w-5 text-gray-500" />, label: "Report post", onClick: handleReportClick },
-      { icon: <Bookmark className={`h-5 w-5 ${isBookmarkActive ? "fill-current text-accent" : "text-gray-500"}`} />, label: isBookmarked ? "Saved" : "Save", onClick: handleBookmark },
-      ...(userId === currentUserId ? [
-        { icon: <Pencil className="h-5 w-5 text-gray-500" />, label: "Edit post", onClick: handleEditPost },
-        { icon: <Trash className="h-5 w-5 text-gray-500" />, label: "Delete post", onClick: handleDeletePost },
-      ] : []),
-    ];
-
-    const handleShare = () => {
-        if (navigator.share) {
-            navigator.share({
-                title: name,
-                text: content,
-                url: window.location.href,
-            }).catch((error) => console.error('Error sharing:', error));
-        } else {
-            console.log('Web Share API not supported in this browser');
-            // Fallback sharing mechanism could be implemented here
+    const handleFollow = async () => {
+        try {
+            // Optimistically update UI
+            const newFollowState = !isFollowedActive;
+            setIsFollowedActive(newFollowState);
+            
+            // Close the menu after action is taken
+            setIsMenuOpen(false);
+            
+            // Make the API call
+            const response = await fetch('/api/follow', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    followingId: userId, 
+                    userId: currentUserId, 
+                    action: newFollowState ? 'follow' : 'unfollow' 
+                }),
+            });
+            
+            if (!response.ok) {
+                // If API fails, revert UI change
+                setIsFollowedActive(!newFollowState);
+                throw new Error('Failed to update follow status');
+            }
+            
+            const data = await response.json();
+            console.log('Follow status updated successfully', data);
+            
+        } catch (error) {
+            console.error('Error updating follow status:', error);
+            // Consider showing a toast notification here for error feedback
         }
-    }
+    };
+
+    // Handle report submission completion
+    const handleReportSubmitted = () => {
+      // Refresh posts data after successful report
+      if (onPostUpdate) {
+        onPostUpdate();
+      }
+    };
+
+    // const handleShare = () => {
+    //     if (navigator.share) {
+    //         navigator.share({
+    //             title: name,
+    //             text: content,
+    //             url: window.location.href,
+    //         }).catch((error) => console.error('Error sharing:', error));
+    //     } else {
+    //         console.log('Web Share API not supported in this browser');
+    //         // Fallback sharing mechanism could be implemented here
+    //     }
+    // }
+    const menuOptions = [
+        { icon: <Flag className="h-5 w-5 text-gray-500" />, label: "Report post", onClick: handleReportClick },
+
+        { icon: <Bookmark className={`h-5 w-5 ${isBookmarkActive ? "fill-current text-accent" : "text-gray-500"}`} />, label: isBookmarked ? "Saved" : "Save", onClick: handleBookmark },
+
+        ...(userId !== currentUserId ? [
+            { icon: <UserPlus className={`h-5 w-5 ${isFollowedActive ? "fill-current text-accent" : "text-gray-500"}`} />, label: isFollowedActive ? "Unfollow" : "Follow", onClick: handleFollow },
+        ] : []),
+        
+        ...(userId === currentUserId ? [
+            { icon: <Pencil className="h-5 w-5 text-gray-500" />, label: "Edit post", onClick: handleEditPost },
+            { icon: <Trash className="h-5 w-5 text-gray-500" />, label: "Delete post", onClick: handleDeletePost },
+        ] : []),
+
+    ];
     
     const getComments = async () => {
         try {
@@ -292,7 +350,8 @@ export const PostCard: React.FC<PostCardProps> = ({
                 <Link href={`/profile/${userId}`}>
                     <h4 className="font-semibold text-sm">{name}</h4>
                 </Link>
-              {/* <span className="text-xs text-gray-500 ml-1.5">• Reposted</span> */}
+                {isFollowedActive && <span className="text-xs text-gray-500 ml-1.5">• Following</span> }
+              
             </div>
             <div className="flex items-center text-xs text-gray-500">
                 <Link href={`/profile/${userId}`}>
@@ -377,7 +436,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         </div>
       </div>
       
-      <div className="flex h-1 w-full my-2">
+      {/* <div className="flex h-1 w-full my-2">
         <div className="flex-1 bg-[#E5243B]/60"></div>
         <div className="flex-1 bg-[#DDA63A]/60"></div>
         <div className="flex-1 bg-[#4C9F38]/60"></div>
@@ -395,7 +454,8 @@ export const PostCard: React.FC<PostCardProps> = ({
         <div className="flex-1 bg-[#56C02B]/60"></div>
         <div className="flex-1 bg-[#00689D]/60"></div>
         <div className="flex-1 bg-[#19486A]/60"></div>
-      </div>
+      </div> */}
+      <div className='w-full border border-gray-200' />
       
       <div className="flex justify-evenly pt-2 ">
         {[
@@ -424,7 +484,12 @@ export const PostCard: React.FC<PostCardProps> = ({
       </div>
       
       {/* Modals and Popovers */}
-      <ReportPopover open={reportOpen} onOpenChange={setReportOpen} postId={_id} />
+      <ReportPopover 
+        open={reportOpen} 
+        onOpenChange={setReportOpen} 
+        postId={_id} 
+        onReportSubmitted={handleReportSubmitted}
+      />
       <EditPost 
         open={editPostOpen} 
         onOpenChange={setEditPostOpen} 

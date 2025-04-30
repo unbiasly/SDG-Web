@@ -2,7 +2,6 @@
 import type { Metadata } from "next";
 
 import "@/app/globals.css";
-import Logo from '@/public/Logo.svg';
 import { UserSidebar } from "@/components/feed/UserProfile";
 import Image from "next/image";
 import Link from "next/link";
@@ -58,7 +57,7 @@ export default function VideoLayout({
     <main className="flex-1 flex overflow-y-auto p-3 gap-6 max-container">
       <aside className="hidden xl:block space-y-3 sticky h-fit">
         <Link href='/' className="flex justify-center items-center gap-2 px-2">    
-          <Image src={Logo} alt='' width={40} height={40} />
+          <Image src='/Logo.svg' alt='SDG Logo' width={40} height={40}  />
           <h1 className='text-xl font-bold'>The SDG Story</h1>
         </Link>
         <UserSidebar />

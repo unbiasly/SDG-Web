@@ -112,18 +112,10 @@ const Page = () => {
 
     // Fetch data based on selected category
     useEffect(() => {
-        if (selectedCategory === "All" || selectedCategory === "Posts") {
-            getPostBookmarks();
-        }
-        
-        if (selectedCategory === "All" || selectedCategory === "News") {
-            getNewsBookmarks();
-        }
-
-        if (selectedCategory === "All" || selectedCategory === "Videos") {
-            getVideoBookmarks();
-        }
-    }, [selectedCategory, getPostBookmarks, getNewsBookmarks, getVideoBookmarks]);
+        getPostBookmarks();
+        getVideoBookmarks();
+        getNewsBookmarks();
+    }, []);
 
     // Handle tab change
     const handleTabChange = (category: string) => {

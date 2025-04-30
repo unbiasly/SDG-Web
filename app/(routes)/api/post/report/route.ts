@@ -14,8 +14,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { reason, report_category, postId } = body;
     
-    if (!postId || (!reason && !report_category)) {
+    if (!postId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+    
+    // Check if at least one of reason or report_category is provided
+    if (!reason && !report_category) {
+      return NextResponse.json({ 
+        error: "Either reason or report_category must be provided" 
+      }, { status: 400 });
     }
     
     // Make API call to report the post

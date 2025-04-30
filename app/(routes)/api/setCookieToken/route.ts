@@ -49,6 +49,17 @@ export async function POST(req: NextRequest) {
                 maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
                 path: '/'
         })}
+        if (userId) {
+            response.cookies.set({
+                name: 'userId',
+                value: userId,
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
+            });
+        }
+
         
         return response;
     } catch (error) {
