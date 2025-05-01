@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FEEDBACK_OPTIONS, POLICY_OPTIONS } from "@/lib/constants/index-constants";
+import { report } from "process";
 
 interface ReportPopoverProps {
   open: boolean;
@@ -46,6 +47,7 @@ const ReportPopover = ({ open, onOpenChange, postId, onReportSubmitted }: Report
         },
         body: JSON.stringify({
           reason: selectedFeedback,
+          report_category: "Feedback",
           postId: postId
         }),
       });
@@ -86,7 +88,8 @@ const ReportPopover = ({ open, onOpenChange, postId, onReportSubmitted }: Report
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          report_category: selectedPolicies.join(', '),
+          reason: selectedPolicies.join(', '),
+          report_category: "Report",
           postId: postId
         }),
       });

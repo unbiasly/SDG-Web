@@ -103,11 +103,20 @@ export const SETTINGS_OPTIONS: SettingOption[] = [
     //     // icon: <div />
     // },
     {
-        id: 'additional-resources',
-        label: 'Additional Resources',
-        description: 'See information about your account and download an archive of your data or learn more about your deactivation options.',
-        subOptions: ADDITIONAL_RESOURCES_OPTIONS,
-        // icon: <div />
+        id: 'terms-and-conditions',
+        label: 'Terms and Conditions',
+        description: "",
+        // link: '/terms-and-conditions',
+    },
+    {
+        id: 'privacy-policy',
+        label: 'Privacy Policy',
+        description: ""
+    },
+    {
+        id: 'about-us',
+        label: 'About Us',
+        description: ""
     },
 ]
 

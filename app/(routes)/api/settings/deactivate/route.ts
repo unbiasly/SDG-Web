@@ -5,6 +5,7 @@ export async function DELETE() {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
 
+    
     const response = await fetch(`${baseURL}/deactivate`, {
         method: "DELETE",
         headers: {
@@ -14,6 +15,12 @@ export async function DELETE() {
     });
 
     const data = await response.json();
+    if (data.success) {
+        // Clear the cookies
+        cookieStore.delete('jwtToken');
+        cookieStore.delete('refreshToken');
+        cookieStore.delete('sessionId');
+    }
 
-    return new Response(JSON.stringify(data), { status: response.status });
+    return Response.json(data);
 }

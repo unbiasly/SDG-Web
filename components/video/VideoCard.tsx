@@ -3,16 +3,10 @@
 import { useState } from "react";
 import { Bookmark, PlayCircle, PauseCircle, X, Volume2, Video, ExternalLink, Share2, MoreVertical, CirclePlay, Play } from "lucide-react";
 import YouTube from "react-youtube";
-import { formatDistanceToNow, set } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import Image from "next/image";
-
-interface Goal {
-    _id: string;
-    name: string;
-}
 
 interface Goal {
     _id: string;
@@ -39,21 +33,27 @@ interface VideoCardProps {
         views?: number;
         likes?: number;
     };
+    playingVideoId: string | null; // ID of the currently playing video
+    setPlayingVideoId: (id: string | null) => void; // Function to update playing video
 }
 
-const VideoCard = ({ video }: VideoCardProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+const VideoCard = ({ video, playingVideoId, setPlayingVideoId }: VideoCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const isBookmarked = video.isBookmarked;
   const [isActive, setIsActive] = useState(isBookmarked);
   
+  // Determine if this video is currently playing
+  const isPlaying = playingVideoId === video._id;
+  
   const handlePlayClick = () => {
-    setIsPlaying(true);
+    // Set this video as the playing video, which will close any other playing videos
+    setPlayingVideoId(video._id);
   };
   
   const handleVideoClose = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsPlaying(false);
+    // Stop all videos from playing
+    setPlayingVideoId(null);
   };
   
   const handleBookmarkToggle = async () => {
@@ -71,7 +71,6 @@ const VideoCard = ({ video }: VideoCardProps) => {
       
       if (response.ok) {
         setIsActive(!isActive);
-        // TODO: Consistently set the IsBookmarked state
       }
     } catch (error) {
       console.error("Error toggling bookmark:", error);
@@ -88,12 +87,9 @@ const VideoCard = ({ video }: VideoCardProps) => {
         console.error('Error sharing:', err);
       });
     } else {
-      // Fallback for browsers that don't support the Web Share API
       navigator.clipboard.writeText(video.link);
-      // Could add a toast notification here
     }
   };
-  
   
   const formattedDate = video.published_date
     ? formatDistanceToNow(new Date(video.published_date), { addSuffix: true })
@@ -104,7 +100,6 @@ const VideoCard = ({ video }: VideoCardProps) => {
     height: '100%',
     width: '100%',
     playerVars: {
-      // https://developers.google.com/youtube/player_parameters
       autoplay: 1,
     },
   };
@@ -143,7 +138,6 @@ const VideoCard = ({ video }: VideoCardProps) => {
         </button>
       </div>
       
-      {/* Modified image container with reduced height but contained image */}
       <div className="relative h-full">
         {isPlaying ? (
           <div className="relative w-full h-full aspect-video overflow-hidden">
@@ -151,7 +145,7 @@ const VideoCard = ({ video }: VideoCardProps) => {
               videoId={video.video_id}
               opts={opts}
               className="w-full h-full"
-              onEnd={() => setIsPlaying(false)}
+              onEnd={() => setPlayingVideoId(null)}
             />
             <button 
               onClick={handleVideoClose}
@@ -189,39 +183,27 @@ const VideoCard = ({ video }: VideoCardProps) => {
             <span className="mx-2">•</span>
             <span>{video.channel_name}</span>
           </div>
-          {/* {formattedDate && <span>{formattedDate}</span>} */}
         </div>
         
-        {/* Hover Actions Panel - Positioned below content */}
         {isHovered && !isPlaying && (
           <div className="mt-3 pt-3 border-t border-gray-200 animate-fade-in">
-
             <div className="flex justify-between">
                 <button 
                     onClick={handlePlayClick}
-                    className="text-white font-semibold flex items-center gap-2 py-2 px-4 bg-zinc-400 cursor-pointer  rounded-lg transition-colors"
+                    className="text-white font-semibold flex items-center gap-2 py-2 px-4 bg-zinc-400 cursor-pointer rounded-lg transition-colors"
                     aria-label="Play video"
-                    >
-                        <Play color="white" className="fill-white" />
-                        <span>Preview</span>
-                    </button>
-                <div className="flex">
-                {/* <button 
-                    onClick={handleOpenExternal}
-                    className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-100 rounded-lg transition-colors"
-                    aria-label="Open in new tab"
                 >
-                    <MoreVertical className="h-5 w-5 text-gray-700" />
-                </button> */}
+                    <Play color="white" className="fill-white" />
+                    <span>Preview</span>
+                </button>
+                <div className="flex">
                 <Link href={`/videos/${video._id}`} 
                     className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-100 rounded-lg transition-colors"
                     aria-label="Open in new tab"
                 >
                     <CirclePlay className=" h-5 w-5 text-gray-700" />
                 </Link>
-                
                 </div>
-              
             </div>
           </div>
         )}

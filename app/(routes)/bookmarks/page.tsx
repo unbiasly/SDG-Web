@@ -10,6 +10,9 @@ import Link from 'next/link'
 import VideoCard from '@/components/video/VideoCard'
 
 const Page = () => {
+    // Add state for tracking playing video
+    const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
+    
     const [selectedCategory, setSelectedCategory] = useState<string>("All");
     const [postBookmarks, setPostBookmarks] = useState<PostBookmarkData[]>([]);
     const [newsBookmarks, setNewsBookmarks] = useState<SDGArticleData[]>([]);
@@ -120,6 +123,7 @@ const Page = () => {
     // Handle tab change
     const handleTabChange = (category: string) => {
         setSelectedCategory(category);
+        setPlayingVideoId(null); // Stop any playing videos when changing tabs
     };
 
     // Render loading state
@@ -235,7 +239,12 @@ const Page = () => {
                                     <h2 className="text-lg font-semibold mt-4">Videos</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {videoBookmarks.map((video) => (
-                                            <VideoCard key={video._id} video={video} />
+                                            <VideoCard 
+                                                key={video._id} 
+                                                video={video}
+                                                playingVideoId={playingVideoId}
+                                                setPlayingVideoId={setPlayingVideoId} 
+                                            />
                                         ))}
                                     </div>
                                 </>
@@ -314,7 +323,12 @@ const Page = () => {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {videoBookmarks.map((video) => (
-                                <VideoCard key={video._id} video={video} />
+                                <VideoCard 
+                                    key={video._id} 
+                                    video={video}
+                                    playingVideoId={playingVideoId}
+                                    setPlayingVideoId={setPlayingVideoId} 
+                                />
                             ))}
                         </div>
                     )}

@@ -2,24 +2,18 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail, Lock, CheckCircle2 } from "lucide-react";
-import PasswordStrengthMeter from "./PasswordStrengthMeter";
-import Link from "next/link";
-import { serialize } from "v8";
-import { set } from "date-fns";
+import { Mail } from "lucide-react";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isResend, setIsResend] = useState(false);
-//   const [isSuccess, setIsSuccess] = useState(false);
   
-
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
@@ -39,12 +33,11 @@ const ForgotPassword = () => {
       
       const data = await response.json();
       setIsLoading(false);
-    //   setIsSubmitted(true);
       
-      if (!data.success) {
-        toast.error(data.message || "Failed to send recovery email");
-        return;
-      }
+        toast(data.message || "Failed to send recovery email");
+        setTimeout(() => {
+            window.location.href = "/login";
+        }, 2000);
     } catch (error) {
       console.error('Forgot password error:', error);
       toast.error("An error occurred. Please try again later.");
@@ -109,7 +102,7 @@ const ForgotPassword = () => {
         {isLoading ? (
           <div className="flex items-center justify-center">
             <div className="animate-spin h-5 w-5 mr-2 border-2 border-white border-t-transparent rounded-full"></div>
-            Resetting Password...
+            Sending Link...
           </div>
         ) : (
           "Continue"

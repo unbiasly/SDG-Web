@@ -24,8 +24,7 @@ export const UserProfileDialog = ({
   // Store the original user data for comparison
   const [originalData, setOriginalData] = useState<UserDetailsRequest | null>(null);
   const [profileData, setProfileData] = useState<UserDetailsRequest>({
-    name: user?.name || "",
-    // username: user?.username || "",
+    name: (user?.fName || '') + (user?.lName || ''), // REMOVED
     location: user?.location || "",
     gender: user?.gender || "",
     dob: user?.dob ? new Date(user.dob) : new Date(), // Default to current date if undefined
@@ -52,7 +51,7 @@ export const UserProfileDialog = ({
   useEffect(() => {
     if (user) {
       const initialData = {
-        name: user.name || "",
+        name: (user?.fName || '') + (user?.lName || ''), // REMOVED
         location: user.location || "",
         gender: user.gender || "",
         dob: user.dob ? new Date(user.dob) : new Date(),
@@ -129,9 +128,10 @@ export const UserProfileDialog = ({
   const handleProfileUpdate = async () => {
     try {
       const formData = new FormData();
-      // Append all necessary fields to FormData
+      // KEEP THIS COMMENTED OUT:
       formData.append('name', `${profileData.fName} ${profileData.lName}`.trim());
-    //   formData.append('username', profileData.username);
+      
+      // Rest of the form data appends remain the same
       formData.append('location', profileData.location || '');
       formData.append('gender', profileData.gender || '');
       formData.append('dob', profileData.dob ? profileData.dob.toISOString() : ''); // Convert date to string
@@ -156,7 +156,7 @@ export const UserProfileDialog = ({
         formData.append('profileBackgroundImage', profileData.profileBackgroundImage.toString());
       }
 
-      const response = await fetch('/profile/userDetailsUpdate', {
+      const response = await fetch('/api', {
         method: "PUT",
         body: formData,
       });

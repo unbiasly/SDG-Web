@@ -109,7 +109,7 @@ export interface UserResponse {
 
 export interface UserDetailsRequest {
     username?: string;
-    name: string;
+    name?: string;
     location: string;
     gender: string;
     dob: Date;

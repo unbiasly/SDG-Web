@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ThumbsUp, MessageCircle, Bookmark, Flag, MoreVertical, Pencil, Trash, Repeat2, UserPlus } from 'lucide-react';
 import Image from 'next/image';
 import CommentSection from '../post/CommentSection';
@@ -65,6 +65,8 @@ export const PostCard: React.FC<PostCardProps> = ({
     
     // PostMenu state
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
     const [reportOpen, setReportOpen] = useState(false);
     const [editPostOpen, setEditPostOpen] = useState(false);
     const [deletePostOpen, setDeletePostOpen] = useState(false);
@@ -76,6 +78,32 @@ export const PostCard: React.FC<PostCardProps> = ({
     
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
     const closeMenu = () => setIsMenuOpen(false);
+
+    // Add click outside listener to close the menu
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            // Check if the click was outside both the menu and the toggle button
+            if (
+                isMenuOpen && 
+                menuRef.current && 
+                buttonRef.current && 
+                !menuRef.current.contains(event.target as Node) && 
+                !buttonRef.current.contains(event.target as Node)
+            ) {
+                closeMenu();
+            }
+        };
+        
+        // Add event listener when menu is open
+        if (isMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        
+        // Clean up event listener
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isMenuOpen]);
 
     useEffect(() => {
         setIsActive(isLiked);
@@ -286,12 +314,12 @@ export const PostCard: React.FC<PostCardProps> = ({
     //     }
     // }
     const menuOptions = [
-        { icon: <Flag className="h-5 w-5 text-gray-500" />, label: "Report post", onClick: handleReportClick },
-
+        
         { icon: <Bookmark className={`h-5 w-5 ${isBookmarkActive ? "fill-current text-accent" : "text-gray-500"}`} />, label: isBookmarked ? "Saved" : "Save", onClick: handleBookmark },
-
+        
         ...(userId !== currentUserId ? [
             { icon: <UserPlus className={`h-5 w-5 ${isFollowedActive ? "fill-current text-accent" : "text-gray-500"}`} />, label: isFollowedActive ? "Unfollow" : "Follow", onClick: handleFollow },
+            { icon: <Flag className="h-5 w-5 text-gray-500" />, label: "Report post", onClick: handleReportClick },
         ] : []),
         
         ...(userId === currentUserId ? [
@@ -368,6 +396,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           {/* Post Menu */}
           <div className="relative">
             <button 
+              ref={buttonRef} // Add ref to the button
               onClick={toggleMenu}
               className="p-2 rounded-full cursor-pointer hover:bg-gray-100 transition-colors"
               aria-label="More options"
@@ -377,6 +406,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
             {isMenuOpen && (
               <div 
+                ref={menuRef} // Add ref to the menu
                 className="absolute right-0 mt-2 w-64 rounded-lg bg-white shadow-lg z-50 border border-gray-100 overflow-hidden"
                 onClick={closeMenu}
               >
@@ -385,7 +415,10 @@ export const PostCard: React.FC<PostCardProps> = ({
                     <button 
                       key={index}
                       className="w-full cursor-pointer text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-100 transition-colors"
-                      onClick={item.onClick}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        item.onClick();
+                      }}
                     >
                       {item.icon}
                       <span className="text-gray-700">{item.label}</span>

@@ -8,7 +8,7 @@ export async function GET() {
     const jwtToken = cookieStore.get('jwtToken')?.value;
     
     if (!jwtToken) {
-        return NextResponse.json({ error: 'Unauthorized (Token Undefined)', redirectToLogin: true }, { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized (Token Undefined)', status: 401 });
     }
     
     try {
@@ -21,7 +21,7 @@ export async function GET() {
         
         if (!response.ok) {
             if (response.status === 401) {
-                return NextResponse.json({ error: 'Unauthorized', redirectToLogin: true }, { status: 401 });
+                return NextResponse.json({ error: 'Unauthorized'}, { status: 401 });
             }
             throw new Error(`API error: ${response.status}`);
         }

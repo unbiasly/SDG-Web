@@ -15,16 +15,39 @@ export const setupAPIInterceptor = () => {
     
     // If the response status is 403, redirect to login page
     if (clonedResponse.status === 403) {
-      console.log('Access forbidden (403) detected, redirecting to login');
-      try {
-        await originalFetch('/api/logout', {
-          method: 'POST'
-        });
-        window.location.href = '/login';
-      } catch (error) {
-        console.error('Error during logout:', error);
-      }
+        console.log('Access forbidden (403) detected, redirecting to login');
+        try {
+            await originalFetch('/api/logout', {
+                method: 'POST'
+            });
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Error during logout:', error);
+        }
+    } else if (clonedResponse.status === 401) {
+        try {
+            const res = await fetch('/api/refreshToken', {
+                method: 'POST',
+            });
+    
+            if (!res.ok && res.status === 401) {
+                console.warn('Session expired or refresh failed');
+              // Optional: redirect to login or set a logout state
+                try {
+                    await fetch('/api/logout',{
+                        method: 'POST'
+                    });
+                    window.location.href = '/login';
+                } catch (error) {
+                    console.error('Error during logout:', error);
+                }
+    
+            }
+        } catch (err) {
+            console.error('Token refresh error:', err);
+        }
     }
+        
     
     // Always return the original response so it can be properly inspected
     return response;

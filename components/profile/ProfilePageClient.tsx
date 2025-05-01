@@ -26,6 +26,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
     const [profileUser, setProfileUser] = useState<UserData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [analytics, setAnalytics] = useState<AnalyticsResponseData | null>(null);
+    const [isFollowingActive, setIsFollowingActive] = useState(false);
 
     // Education dialog state
     const [educationDialogOpen, setEducationDialogOpen] = useState(false);
@@ -58,6 +59,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             const userData = await response.json();
             if (userData?.data) {
                 setProfileUser(userData.data);
+                setIsFollowingActive(userData.data.isFollowing);
                 return userData.data;
             }
             return null;
@@ -138,7 +140,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
         fetchUserById(userId)
         getAnalytics();
         getUserPosts(userId);
-        if (!isOwnProfile) {
+        if (isOwnProfile == false) {
             trackProfileView(userId);
         }
     }, []); // Add userId to dependencies to reset state when it changes
@@ -305,7 +307,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                 alt="Profile" 
                 
               />
-              {isOwnProfile ? <UserProfileDialog /> : <FollowButton targetId={profileUser?._id} userId={user?._id || ''}/>}
+              {isOwnProfile ? <UserProfileDialog /> : <FollowButton targetId={profileUser?._id} userId={user?._id || ''} followed={isFollowingActive}/>}
             </div>
             
             {/* Profile info */}
@@ -334,11 +336,13 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
               <div className="mt-4 text-profile-secondary">
                 <p className="mb-1">{profileUser?.experience?.[0]?.company || ''}</p>
                 <p className="mb-1">{profileUser?.location || ''}</p>
+                {profileUser?.portfolioLink && (
+                    
                 <Link href={profileUser?.portfolioLink || ''} className="flex items-center gap-1 mb-4">
                   <LinkIcon size={16} />
                   <span>{profileUser?.portfolioLink || ''}</span>
                 </Link>
-                
+                )}
                 {profileUser?.bio && (
                   <div className="mb-4">
                     <p className="text-md text-gray-500">{profileUser.bio}</p>

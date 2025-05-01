@@ -35,14 +35,6 @@ export default function RootLayout({
             credentials: 'include'
           });
           
-          if (!response.ok) {
-            // If unauthorized, handle it
-            if (response.status === 401 || response.status === 403) {
-              dispatch(fetchUserFailure('Unauthorized'));
-              window.location.href = '/login';
-              return null;
-            }
-          }
           const data = await response.json();
           if (data.data && data.data._id) {
             // Set fallback color for new users

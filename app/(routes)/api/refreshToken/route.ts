@@ -49,7 +49,7 @@ export async function POST() {
             JSON.stringify({ 
                 success: true,
                 // Include the expiry time so clients know when to refresh next
-                expiresAt: Date.now() + (10 * 60 * 1000) // 10 minutes from now
+                // expiresAt: Date.now() + (10 * 60 * 1000) // 10 minutes from now
             }),
             {
                 status: 200,
@@ -65,7 +65,7 @@ export async function POST() {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: 10 * 60, // 10 minutes in seconds
+            maxAge: 60 * 60, // 10 minutes in seconds
             path: '/'
         });
         
@@ -75,7 +75,7 @@ export async function POST() {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: 60 * 60, // 1 hour in seconds
+            maxAge: 4 * 60 * 60, // 1 hour in seconds
             path: '/'
         });
         
