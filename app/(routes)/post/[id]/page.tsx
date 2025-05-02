@@ -1,5 +1,5 @@
 'use client'
-import Loading from '@/app/loading';
+import Loading from '@/components/Loader';
 import { PostCard } from '@/components/feed/PostCard';
 import { formatDate } from '@/lib/utilities/formatDate';
 import { PostData } from '@/service/api.interface';
@@ -59,7 +59,7 @@ const Page = () => {
 
     if (loading) {
         return (
-            <div className="fixed inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+            <div className="flex-1 bg-white bg-opacity-75 z-50 flex items-center justify-center">
                 <Loading />
             </div>
         );

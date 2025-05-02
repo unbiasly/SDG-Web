@@ -13,6 +13,7 @@ import { BentoImageGrid } from '../post/BentoGrid';
 import DeletePostModal from '../post/DeletePostModal';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import ConfirmationDialog from '../ConfirmationDialog';
 
 interface PostCardProps {
   _id: string;
@@ -72,6 +73,7 @@ export const PostCard: React.FC<PostCardProps> = ({
     const [deletePostOpen, setDeletePostOpen] = useState(false);
     const [isBookmarkActive, setIsBookmarkActive] = useState(isBookmarked);
     const [isFollowedActive, setIsFollowedActive] = useState(isFollowed);   
+    const [repostConfirmOpen, setRepostConfirmOpen] = useState(false);
     
     const { user } = useUser();
     const currentUserId = user?._id;
@@ -171,13 +173,18 @@ export const PostCard: React.FC<PostCardProps> = ({
         }
     }
 
-    const handleRepost = async () => {
+    const handleRepost = () => {
         // Check if the post belongs to the current user
         if (userId === currentUserId) {
             toast.error("You cannot repost your own content");
             return;
         }
-    
+        
+        // Open the confirmation dialog
+        setRepostConfirmOpen(true);
+    };
+
+    const performRepost = async () => {
         try {
             const response = await fetch(`/api/post/post-action`, {
                 method: 'PATCH',
@@ -202,12 +209,19 @@ export const PostCard: React.FC<PostCardProps> = ({
             
             toast.success("Post reposted successfully");
             
+            // Invalidate query to fetch updated posts including the new repost
+            if (onPostUpdate) {
+                onPostUpdate();
+            }
+            
         } catch (error) {
             console.error('Error reposting:', error);
             toast.error("Failed to repost. Please try again later.");
         }
-    }
-
+        
+        // Close the dialog
+        setRepostConfirmOpen(false);
+    };
     
     // PostMenu handlers
     const handleReportClick = () => {
@@ -315,7 +329,7 @@ export const PostCard: React.FC<PostCardProps> = ({
     // }
     const menuOptions = [
         
-        { icon: <Bookmark className={`h-5 w-5 ${isBookmarkActive ? "fill-current text-accent" : "text-gray-500"}`} />, label: isBookmarked ? "Saved" : "Save", onClick: handleBookmark },
+        { icon: <Bookmark className={`h-5 w-5 ${isBookmarkActive ? "fill-current text-accent" : "text-gray-500"}`} />, label: isBookmarkActive ? "Saved" : "Save", onClick: handleBookmark },
         
         ...(userId !== currentUserId ? [
             { icon: <UserPlus className={`h-5 w-5 ${isFollowedActive ? "fill-current text-accent" : "text-gray-500"}`} />, label: isFollowedActive ? "Unfollow" : "Follow", onClick: handleFollow },
@@ -534,6 +548,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         open={deletePostOpen}
         onOpenChange={setDeletePostOpen}
         postId={_id}
+        onPostUpdate={onPostUpdate} // Pass the callback here
       />
       <SocialPostDialog 
         open={isDialogOpen}
@@ -564,6 +579,14 @@ export const PostCard: React.FC<PostCardProps> = ({
           </Link>
         </div>
       )}
+      {/* Add this near the bottom of your component, with the other dialogs */}
+      <ConfirmationDialog 
+        open={repostConfirmOpen}
+        onOpenChange={setRepostConfirmOpen}
+        clickFunc={performRepost}
+        subject="Repost"
+        object="post"
+      />
     </div>
   );
 };

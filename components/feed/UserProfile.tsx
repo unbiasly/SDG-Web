@@ -1,5 +1,5 @@
 "use client"
-import React from 'react';
+import React, { useMemo } from 'react';
 import { LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { PROFILE_OPTIONS } from '@/lib/constants/index-constants';
@@ -11,6 +11,11 @@ import ProfileAvatar from '../profile/ProfileAvatar';
 export const UserSidebar = () => {
     const pathname = usePathname();
     const { user } = useUser();
+    
+    // Check if essential user data has loaded
+    const isDataLoaded = useMemo(() => {
+        return Boolean(user && user.username);
+    }, [user]);
 
     const handleLogout = async () => {
         try {
@@ -32,28 +37,35 @@ export const UserSidebar = () => {
             <div className="flex-col items-start lg:border-b py-2 border-gray-600 hidden lg:flex">
                 <div className="relative mb-2 w-20 ">
                     <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-100 to-blue-200 flex items-center justify-center overflow-hidden ">
-                        <ProfileAvatar 
-                        src={user?.profileImage || ''}
-                        className='object-contain '
-                        size='profile'
-                        displayName={user?.username}
-                        />
+                        {isDataLoaded ? (
+                            <ProfileAvatar 
+                                src={user?.profileImage || ''}
+                                className='object-contain'
+                                size='profile'
+                                displayName={user?.username}
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                        )}
                     </div>
                     <button aria-label='.' className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm">
                         <div className="w-3 h-3 rounded-full bg-green-500"></div>
                     </button>
                 </div>
-                <h3 className="font-semibold text-lg">{user?.fName && user?.lName ? `${user.fName} ${user.lName}` : (user?.name || `@${user?.username}`)}</h3>
-                <p className="text-sm text-gray-500 mb-1">@{user?.username}</p>
-                {/* <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                    <div className="flex items-center">
-                        <span className="font-semibold">000</span> <span className="ml-1">Followers</span>
-                    </div>
-                    <div className="w-1 h-1 rounded-full bg-gray-300"/>
-                    <div className="flex items-center">
-                        <span className="font-semibold">000</span> <span className="ml-1">Following</span>
-                    </div>
-                </div> */}
+                
+                {isDataLoaded ? (
+                    <>
+                        {user?.fName && user?.lName && (
+                            <h3 className="font-semibold text-lg">{user.fName} {user.lName}</h3>
+                        )}
+                        <p className="text-sm text-gray-500 mb-1">@{user?.username}</p>
+                    </>
+                ) : (
+                    <>
+                        <div className="h-6 w-32 bg-gray-200 animate-pulse rounded-md mb-2"></div>
+                        <div className="h-4 w-24 bg-gray-200 animate-pulse rounded-md mb-1"></div>
+                    </>
+                )}
             </div>
             
             <nav className="lg:pt-2">
@@ -62,7 +74,6 @@ export const UserSidebar = () => {
                         let route = option.route;
                         
                         if (option.routeGenerator && user?._id) {
-                            // Using user._id instead of username
                             route = option.routeGenerator(user._id);
                         }
                         

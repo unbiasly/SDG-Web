@@ -6,7 +6,7 @@ import { useUser } from '@/lib/redux/features/user/hooks';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import Loading from '../../loading';
+import Loading from '@/components/Loader';
 import { SDGVideoResponse } from '@/service/api.interface';
 
 const Page = () => {
@@ -130,7 +130,7 @@ const Page = () => {
   // Show loading state
   if (status === 'pending') {
     return (
-      <div className="fixed inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+      <div className="flex-1 bg-white bg-opacity-75 z-50 flex items-center justify-center">
         <Loading />
       </div>
     );

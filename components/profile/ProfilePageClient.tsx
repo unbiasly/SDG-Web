@@ -468,6 +468,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                             likesCount={post.poststat_id?.likes || 0}
                             commentsCount={post.poststat_id?.comments || 0}
                             repostsCount={post.poststat_id?.reposts || 0}
+                            onPostUpdate={() => getUserPosts(userId)}
                           />
                         </div>
                       ))

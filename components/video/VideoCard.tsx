@@ -35,9 +35,10 @@ interface VideoCardProps {
     };
     playingVideoId: string | null; // ID of the currently playing video
     setPlayingVideoId: (id: string | null) => void; // Function to update playing video
+    onBookmarkToggle?: () => void; // Add this prop
 }
 
-const VideoCard = ({ video, playingVideoId, setPlayingVideoId }: VideoCardProps) => {
+const VideoCard = ({ video, playingVideoId, setPlayingVideoId, onBookmarkToggle }: VideoCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const isBookmarked = video.isBookmarked;
   const [isActive, setIsActive] = useState(isBookmarked);
@@ -71,6 +72,11 @@ const VideoCard = ({ video, playingVideoId, setPlayingVideoId }: VideoCardProps)
       
       if (response.ok) {
         setIsActive(!isActive);
+        
+        // Call the callback if provided and unbookmarking
+        if (isActive && onBookmarkToggle) {
+          onBookmarkToggle();
+        }
       }
     } catch (error) {
       console.error("Error toggling bookmark:", error);

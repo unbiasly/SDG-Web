@@ -8,7 +8,7 @@ import { formatDate } from '@/lib/utilities/formatDate';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useRef } from 'react'
 import { useInView } from 'react-intersection-observer';
-import Loading from '../loading';
+import Loading from '@/components/Loader';
 import { useUser } from '@/lib/redux/features/user/hooks';
 import { PostsFetchResponse } from '@/service/api.interface';
 
