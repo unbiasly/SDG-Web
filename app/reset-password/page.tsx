@@ -3,6 +3,7 @@
 import ResetPassword from '@/components/login/ResetPassword'
 import Image from 'next/image'
 import React, { Suspense } from 'react'
+import Logo from '@/public/Logo.png'
 
 // Create a client component that uses useSearchParams
 const ResetPasswordForm = () => {
@@ -23,7 +24,7 @@ const Page = () => {
             <div className="bg-white/60 h-full flex flex-col items-center justify-center rounded-lg border border-gray-500 overflow-hidden">
                 {/* Logo div positioned to sit halfway outside the card */}
                 <div className=" bg-white/40 mt-10 rounded-full border-2 border-white/40">
-                    <Image src="/Logo.svg" alt="SDG Logo" width={130} height={130} />
+                    <Image src={Logo} alt="SDG Logo" width={130} height={130} />
                 </div>
               
               <div className="flex flex-col items-center justify-center py-6 ">
@@ -34,7 +35,7 @@ const Page = () => {
               </div>
               <div className="flex h-10 mt-5 w-full">
                 <div className="flex-1 bg-[#E5243B]"></div>
-                <div className="flex-1 bg-[#DDA63A]"></div>
+                <div className="flex-1 bg-[#dda73a80]"></div>
                 <div className="flex-1 bg-[#4C9F38]"></div>
                 <div className="flex-1 bg-[#C5192D]"></div>
                 <div className="flex-1 bg-[#FF3A21]"></div>

@@ -9,13 +9,20 @@ import { report } from "process";
 interface ReportPopoverProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  postId: string;
+  id: string;
+  type?: 'post' | 'video' | 'news'; // New parameter for content type
   onReportSubmitted?: () => void; // Add callback for successful report
 }
 
 type ReportStep = "choice" | "report" | "feedback";
 
-const ReportPopover = ({ open, onOpenChange, postId, onReportSubmitted }: ReportPopoverProps) => {
+const ReportPopover = ({ 
+  open, 
+  onOpenChange, 
+  id, 
+  type = 'post', // Default to 'post' for backward compatibility
+  onReportSubmitted 
+}: ReportPopoverProps) => {
   const [step, setStep] = useState<ReportStep>("choice");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPolicies, setSelectedPolicies] = useState<string[]>([]);
@@ -40,7 +47,7 @@ const ReportPopover = ({ open, onOpenChange, postId, onReportSubmitted }: Report
     
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/post/report`, {
+      const response = await fetch(`/api/${type}/report`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,7 +55,7 @@ const ReportPopover = ({ open, onOpenChange, postId, onReportSubmitted }: Report
         body: JSON.stringify({
           reason: selectedFeedback,
           report_category: "Feedback",
-          postId: postId
+          postId: id
         }),
       });
 
@@ -82,7 +89,7 @@ const ReportPopover = ({ open, onOpenChange, postId, onReportSubmitted }: Report
     
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/post/report`, {
+      const response = await fetch(`/api/${type}/report`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +97,7 @@ const ReportPopover = ({ open, onOpenChange, postId, onReportSubmitted }: Report
         body: JSON.stringify({
           reason: selectedPolicies.join(', '),
           report_category: "Report",
-          postId: postId
+          postId: id
         }),
       });
 
@@ -140,7 +147,7 @@ const ReportPopover = ({ open, onOpenChange, postId, onReportSubmitted }: Report
       <DialogContent>
         <DialogHeader className="border-b border-gray-100 pb-4">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold">Report this post</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">Report this {type}</DialogTitle>
           </div>
         </DialogHeader>
 

@@ -58,14 +58,6 @@ export async function POST(req: NextRequest) {
       statusCode: response.status
     });
     
-    // For 'track' actions, we don't need to handle 401 errors with token refresh
-    // This matches the Flutter implementation
-    if (response.status === 401 && action !== 'track') {
-      return NextResponse.json(
-        { success: false, message: "Authentication token expired", redirectToLogin: true },
-        { status: 401 }
-      );
-    }
     
     // Get the response data
     const responseData = await response.json();

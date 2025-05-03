@@ -1,16 +1,20 @@
+
 import ForgotPassword from '@/components/login/ForgotPassword'
+
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
+import Logo from '@/public/Logo.png'
 
-const page = () => {
+
+const Page = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4">
         <div className="w-full max-w-2xl m-30 h-full relative">
             <div className="bg-white/60 h-full flex  flex-col items-center justify-center rounded-lg border border-gray-500 overflow-hidden">
                 {/* Logo div positioned to sit halfway outside the card */}
                 <div className=" bg-white/40 mt-10 rounded-full border-2 border-white/40">
-                    <Image src="/Logo.svg" alt="SDG Logo" width={130} height={130} />
+                    <Image src={Logo} alt="SDG Logo" width={130} height={130} />
                 </div>
               
               <div className="flex flex-col items-center justify-center py-6">
@@ -42,4 +46,4 @@ const page = () => {
   )
 }
 
-export default page
+export default Page

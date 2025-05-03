@@ -80,9 +80,9 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({ onBack }) => {
             onChange={(e) => setCurrentPassword(e.target.value)}
             className="w-full h-10 border-0 rounded-md bg-gray-100"
           />
-          <Link href="/login?forgotPassword=true" className="text-accent hover:underline block mt-1">
+          {/* <Link href="/forgot-password" className="text-accent hover:underline block mt-1">
             Forgot Password?
-          </Link>
+          </Link> */}
         </div>
 
         {/* New password */}

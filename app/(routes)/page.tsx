@@ -11,6 +11,7 @@ import { useInView } from 'react-intersection-observer';
 import Loading from '@/components/Loader';
 import { useUser } from '@/lib/redux/features/user/hooks';
 import { PostsFetchResponse } from '@/service/api.interface';
+import { PostWithImpressionTracking } from '@/components/feed/PostWithImpressionTracking';
 
 
 export default function Home() {
@@ -55,6 +56,13 @@ export default function Home() {
     staleTime: 60 * 1000, // 1 minute
   });
 
+  const queryClient = useQueryClient();
+  
+  const handlePostUpdate = () => {
+    // Invalidate the posts query to refetch data
+    queryClient.invalidateQueries({ queryKey: ['posts'] });
+  };
+
   // Flatten the pages into a single array of posts
   const posts = data?.pages.flatMap(page => page.data) || [];
 
@@ -64,29 +72,6 @@ export default function Home() {
       fetchNextPage();
     }
   }, [inView, fetchNextPage, hasNextPage, isFetchingNextPage]);
-  
-  // Track post impressions
-const trackPostImpression = async (postId: string, userId: string) => {
-    if (!user?._id) return;
-    
-    try {
-      await fetch('/api/analytics', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'track',
-          type: 'post_impression',
-          viewerId: user._id,
-          postId,
-          userId
-        }),
-      });
-    } catch (error) {
-      console.error("Failed to track post impression:", error);
-    }
-  };
   
   // Show loading state
   if (status === 'pending') {
@@ -115,17 +100,13 @@ const trackPostImpression = async (postId: string, userId: string) => {
                 <>
                     <CreatePost />
                     <div className="px-4 space-y-4">
-                    {posts.filter(post => post !== undefined).map((post) => {
-                        // Create props for the PostWithTracking component
-                        return (
-                        <PostWithTracking 
-                            key={post._id}
-                            post={post}
-                            user={user}
-                            onImpression={trackPostImpression}
-                        />
-                        );
-                    })}
+                    {posts.filter(post => post !== undefined).map((post) => (
+                      <PostWithImpressionTracking 
+                        key={post._id} 
+                        post={post} 
+                        onPostUpdate={handlePostUpdate} 
+                      />
+                    ))}
                     
                     {/* Loading indicator and ref for intersection observer */}
                     {(hasNextPage || isFetchingNextPage) && (
@@ -159,88 +140,4 @@ const trackPostImpression = async (postId: string, userId: string) => {
   )
 }
 
-// Separate component for the post with tracking
-interface PostWithTrackingProps {
-post: {
-    _id: string;
-    user_id: {
-        _id: string;
-        name?: string;
-        username: string;
-        profileImage?: string;
-        followerCount?: number;
-        isFollowing?: boolean | null;
-    };
-    content: string;
-    images?: string[];
-    status?: string;
-    visibility?: string;
-    original_post_id: string | null;
-    poststat_id?: {
-        _id?: string;
-        likes: number;
-        views?: number;
-        bookmarks?: number;
-        comments: number;
-        reposts: number;
-    } | null;
-    createdAt?: string;
-    updatedAt: string;
-    __v?: number;
-    isLiked?: boolean;
-    isBookmarked?: boolean;
-    isReposted?: boolean;
-};
-  user: {
-    _id?: string;
-  } | null | undefined;
-  onImpression: (postId: string, userId: string) => Promise<void>;
-}
 
-function PostWithTracking({ post, user, onImpression }: PostWithTrackingProps) {
-  const { ref, inView } = useInView({
-    threshold: 0.5,
-    triggerOnce: true, // Only trigger once when post becomes visible
-  });
-  
-  // Get access to the queryClient to invalidate queries
-  const queryClient = useQueryClient();
-  
-  // Track impression only when post comes into view
-  useEffect(() => {
-    if (inView && user?._id && post._id && post.user_id._id) {
-      // Only call the API when this specific post is in the viewport
-      onImpression(post._id, post.user_id._id);
-    }
-  }, [inView, post._id, post.user_id._id, user?._id, onImpression]);
-
-  // Handle post updates (after reporting, etc.)
-  const handlePostUpdate = () => {
-    // Invalidate the posts query to refetch data
-    queryClient.invalidateQueries({ queryKey: ['posts'] });
-  };
-
-  return (
-    <div ref={ref}>
-      <PostCard
-        isReposted={post.original_post_id !== null}
-        key={post._id}
-        _id={post._id}
-        name={post.user_id.name || `@${post.user_id.username}`}
-        handle={`@${post.user_id.username}`}
-        avatar={post.user_id.profileImage || ''}
-        time={formatDate(post.updatedAt)}
-        isLiked={post.isLiked || false}
-        userId={post.user_id._id}
-        isBookmarked={post.isBookmarked || false}
-        content={post.content}
-        imageUrl={post.images|| []}
-        isFollowed={post.user_id.isFollowing || undefined}
-        likesCount={post.poststat_id?.likes || 0}
-        commentsCount={post.poststat_id?.comments || 0}
-        repostsCount={post.poststat_id?.reposts || 0}
-        onPostUpdate={handlePostUpdate} // Add the onPostUpdate prop
-      />
-    </div>
-  );
-}

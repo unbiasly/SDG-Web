@@ -4,6 +4,7 @@ import ProfileAvatar from "../profile/ProfileAvatar";
 import { cn } from "@/lib/utils";
 import { CommentData } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
+import { SendHorizonal } from "lucide-react";
 
 interface CommentSectionProps {
     post_id: string;
@@ -91,7 +92,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       {/* Comment input area */}
       <div className="flex gap-3 mb-4">
         <ProfileAvatar src={user?.profileImage || ''} size="xs" />
-        <div className="flex-1 relative">
+        <div className="flex-1 flex items-center relative">
           <input
             type="text"
             value={comment}
@@ -104,6 +105,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               }
             }}
           />
+          <SendHorizonal className="ml-2 cursor-pointer " onClick={handleComment}/>
         </div>
           {/* <div className=" flex gap-2 ">
             <button aria-label="add-image" className="text-gray-500 cursor-pointer hover:text-gray-700">

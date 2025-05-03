@@ -377,11 +377,11 @@ export const PostCard: React.FC<PostCardProps> = ({
     
   return (
     <div className="w-full border-b  p-2 border-gray-300">
-        {isReposted && (
+        {/* {isReposted && (
           <div className=" py-2 border-b px-4 mb-2  text-sm text-gray-500">
             <Link href={`/profile/${userId}`} className="font-bold hover:underline">{name}</Link> reposted this
           </div>
-        )}
+        )} */}
       <div className="flex justify-between mb-3">
         <div className="flex items-center">
             <Link href={`/profile/${userId}`}>

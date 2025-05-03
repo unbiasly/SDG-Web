@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { PenLine } from 'lucide-react';
 
 interface EducationCardProps {
-  logo?: string;
+//   logo?: string;
   institution: string;
   degree: string;
   className?: string;

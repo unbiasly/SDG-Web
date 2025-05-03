@@ -5,13 +5,12 @@ import "@/app/globals.css";
 import { UserSidebar } from "@/components/feed/UserProfile";
 import Image from "next/image";
 import Link from "next/link";
-import { setupTokenRefresh } from "@/lib/utilities/tokenRefresh";
 import { useEffect } from "react";
 import { useAppDispatch } from "@/lib/redux/hooks";
 import { fetchUserFailure, fetchUserStart, fetchUserSuccess, setFallbackColor } from "@/lib/redux/features/user/userSlice";
 import { getRandomColor } from "@/lib/utilities/generateColor";
 
-export default function VideoLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -20,7 +19,6 @@ export default function VideoLayout({
 
   useEffect(() => {
     // Set up the token refresh service worker
-    setupTokenRefresh();
     fetchUser();
   }, []);
     
@@ -30,14 +28,6 @@ export default function VideoLayout({
       const response = await fetch('/api', {
         credentials: 'include'
       });
-      
-      if (!response.ok) {
-        if (response.status === 401) {
-          dispatch(fetchUserFailure('Unauthorized'));
-          window.location.href = '/login';
-          return null;
-        }
-      }
       const data = await response.json();
       if (data.data && data.data._id) {
         const fallbackColor = getRandomColor();

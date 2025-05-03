@@ -19,19 +19,13 @@ export async function GET() {
             }
         });
         
-        if (!response.ok) {
-            if (response.status === 401) {
-                return NextResponse.json({ error: 'Unauthorized'}, { status: 401 });
-            }
-            throw new Error(`API error: ${response.status}`);
-        }
         
         const data = await response.json();
         return NextResponse.json(data);
     } catch (error) {
         console.error("careerUpdate/route.ts GET error:", error);
         return NextResponse.json(
-            { error: 'Failed to fetch career data', redirectToLogin: false }, 
+            { error: 'Failed to fetch career data' }, 
             { status: 500 }
         );
     }
@@ -44,7 +38,7 @@ export async function PUT(req: NextRequest) {
         const jwtToken = cookieStore.get('jwtToken')?.value;
         
         if (!jwtToken) {
-            return NextResponse.json({ error: 'Unauthorized (Token Undefined)', redirectToLogin: true }, { status: 401 });
+            return NextResponse.json({ error: 'Unauthorized (Token Undefined)' }, { status: 401 });
         }
         
         // Parse the JSON request body

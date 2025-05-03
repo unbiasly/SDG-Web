@@ -4,16 +4,12 @@ import { cookies } from "next/headers";
 
 // POST /v1/sdg-video/report/:video_id
 export async function POST(req: NextRequest) {
+
+    const cookieStore = await cookies();
+    const jwtToken = cookieStore.get("jwtToken")?.value;
     try {
 
-        // Extract video_id from URL path
-        const url = new URL(req.url);
-        const pathParts = url.pathname.split('/');
-        // Check if the path contains "report" and get the video_id
-        const reportIndex = pathParts.findIndex(part => part === "report");
-        const video_id = reportIndex >= 0 && reportIndex < pathParts.length - 1 
-            ? pathParts[reportIndex + 1] 
-            : null;
+        const { video_id } = await req.json();
         
         if (!video_id) {
             return NextResponse.json(
@@ -29,7 +25,7 @@ export async function POST(req: NextRequest) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer `
+                "Authorization": `Bearer ${jwtToken}`
             },
             body: JSON.stringify(body)
         });

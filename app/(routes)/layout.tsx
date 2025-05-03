@@ -10,7 +10,6 @@ import Link from "next/link";
 import { getRandomColor } from "@/lib/utilities/generateColor";
 import SearchBar from "@/components/feed/SearchBar";
 import { setupAPIInterceptor } from "@/lib/utilities/interceptor";
-import { useTokenRefresh } from "@/lib/hooks/useTokenRefresh";
 
 export default function RootLayout({
   children,
