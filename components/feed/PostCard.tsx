@@ -534,7 +534,7 @@ export const PostCard: React.FC<PostCardProps> = ({
       <ReportPopover 
         open={reportOpen} 
         onOpenChange={setReportOpen} 
-        postId={_id} 
+        id={_id} 
         onReportSubmitted={handleReportSubmitted}
       />
       <EditPost 

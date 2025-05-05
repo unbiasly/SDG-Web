@@ -101,7 +101,7 @@ const PostMenu = ({ postId, userId, isBookmarked }: PostMenuProps) => {
         </div>
       )}
       
-      <ReportPopover open={reportOpen} onOpenChange={setReportOpen} postId={postId} />
+      <ReportPopover open={reportOpen} onOpenChange={setReportOpen} id={postId} />
       <EditPost open={editPostOpen} onOpenChange={setEditPostOpen} postId={postId} />
     </div>
   );

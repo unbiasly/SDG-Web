@@ -21,17 +21,17 @@ export function middleware(request: NextRequest) {
     return response;
   }
   
-  // Check for JWT token
-  const jwtToken = request.cookies.get('jwtToken')?.value;
+  // Check for Session Id
+  const sessionId = request.cookies.get('sessionId')?.value;
   
   // If user has a token and is trying to access login/register pages, redirect to home
-  if (jwtToken && authPaths.some(path => pathname.startsWith(path))) {
+  if (sessionId && authPaths.some(path => pathname.startsWith(path))) {
     const homeUrl = new URL('/', request.url);
     return NextResponse.redirect(homeUrl);
   }
   
   // If no token and trying to access protected route, redirect to login
-  if (!jwtToken && !publicPaths.some(path => pathname.startsWith(path))) {
+  if (!sessionId && !publicPaths.some(path => pathname.startsWith(path))) {
     const loginUrl = new URL('/login', request.url);
     return NextResponse.redirect(loginUrl);
   }

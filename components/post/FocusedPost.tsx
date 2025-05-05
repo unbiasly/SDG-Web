@@ -334,7 +334,7 @@ export function SocialPostDialog({ open, onOpenChange, avatar, name, handle, tim
         </div>
         </div>
         
-        <ReportPopover open={reportOpen} onOpenChange={setReportOpen} postId={_id} />
+        <ReportPopover open={reportOpen} onOpenChange={setReportOpen} id={_id} />
         <EditPost 
           open={editPostOpen} 
           onOpenChange={setEditPostOpen} 
