@@ -9,7 +9,6 @@ import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useRef } from 'react'
 import { useInView } from 'react-intersection-observer';
 import Loading from '@/components/Loader';
-import { useUser } from '@/lib/redux/features/user/hooks';
 import { PostsFetchResponse } from '@/service/api.interface';
 import { PostWithImpressionTracking } from '@/components/feed/PostWithImpressionTracking';
 
@@ -17,8 +16,6 @@ import { PostWithImpressionTracking } from '@/components/feed/PostWithImpression
 export default function Home() {
   const [activeTab, setActiveTab] = React.useState("For You");
   const { ref, inView } = useInView();
-  const { user } = useUser();
-
   async function fetchPosts(cursor?: string): Promise<PostsFetchResponse> {
     const url = cursor 
       ? `/api/post?cursor=${cursor}` 

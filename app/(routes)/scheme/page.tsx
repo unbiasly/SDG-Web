@@ -49,6 +49,7 @@ const Page = () => {
                                     icon={scheme.icon}
                                     count={scheme.count}
                                     label={scheme.label}
+                                    type='category'
                                 />
                             ))}
                         </div>
@@ -79,6 +80,7 @@ const Page = () => {
                                     icon={scheme.icon}
                                     count={scheme.count}
                                     label={scheme.label}
+                                    type='ministry'
                                 />
                             ))}
                         </div>

@@ -346,7 +346,8 @@ export interface SchemeCardProps {
     label: string;
     count: number;
     icon: string;
-    onClick?: () => void;
+    type: string;
+    // onClick?: () => void;
 };
 export interface AnalyticsResponseData {
   success: boolean;

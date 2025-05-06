@@ -223,3 +223,15 @@ export const SDG_NEWS = [
     "Illegal goods and services",
     "Infringement"
   ];
+
+export const SCHEME_CATEGORIES = [
+    'All Schemes',
+    'Central Schemes',
+]
+
+export const SCHEME_DATA_TABS = [
+    'Details',
+    'Benefits',
+    'Eligibility',
+    'Application Process'
+]

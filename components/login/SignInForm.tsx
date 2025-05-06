@@ -56,7 +56,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
                     window.location.reload();
                     toast.success('Signed in successfully!');
                     // Redirect to dashboard or home page after successful login
-                    window.location.href = '/dashboard'; // Update this to your desired redirect location
+                    window.location.href = '/'; // Update this to your desired redirect location
                     toast.success('Signed in successfully!');
                 } else {
                     const cookieError = await cookieResponse.json();
