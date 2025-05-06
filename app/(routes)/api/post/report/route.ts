@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
     }
     
     const body = await request.json();
-    const { reason, report_category, postId } = body;
+    const { reason, report_category, id } = body;
     
-    if (!postId) {
+    if (!id) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
     
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Make API call to report the post
-    const response = await fetch(`${baseURL}/post/report/${postId}`, {
+    const response = await fetch(`${baseURL}/post/report/${id}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

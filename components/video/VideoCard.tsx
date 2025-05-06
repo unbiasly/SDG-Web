@@ -165,11 +165,11 @@ const VideoCard = ({ video, playingVideoId, setPlayingVideoId, onBookmarkToggle 
   const isPodcast = video.type === "podcast";
 
   const menuOptions = [
-    { 
-      icon: <Share2 className="h-5 w-5 text-gray-500" />, 
-      label: "Share", 
-      onClick: handleShare 
-    },
+    // { 
+    //   icon: <Share2 className="h-5 w-5 text-gray-500" />, 
+    //   label: "Share", 
+    //   onClick: handleShare 
+    // },
     { 
       icon: <Flag className="h-5 w-5 text-gray-500" />, 
       label: "Report", 

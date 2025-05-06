@@ -8,36 +8,41 @@ export async function POST(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get("jwtToken")?.value;
     try {
-
-        const { video_id } = await req.json();
-        
-        if (!video_id) {
-            return NextResponse.json(
-                { success: false, message: "Video ID is required" },
-                { status: 400 }
-            );
-        }
-
         const body = await req.json();
+        const { reason, report_category, id } = body;
 
-        // Make API call to your backend service
-        const response = await fetch(`${baseURL}/sdg-video/report/${video_id}`, {
+        if (!id) {
+            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+          }
+          
+          // Check if at least one of reason or report_category is provided
+          if (!reason && !report_category) {
+            return NextResponse.json({ 
+              error: "Either reason or report_category must be provided" 
+            }, { status: 400 });
+          }
+          
+          // Make API call to report the post
+          const response = await fetch(`${baseURL}/sdg-video/report/${id}`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${jwtToken}`
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${jwtToken}`
             },
-            body: JSON.stringify(body)
-        });
+            body: JSON.stringify({
+              ...(reason && { reason }),
+              ...(report_category && { report_category })
+            })
+          });
 
-        const data = await response.json();
-        
         if (!response.ok) {
             return NextResponse.json(
-                { success: false, message: data.message || "Failed to submit report" },
+                { success: false, message: "Failed to submit report" },
                 { status: response.status }
             );
         }
+        const data = await response.json();
+        
 
         return NextResponse.json({
             success: true,

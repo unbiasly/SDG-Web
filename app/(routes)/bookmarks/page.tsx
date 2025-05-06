@@ -107,6 +107,14 @@ const Page = () => {
         }
     }, [hasFetchedVideos, videoBookmarks.length]);
 
+    // Adapter function to transform SDGVideoData into the format expected by VideoCard
+    const adaptVideoForCard = useCallback((video: SDGVideoData) => {
+        return {
+            ...video,
+            comments: Array.isArray(video.comments) ? video.comments.length : 0,
+        };
+    }, []);
+
     // Combined bookmarks for "All" tab
     const allBookmarks = useMemo(() => {
         const loading = loadingPosts || loadingNews || loadingVideos;
@@ -290,7 +298,7 @@ const Page = () => {
                                         {videoBookmarks.map((video) => (
                                             <VideoCard 
                                                 key={video._id} 
-                                                video={video}
+                                                video={adaptVideoForCard(video)}
                                                 playingVideoId={playingVideoId}
                                                 setPlayingVideoId={setPlayingVideoId}
                                                 onBookmarkToggle={() => handleVideoUnbookmark(video._id)}
@@ -383,7 +391,7 @@ const Page = () => {
                             {videoBookmarks.map((video) => (
                                 <VideoCard 
                                     key={video._id} 
-                                    video={video}
+                                    video={adaptVideoForCard(video)}
                                     playingVideoId={playingVideoId}
                                     setPlayingVideoId={setPlayingVideoId}
                                     onBookmarkToggle={() => handleVideoUnbookmark(video._id)}

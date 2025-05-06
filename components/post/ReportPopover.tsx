@@ -55,7 +55,7 @@ const ReportPopover = ({
         body: JSON.stringify({
           reason: selectedFeedback,
           report_category: "Feedback",
-          postId: id
+          id
         }),
       });
 
@@ -97,7 +97,7 @@ const ReportPopover = ({
         body: JSON.stringify({
           reason: selectedPolicies.join(', '),
           report_category: "Report",
-          postId: id
+          id
         }),
       });
 

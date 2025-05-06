@@ -19,6 +19,7 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
     const [isLiked, setIsLiked] = useState(data?.isLiked);
     const [isBookmarked, setIsBookmarked] = useState(data?.isBookmarked);
     const [likesCount, setLikesCount] = useState(0);
+    const [commentText, setCommentText] = useState(''); // Add state for comment input
     
     const opts = {
         height: '100%',
@@ -124,6 +125,62 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
           console.error("Error toggling like:", error);
         }
       };
+
+      const handleCommentSubmit = async () => {
+        if (!commentText.trim()) return; // Don't submit empty comments
+        
+        try {
+            const response = await fetch(`/api/video`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    videoId: videoId,
+                    actionType: 'comment',
+                    comment: commentText,
+                }),
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                
+                // Create new comment object that matches the expected structure in SDGVideoData
+                const newComment = {
+                    id: result.commentId || Date.now().toString(), // Use returned ID or fallback
+                    text: commentText,
+                    userName: user?.name || 'You',
+                    userId: user?._id,
+                    createdAt: new Date().toISOString(),
+                    userImage: user?.profileImage || '',
+                };
+                
+                // Update the data state to include the new comment
+                // setData(prevData => {
+                //     if (!prevData) return null;
+                    
+                //     return {
+                //         ...prevData,
+                //         comments: prevData.comments ? [...prevData.comments, newComment] : [newComment]
+                //     };
+                // });
+                
+                // Clear the input field
+                setCommentText('');
+            }
+        } catch (error) {
+            console.error("Error submitting comment:", error);
+        }
+    };
+    
+    // Handle Enter key press for comment submission
+    const handleCommentKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleCommentSubmit();
+        }
+    };
+      
 
     const handleVideoClose = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -272,20 +329,6 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                 </div>
 
                 {/* Comments Section */}
-                <div className="mb-8 py-2 px-4 border rounded-lg border-gray-400">
-                    <h3 className="text-lg font-semibold mb-4">Comments</h3>
-                    <div className="flex gap-4 mb-6">
-                        <ProfileAvatar src={user?.profileImage || ''} size="xs"/>
-                        <input
-                            type="text"
-                            placeholder="Leave a comment..."
-                            className="flex-1 bg-transparent border px-4 border-gray-300 focus:outline-none focus:border-accent rounded-full"
-                        />
-                    </div>
-
-                    {/* Comments */}
-                    {/* {(dx */}
-                </div>
             </div>
         </div>
     );
@@ -293,3 +336,50 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
 
 export default VideoPageClient;
 
+
+                // <div className="mb-8 py-2 px-4 border rounded-lg border-gray-400">
+                //     <h3 className="text-lg font-semibold mb-4">Comments</h3>
+                //     <div className="flex gap-4 mb-6">
+                //         <ProfileAvatar src={user?.profileImage || ''} size="xs"/>
+                //         <div className="flex-1 flex">
+                //             <input
+                //                 type="text"
+                //                 placeholder="Leave a comment..."
+                //                 className="flex-1 bg-transparent border px-4 border-gray-300 focus:outline-none focus:border-accent rounded-full"
+                //                 value={commentText}
+                //                 onChange={(e) => setCommentText(e.target.value)}
+                //                 onKeyPress={handleCommentKeyPress}
+                //             />
+                //             <Button 
+                //                 className="ml-2" 
+                //                 size="sm" 
+                //                 onClick={handleCommentSubmit}
+                //                 disabled={!commentText.trim()}
+                //             >
+                //                 Post
+                //             </Button>
+                //         </div>
+                //     </div>
+
+                //     {/* Comments */}
+                //     {data?.comments?.length ? (
+                //         data.comments.map((comment, index) => (
+                //             <div key={index|| `comment-${index}`} className="flex gap-3 mb-4">
+                //                 {/* <ProfileAvatar src={comment.userImage || ''} size="xs" /> */}
+                //                 <div className="flex flex-col">
+                //                     <div className="flex items-center gap-2">
+                //                         {/* <span className="font-semibold">{comment.userName || 'Anonymous User'}</span> */}
+                //                         <span className="text-xs text-gray-500">
+                //                             {/* {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : 'Just now'} */}
+                //                         </span>
+                //                     </div>
+                //                     {/* <p className="text-gray-700">{comment.text}</p> */}
+                //                 </div>
+                //             </div>
+                //         ))
+                //     ) : (
+                //         <div className="text-center py-4 text-gray-500">
+                //             No comments yet. Be the first to comment!
+                //         </div>
+                //     )}
+                // </div>
