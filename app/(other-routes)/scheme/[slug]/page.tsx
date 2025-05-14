@@ -155,7 +155,7 @@ const Page = () => {
               <Link href={scheme.scheme_url || `/scheme/id/detail?id=${scheme.id}`} target={scheme.scheme_url ? "_blank" : "_self"} key={scheme.id} className="block">
                 <div className="border rounded-lg p-6 hover:shadow-lg transition-shadow">
                   <div className="flex justify-between mb-3">
-                    <div className="inline-block px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800">
+                    <div className="inline-block px-3 py-1 rounded-full text-sm bg-gray-500 text-white">
                       {scheme.state}
                     </div>
                     {scheme.level && (
@@ -170,7 +170,7 @@ const Page = () => {
                     {scheme.tags.map((tag, index) => (
                       <span
                         key={index}
-                        className="px-3 py-1 rounded-full text-sm border border-gray-300 text-gray-600"
+                        className="px-3 py-1 rounded-full text-sm border border-gray-600 text-black"
                       >
                         {tag}
                       </span>

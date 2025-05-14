@@ -244,7 +244,7 @@ const Page = () => {
                                             name={bookmark.user_id.name || bookmark.user_id.username}
                                             handle={bookmark.user_id.username}
                                             time={bookmark.createdAt}
-                                            isVerified={bookmark.user_id.isFollowing || false}
+                                            // isVerified={bookmark.user_id.isFollowing || false}
                                             content={bookmark.content}
                                             isLiked={bookmark.isLiked}
                                             isBookmarked={bookmark.isBookmarked}
@@ -327,7 +327,7 @@ const Page = () => {
                                 name={bookmark.user_id.name || bookmark.user_id.username}
                                 handle={bookmark.user_id.username}
                                 time={bookmark.createdAt}
-                                isVerified={bookmark.user_id.isFollowing || false}
+                                // isVerified={bookmark.user_id.isFollowing || false}
                                 content={bookmark.content}
                                 isLiked={bookmark.isLiked}
                                 isBookmarked={bookmark.isBookmarked}

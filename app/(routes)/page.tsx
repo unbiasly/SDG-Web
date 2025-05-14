@@ -1,8 +1,8 @@
 "use client"
 import { ContentFeed } from '@/components/feed/ContentFeed'
 import CreatePost from '@/components/feed/CreatePost';
-import { PostCard } from '@/components/feed/PostCard';
-import SDGNews from '@/components/feed/SDGNews';
+// import { PostCard } from '@/components/feed/PostCard';
+// import SDGNews from '@/components/feed/SDGNews';
 import { FEED_TABS } from '@/lib/constants/index-constants'
 import { formatDate } from '@/lib/utilities/formatDate';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';

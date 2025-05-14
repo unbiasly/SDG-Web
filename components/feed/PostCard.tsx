@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef } from 'react';
-import { ThumbsUp, MessageCircle, Bookmark, Flag, MoreVertical, Pencil, Trash, Repeat2, UserPlus } from 'lucide-react';
+import { ThumbsUp, MessageCircle, Bookmark, Flag, MoreVertical, Pencil, Trash,  UserPlus, Repeat } from 'lucide-react';
 import Image from 'next/image';
 import CommentSection from '../post/CommentSection';
 import { CommentData } from '@/service/api.interface';
@@ -20,7 +20,7 @@ interface PostCardProps {
   name: string;
   handle: string;
   time: string;
-  isVerified?: boolean;
+//   isVerified?: boolean;
   content: string;
   isLiked: boolean;
   isReposted?: boolean;
@@ -40,8 +40,8 @@ export const PostCard: React.FC<PostCardProps> = ({
   name,
   handle,
   time,
-  isVerified = false,
-  isReposted = false,
+//   isVerified,
+  isReposted,
   content,
   imageUrl,
   isLiked,
@@ -483,37 +483,19 @@ export const PostCard: React.FC<PostCardProps> = ({
         </div>
       </div>
       
-      {/* <div className="flex h-1 w-full my-2">
-        <div className="flex-1 bg-[#E5243B]/60"></div>
-        <div className="flex-1 bg-[#DDA63A]/60"></div>
-        <div className="flex-1 bg-[#4C9F38]/60"></div>
-        <div className="flex-1 bg-[#C5192D]/60"></div>
-        <div className="flex-1 bg-[#FF3A21]/60"></div>
-        <div className="flex-1 bg-[#26BDE2]/60"></div>
-        <div className="flex-1 bg-[#FCC30B]/60"></div>
-        <div className="flex-1 bg-[#A21942]/60"></div>
-        <div className="flex-1 bg-[#FD6925]/60"></div>
-        <div className="flex-1 bg-[#DD1367]/60"></div>
-        <div className="flex-1 bg-[#FD9D24]/60"></div>
-        <div className="flex-1 bg-[#BF8B2E]/60"></div>
-        <div className="flex-1 bg-[#3F7E44]/60"></div>
-        <div className="flex-1 bg-[#0A97D9]/60"></div>
-        <div className="flex-1 bg-[#56C02B]/60"></div>
-        <div className="flex-1 bg-[#00689D]/60"></div>
-        <div className="flex-1 bg-[#19486A]/60"></div>
-      </div> */}
+      
       <div className='w-full border border-gray-200' />
       
       <div className="flex justify-evenly pt-2 ">
         {[
-            { icon: <ThumbsUp size={18}  className={isActive ? "fill-current font-bold" : "text-gray-500"} />, label: "Like", onClick: handleLike, isActive: isActive },
+            { icon: <ThumbsUp size={18}  className={isActive ? "fill-current font-bold" : "text-gray-500"} />, label: isActive ? "Liked" : "Like" , onClick: handleLike, isActive: isActive },
             { icon: <MessageCircle size={18} className={isCommentsOpen ? "fill-current" : "text-gray-500"} />, label: "Comment", onClick: toggleComments, isActive: isCommentsOpen },
-            { icon: <Repeat2 size={18} className={ "text-gray-500"} />, label: "Repost", onClick: handleRepost, },
+            { icon: <Repeat size={18} className={isReposted ? "fill-current" : "text-gray-500"} />, label: isReposted ? "Reposted" : "Repost", onClick: handleRepost, },
             //   { icon: <Share2 size={18} className="text-gray-500" />, label: "Share", onClick: handleShare, isActive: false }
         ].map((action, index) => (
             <button 
             key={index}
-            className={`w-50 flex items-center cursor-pointer justify-center gap-2 py-1.5 rounded-xl transition-colors duration-200 ${action.isActive ?  "font-bold bg-gray-300" : "font-medium hover:bg-gray-200 "}`}
+            className={`w-50 flex items-center cursor-pointer justify-center gap-2 py-1.5 rounded-xl transition-colors duration-200 ${action.isActive ?  "font-bold" : "font-medium hover:bg-gray-200 "}`}
             onClick={action.onClick}
             >
             {action.icon}
@@ -558,7 +540,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         handle={handle}
         userId={userId}
         time={time}
-        isVerified={isVerified}
+        // isVerified={isVerified}
         content={content}
         isLiked={isLiked}
         isBookmarked={isBookmarked}

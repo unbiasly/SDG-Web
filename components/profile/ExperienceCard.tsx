@@ -3,7 +3,6 @@ import { cn } from '@/lib/utils';
 import { PenLine } from 'lucide-react';
 
 interface ExperienceCardProps {
-    id: string;
 //   logo?: string;
   position: string;
   company: string;
@@ -14,7 +13,6 @@ interface ExperienceCardProps {
 }
 
 const ExperienceCard: React.FC<ExperienceCardProps> = ({
-    id,
 //   logo,
   position,
   company,

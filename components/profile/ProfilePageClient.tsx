@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react'
-import { Eye, LinkIcon } from 'lucide-react';
+import { Camera, Eye, LinkIcon } from 'lucide-react';
 import ProfileAvatar from '@/components/profile/ProfileAvatar';
 import ProfileTabs from '@/components/profile/ProfileTabs';
 import ProfileAnalyticsCard from '@/components/profile/ProfileAnalyticsCard';
@@ -19,6 +19,8 @@ import { EducationDialog } from '@/components/userDataDialogs/EducationDialog';
 import { ExperienceDialog } from '@/components/userDataDialogs/ExperienceDialog';
 import FollowButton from '@/components/profile/FollowButton';
 import Loader from '../Loader';
+import ProfileImageDialog from '../userDataDialogs/ProfileImageDialog';
+import BackgroundImageDialog from '../userDataDialogs/BackgroundImageDialog';
 
 const ProfilePageClient = ({ userId }: { userId: string }) => {
     const [activeTab, setActiveTab] = useState('about');
@@ -145,6 +147,32 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
         }
     }, []); // Add userId to dependencies to reset state when it changes
 
+    useEffect(() => {
+        const handleUserUpdate = (event: CustomEvent) => {
+            // Update local state with the new user data
+            setProfileUser(event.detail);
+        };
+        
+        window.addEventListener('user-profile-updated', handleUserUpdate as EventListener);
+        
+        return () => {
+            window.removeEventListener('user-profile-updated', handleUserUpdate as EventListener);
+        };
+    }, []);
+
+    useEffect(() => {
+        const handleUserUpdate = (event: CustomEvent) => {
+            // Update local state with the new user data
+            setProfileUser(event.detail);
+        };
+        
+        window.addEventListener('user-profile-updated', handleUserUpdate as EventListener);
+        
+        return () => {
+            window.removeEventListener('user-profile-updated', handleUserUpdate as EventListener);
+        };
+    }, []);
+
     // Function to open dialog for adding new education
     const handleAddEducation = () => {
         setSelectedEducation(undefined);
@@ -244,17 +272,13 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             }
             
             // Call the API to update the experience data
-            const response = await fetch('/api/career', {
+            const response = await fetch('/api', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ experience: updatedExperience }),
             });
-            
-            if (!response.ok) {
-                throw new Error('Failed to update experience');
-            }
             
             // Refresh user data to show the updates
             await fetchUserById(userId);
@@ -284,7 +308,8 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
     return (
         <div className="w-full min-h-screen flex flex-1 flex-col border-gray-300 rounded-2xl border-1 pb-20">
           {/* Header with gray background */}
-          <div className="h-40 rounded-t-xl relative overflow-hidden">
+          {/* Standard Profile Background Banner Height = 201px */}
+          <div className="h-[201px] aspect-video rounded-t-xl relative overflow-hidden">
             {profileUser?.profileBackgroundImage ? (
               <Image 
                 src={typeof profileUser.profileBackgroundImage === 'string' ? profileUser.profileBackgroundImage : ''}
@@ -296,17 +321,22 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             ) : (
               <div className="w-full h-full bg-gray-300" />
             )}
+            <BackgroundImageDialog />
+            
           </div>
           {/* Main content */}
           <div className="w-full mx-auto px-4 sm:px-6 -mt-20 relative z-10">
             {/* Profile header */}
             <div className="flex justify-between items-end mb-8">
-              <ProfileAvatar 
-                size="xl"
-                src={profileUser?.profileImage || ''}
-                alt="Profile" 
-                
-              />
+                <div className='relative'>
+                    <ProfileAvatar 
+                        size="xl"
+                        src={profileUser?.profileImage || ''}
+                        alt="Profile" 
+                        
+                    />
+                    <ProfileImageDialog />
+                </div>
               {isOwnProfile ? <UserProfileDialog /> : <FollowButton targetId={profileUser?._id} userId={user?._id || ''} followed={isFollowingActive}/>}
             </div>
             
@@ -406,7 +436,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                       profileUser.experience.map((exp, index) => (
                         <div key={exp._id || index} className="relative">
                           <ExperienceCard 
-                            id={exp._id}
+                            // id={exp._id}
                             position={exp.role}
                             company={exp.company}
                             handleEditClick={isOwnProfile ? () => handleEditExperience(exp, index) : undefined}
@@ -489,7 +519,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
               onOpenChange={setEducationDialogOpen}
               onSave={handleSaveEducation}
               education={selectedEducation}
-              id={selectedEducation?._id}
+            //   id={selectedEducation?._id}
             />
           )}
 
@@ -498,9 +528,9 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             <ExperienceDialog
               open={experienceDialogOpen}
               onOpenChange={setExperienceDialogOpen}
-              onSave={handleSaveExperience}
+              onSuccess={handleSaveExperience}
               experience={selectedExperience}
-              index={selectedExperienceIndex}
+            //   index={selectedExperienceIndex}
             />
           )}
         </div>

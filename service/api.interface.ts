@@ -1,9 +1,13 @@
 export interface Notification {
-    id: string;
+    _id: string;
+    post?: string;
     type: string;
-    title: string;
-    time: string;
-  }
+    message: string;
+    isRead: boolean;
+    category: string;
+    userProfile?: string;
+    time?: string;
+}
 
 export interface ManualAuthRequest {
     email: string;
@@ -66,7 +70,7 @@ export interface PostCreateResponse {
 }
 
 export interface Experience {
-    _id: string;
+    _id?: string;
     company: string;
     role: string;
     startDate: string;
@@ -74,7 +78,7 @@ export interface Experience {
 }
 
 export interface Education {
-    _id: string;
+    _id?: string;
     school: string;
     degree: string;
     startDate: string;
@@ -411,9 +415,21 @@ export interface SessionsResponse {
             _id: string;
             userId: string;
             deviceId?: string;
+            deviceName?: string;
             ipAddress: string;
             userAgent: string;
             loginTime: string;
         }[];
     }
 }
+
+
+export interface JobListing {
+    id: number;
+    title: string;
+    company: string;
+    location: string;
+    postedDays: number;
+    applicants?: number;
+    matches?: string[];
+  }

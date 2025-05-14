@@ -39,18 +39,11 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized (Token Undefined)'}, { status: 401 });
         }
 
-        // Depending on the content type, handle JSON or FormData
-        let requestBody;
         let contentType = req.headers.get("content-type") || "";
 
         if (contentType.includes("application/json")) {
-            // Handle JSON request
-            requestBody = await req.json();
+            const requestBody = await req.json();
             
-            // Make sure education and experience are properly formatted
-            
-
-            // Send the request to the backend
             const response = await fetch(`${baseURL}/userDetails`, {
                 method: "PUT",
                 headers: {
@@ -60,25 +53,22 @@ export async function PUT(req: NextRequest) {
                 body: JSON.stringify(requestBody)
             });
             
-            // Process response
             const resContentType = response.headers.get("content-type");
             if (resContentType && resContentType.indexOf("application/json") !== -1) {
                 const data = await response.json();
                 return NextResponse.json(data, { status: response.status });
             } else {
                 const text = await response.text();
-                console.error("Non-JSON response:", text);
+                console.error("Non-JSON response from backend (application/json flow):", text);
                 return NextResponse.json(
-                    { success: false, message: "Server error occurred", details: text }, 
-                    { status: 500 }
+                    { success: false, message: "Backend error or non-JSON response", details: text }, 
+                    { status: response.status || 500 }
                 );
             }
         } else if (contentType.includes("multipart/form-data")) {
-            // Handle existing FormData processing for file uploads
             const formData = await req.formData();
             const backendFormData = new FormData();
             
-            // Add all text fields from the form
             const textFields = [
                 'name', 'username', 'location', 'gender', 'dob', 
                 'portfolioLink', 'bio', 'fName', 'lName', 
@@ -87,66 +77,53 @@ export async function PUT(req: NextRequest) {
             
             textFields.forEach(field => {
                 const value = formData.get(field);
-                if (value) backendFormData.append(field, value.toString());
+                if (value !== null) { // Check if the field exists
+                    backendFormData.append(field, value.toString());
+                }
             });
             
-            // Handle file uploads
             const profileImageFile = formData.get('profileImage') as File | null;
-            const backgroundImageFile = formData.get('profileBackgroundImage') as File | null;
-            
             if (profileImageFile instanceof File && profileImageFile.size > 0) {
                 backendFormData.append('profileImage', profileImageFile);
             }
             
+            const backgroundImageFile = formData.get('profileBackgroundImage') as File | null;
             if (backgroundImageFile instanceof File && backgroundImageFile.size > 0) {
                 backendFormData.append('profileBackgroundImage', backgroundImageFile);
             }
             
             // Handle education and experience arrays
-            const education = formData.get('education');
-            if (education) {
-                try {
-                    const educationArray = JSON.parse(education.toString());
-                    if (Array.isArray(educationArray)) {
-                        backendFormData.append('education', JSON.stringify(educationArray));
-                    }
-                } catch (e) {
-                    backendFormData.append('education', education.toString());
-                }
+            // These fields are expected to be sent as JSON strings by the client (e.g., Flutter app)
+            // when using multipart/form-data.
+            const educationString = formData.get('education');
+            if (educationString !== null) {
+                backendFormData.append('education', educationString.toString());
             }
             
-            const experience = formData.get('experience');
-            if (experience) {
-                try {
-                    const experienceArray = JSON.parse(experience.toString());
-                    if (Array.isArray(experienceArray)) {
-                        backendFormData.append('experience', JSON.stringify(experienceArray));
-                    }
-                } catch (e) {
-                    backendFormData.append('experience', experience.toString());
-                }
+            const experienceString = formData.get('experience');
+            if (experienceString !== null) {
+                backendFormData.append('experience', experienceString.toString());
             }
             
-            // Send FormData request
             const response = await fetch(`${baseURL}/userDetails`, {
                 method: "PUT",
                 headers: {
                     "Authorization": `Bearer ${jwtToken}`
+                    // Content-Type for FormData is set automatically by fetch
                 },
                 body: backendFormData
             });
             
-            // Process response
             const resContentType = response.headers.get("content-type");
             if (resContentType && resContentType.indexOf("application/json") !== -1) {
                 const data = await response.json();
                 return NextResponse.json(data, { status: response.status });
             } else {
                 const text = await response.text();
-                console.error("Non-JSON response:", text);
+                console.error("Non-JSON response from backend (multipart/form-data flow):", text);
                 return NextResponse.json(
-                    { success: false, message: "Server error occurred", details: text }, 
-                    { status: 500 }
+                    { success: false, message: "Backend error or non-JSON response", details: text }, 
+                    { status: response.status || 500 }
                 );
             }
         } else {
@@ -156,9 +133,10 @@ export async function PUT(req: NextRequest) {
             );
         }
     } catch (error) {
-        console.error("Error updating user details:", error);
+        console.error("Error updating user details in /api/route.ts:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
         return NextResponse.json(
-            { success: false, message: "Failed to update user details", error: String(error) },
+            { success: false, message: "Failed to update user details", error: errorMessage },
             { status: 500 }
         );
     }

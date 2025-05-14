@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
     const { userId } = await req.json();
     try {
         const response = await fetch(`${baseURL}/userDetails/?user_id=${userId}`, {
+            
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
                 'Content-Type': 'application/json'

@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
@@ -10,35 +10,54 @@ import { Experience } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
 import { toast } from "sonner";
 
+// Change interface to match EducationDialog but for Experience
 interface ExperienceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (experience: Experience, id?: string, isDeleted?: boolean) => void;
+  onSuccess: (experience: Experience, id?: string, isDeleted?: boolean) => void;
   experience?: Experience;
-  index?: number; // We'll convert this to use _id instead of index
 }
 
 export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
   open,
   onOpenChange,
-  onSave,
+  onSuccess,
   experience,
-  index,
 }) => {
-  const [experienceData, setExperienceData] = useState<Experience>(
-    experience || {
-      _id: crypto.randomUUID(), // Generate a temporary ID for new entries
-      company: "",
-      role: "",
-      startDate: new Date().toISOString(),
-      endDate: new Date().toISOString(),
-    }
-  );
+  // Initialize experience data with provided experience or new default
+  const [experienceData, setExperienceData] = useState<Experience>({
+    _id: "",
+    company: "",
+    role: "",
+    startDate: new Date().toISOString(),
+    endDate: new Date().toISOString(),
+  });
   const [startDateCalendarOpen, setStartDateCalendarOpen] = useState<boolean>(false);
   const [endDateCalendarOpen, setEndDateCalendarOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
+  
   const { user } = useUser();
+  
+  // Update local state when experience prop changes
+  useEffect(() => {
+    if (experience) {
+      setExperienceData({
+        _id: experience._id || "",
+        company: experience.company || "",
+        role: experience.role || "",
+        startDate: experience.startDate || new Date().toISOString(),
+        endDate: experience.endDate || new Date().toISOString(),
+      });
+    } else {
+      setExperienceData({
+        _id: "",
+        company: "",
+        role: "",
+        startDate: new Date().toISOString(),
+        endDate: new Date().toISOString(),
+      });
+    }
+  }, [experience, open]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -51,114 +70,145 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
     if (date) {
       setExperienceData((prev) => ({ ...prev, [field]: date.toISOString() }));
     }
+    if (field === "startDate") setStartDateCalendarOpen(false);
+    if (field === "endDate") setEndDateCalendarOpen(false);
   };
 
-  const handleSave = async () => {
-    setIsSubmitting(true);
-    try {
-      // First update the experience via API
-      await updateUserWithExperience(false);
-      
-      // Then call the parent component's onSave callback
-      onSave(experienceData, experienceData._id);
-      onOpenChange(false);
-      toast.success("Experience saved successfully");
-    } catch (error) {
-      console.error('Error saving experience:', error);
-      toast.error("Failed to save experience");
-    } finally {
-      setIsSubmitting(false);
+  /**
+   * Updates the user's experience array on the server
+   */
+  const updateUserWithExperience = async (isDeleteOperation: boolean) => {
+    if (!user) {
+      toast.error("User data not available.");
+      throw new Error("User data not available.");
     }
-  };
 
-  const updateUserWithExperience = async (isDelete: boolean) => {
-    if (!user) return;
-    
-    // Create a copy of the user's existing experience array or empty array
     let updatedExperiences = [...(user.experience || [])];
-    
-    if (isDelete && experience?._id) {
-      // For delete operations, filter out by ID
-      updatedExperiences = updatedExperiences.filter(exp => exp._id !== experience._id);
-    } else if (experience?._id) {
-      // For edit operations, find by ID and update
-      const idx = updatedExperiences.findIndex(exp => exp._id === experience._id);
-      if (idx !== -1) {
-        updatedExperiences[idx] = experienceData;
+    const currentEntryId = experience?._id;
+
+    if (isDeleteOperation) {
+      if (!currentEntryId) {
+        toast.error("Cannot delete an item without an ID.");
+        throw new Error("Cannot delete an item without an ID.");
+      }
+      // Filter out the experience item to be deleted
+      updatedExperiences = updatedExperiences.filter(exp => exp._id !== currentEntryId);
+    } else {
+      // This is an Add or Edit operation
+      if (currentEntryId) {
+        // Editing an existing experience
+        const indexToUpdate = updatedExperiences.findIndex(exp => exp._id === currentEntryId);
+        if (indexToUpdate !== -1) {
+          updatedExperiences[indexToUpdate] = { ...experienceData, _id: currentEntryId };
+        } else {
+          toast.error("Experience not found in user profile.");
+          throw new Error("Experience not found in user profile.");
+        }
       } else {
-        // If not found, add it
+        // Adding a new experience
         updatedExperiences.push(experienceData);
       }
-    } else {
-      // For new entries, push to array
-      updatedExperiences.push(experienceData);
     }
-    
-    // Prepare complete user data for the API
-    const userData = {
-      // Include all required user fields
-      name: user.name || "",
-      fName: user.fName || "",
-      lName: user.lName || "",
-      username: user.username || "",
-      location: user.location || "",
-      gender: user.gender || "",
-      dob: user.dob || new Date().toISOString(),
-      bio: user.bio || "",
-      occupation: user.occupation || "",
-      pronouns: user.pronouns || "",
-      headline: user.headline || "",
-      portfolioLink: user.portfolioLink || "",
-      // Update the experience array, keep education the same
-      education: user.education || [],
-      experience: updatedExperiences
-    };
-    
-    // Call the User Details API
-    const response = await fetch('/api/career', {
+
+    // Send the updated experience array to the server
+    const response = await fetch('/api', {
       method: "PUT",
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(userData)
+      body: JSON.stringify({ experience: updatedExperiences })
     });
-    
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Failed to update experience');
+      const errorData = await response.json().catch(() => ({ message: "Unknown server error" }));
+      throw new Error(errorData.message || `Failed to update user details (status: ${response.status})`);
     }
     
     return await response.json();
   };
+
+  const handleSave = async () => {
+    // Basic validation
+    if (!experienceData.company || !experienceData.role || !experienceData.startDate || !experienceData.endDate) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const updatedUserData = await updateUserWithExperience(false);
+      
+      // Use the custom event to notify the parent component
+      window.dispatchEvent(new CustomEvent('user-profile-updated', { 
+        detail: updatedUserData.data || updatedUserData
+      }));
+      
+      // Call onSuccess to maintain component's expected behavior
+      if (experience?._id) {
+        onSuccess(experienceData, experience._id, false);
+      } else {
+        // Try to find the newly added experience in the response
+        const newExperience = (updatedUserData.data?.experience || updatedUserData.experience)?.find(
+          (exp: Experience) => 
+            exp.company === experienceData.company && 
+            exp.role === experienceData.role && 
+            (!experience || experience._id !== exp._id)
+        );
+        onSuccess(experienceData, newExperience?._id || "", false);
+      }
+      
+      onOpenChange(false);
+      toast.success("Experience saved successfully!");
+    } catch (error) {
+      console.error('Error saving experience:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to save experience");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   const handleDelete = async () => {
-    if (!experience?._id) return;
+    if (!experience?._id) {
+      toast.error("No experience selected to delete.");
+      return;
+    }
     
     setIsSubmitting(true);
     try {
-      // Update user details by removing this experience entry
-      await updateUserWithExperience(true);
+      const updatedUserData = await updateUserWithExperience(true);
       
-      // Call parent's callback with deleted flag
+      // Use the custom event to notify the parent component
+      window.dispatchEvent(new CustomEvent('user-profile-updated', { 
+        detail: updatedUserData.data || updatedUserData
+      }));
+      
+      // Call onSuccess to maintain component's expected behavior
+      onSuccess(experienceData, experience._id, true);
+      
       onOpenChange(false);
-      onSave(experienceData, experience._id, true);
-      toast.success("Experience deleted successfully");
+      toast.success("Experience deleted successfully!");
     } catch (error) {
       console.error('Error deleting experience:', error);
-      toast.error("Failed to delete experience");
+      toast.error(error instanceof Error ? error.message : "Failed to delete experience");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="border-b pb-4">
+    <Dialog open={open} onOpenChange={(val) => { if (!isSubmitting) onOpenChange(val); }}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 text-black dark:text-white">
+        <DialogHeader className="border-b pb-4 dark:border-gray-700">
           <DialogTitle className="text-xl font-bold">
-            {experience?._id ? "Edit experience" : "Add experience"}
+            {experience?._id ? "Edit Experience" : "Add Experience"}
           </DialogTitle>
-          <p className="text-sm text-muted-foreground mt-1">* Indicates required</p>
+          <p className="text-sm text-muted-foreground mt-1 dark:text-gray-400">* Indicates required</p>
         </DialogHeader>
 
         <div className="py-4 space-y-6">
@@ -174,6 +224,8 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
               value={experienceData.company}
               onChange={handleInputChange}
               required
+              onKeyDown={handleKeyDown}
+              className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
             />
           </div>
 
@@ -189,6 +241,8 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
               value={experienceData.role}
               onChange={handleInputChange}
               required
+              onKeyDown={handleKeyDown}
+              className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
             />
           </div>
 
@@ -199,10 +253,11 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
             </label>
             <div className="relative">
               <Button
+                type="button"
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !experienceData.startDate && "text-muted-foreground"
+                  "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
+                  !experienceData.startDate && "text-muted-foreground dark:text-gray-400"
                 )}
                 onClick={() => setStartDateCalendarOpen(!startDateCalendarOpen)}
               >
@@ -214,16 +269,12 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
                 <CalendarIcon className="ml-auto h-4 w-4" />
               </Button>
               {startDateCalendarOpen && (
-                <div className="absolute z-50 right-1 bottom-1 mb-1 bg-white rounded-md shadow-md">
+                <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
                   <Calendar
                     mode="single"
                     selected={experienceData.startDate ? new Date(experienceData.startDate) : undefined}
-                    onSelect={(date) => {
-                      handleDateChange("startDate", date);
-                      setStartDateCalendarOpen(false);
-                    }}
+                    onSelect={(date) => handleDateChange("startDate", date)}
                     initialFocus
-                    className="p-3 pointer-events-auto"
                   />
                 </div>
               )}
@@ -233,35 +284,32 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
           {/* End Date */}
           <div className="space-y-2">
             <label htmlFor="endDate" className="text-sm font-medium">
-              End Date<span className="text-red-500">*</span>
+              End Date<span className="text-red-500">*</span> (or expected)
             </label>
             <div className="relative">
               <Button
+                type="button"
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !experienceData.endDate && "text-muted-foreground"
+                  "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
+                  !experienceData.endDate && "text-muted-foreground dark:text-gray-400"
                 )}
                 onClick={() => setEndDateCalendarOpen(!endDateCalendarOpen)}
               >
                 {experienceData.endDate ? (
                   format(new Date(experienceData.endDate), "PPP")
                 ) : (
-                  <span>End Date (or expected)</span>
+                  <span>End Date</span>
                 )}
                 <CalendarIcon className="ml-auto h-4 w-4" />
               </Button>
               {endDateCalendarOpen && (
-                <div className="absolute z-50 right-1 bottom-1 mb-1 bg-white rounded-md shadow-md">
+                <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
                   <Calendar
                     mode="single"
                     selected={experienceData.endDate ? new Date(experienceData.endDate) : undefined}
-                    onSelect={(date) => {
-                      handleDateChange("endDate", date);
-                      setEndDateCalendarOpen(false);
-                    }}
+                    onSelect={(date) => handleDateChange("endDate", date)}
                     initialFocus
-                    className="p-3 pointer-events-auto"
                   />
                 </div>
               )}
@@ -269,21 +317,33 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
           </div>
         </div>
 
-        <div className="border-t pt-4 flex justify-between">
-          {experience?._id && (
+        <DialogFooter className="border-t pt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-2 dark:border-gray-700">
+          {(experience?._id) && (
             <Button 
+              type="button"
               onClick={handleDelete}
               variant="outline"
-              className="text-red-600 border-red-600 hover:bg-red-50"
+              className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900 dark:hover:text-red-300 w-full sm:w-auto"
               disabled={isSubmitting}
             >
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Delete
             </Button>
           )}
-          <div className={experience?._id ? "" : "ml-auto"}>
+          <div className={cn("flex gap-2 w-full sm:w-auto", (experience?._id) ? "" : "ml-auto")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+              className="w-full sm:w-auto dark:border-gray-600 dark:hover:bg-gray-700"
+            >
+              Cancel
+            </Button>
             <Button 
+              type="button"
               onClick={handleSave} 
-              className="bg-red-600 hover:bg-red-700 text-white px-8"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 w-full sm:w-auto"
               disabled={
                 isSubmitting || 
                 !experienceData.company || 
@@ -292,10 +352,10 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
                 !experienceData.endDate
               }
             >
-              {isSubmitting ? "Saving..." : "Save"}
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Save"}
             </Button>
           </div>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

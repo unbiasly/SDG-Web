@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Education } from "@/service/api.interface";
+import { useUser } from "@/lib/redux/features/user/hooks";
 import { toast } from "sonner";
 
 interface EducationDialogProps {
@@ -14,7 +15,6 @@ interface EducationDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (education: Education, id?: string, isDeleted?: boolean) => void;
   education?: Education;
-  id?: string;
 }
 
 export const EducationDialog: React.FC<EducationDialogProps> = ({
@@ -22,7 +22,6 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
   onOpenChange,
   onSave,
   education,
-  id,
 }) => {
   // Initialize education data with provided education or new default
   const [educationData, setEducationData] = useState<Education>({
@@ -36,11 +35,13 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
   const [endDateCalendarOpen, setEndDateCalendarOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
+  const { user } = useUser();
+  
   // Update local state when education prop changes
   useEffect(() => {
     if (education) {
       setEducationData({
-        _id: education._id || id || "",
+        _id: education._id || "",
         school: education.school || "",
         degree: education.degree || "",
         startDate: education.startDate || new Date().toISOString(),
@@ -48,14 +49,14 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
       });
     } else {
       setEducationData({
-        _id: id || crypto.randomUUID(),
+        _id: "",
         school: "",
         degree: "",
         startDate: new Date().toISOString(),
         endDate: new Date().toISOString(),
       });
     }
-  }, [education, id, open]);
+  }, [education, open]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -68,33 +69,126 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
     if (date) {
       setEducationData((prev) => ({ ...prev, [field]: date.toISOString() }));
     }
+    if (field === "startDate") setStartDateCalendarOpen(false);
+    if (field === "endDate") setEndDateCalendarOpen(false);
+  };
+
+  /**
+   * Updates the user's education array on the server
+   */
+  const updateUserWithEducation = async (isDeleteOperation: boolean) => {
+    if (!user) {
+      toast.error("User data not available.");
+      throw new Error("User data not available.");
+    }
+
+    let updatedEducations = [...(user.education || [])];
+    const currentEntryId = education?._id;
+
+    if (isDeleteOperation) {
+      if (!currentEntryId) {
+        toast.error("Cannot delete an item without an ID.");
+        throw new Error("Cannot delete an item without an ID.");
+      }
+      // Filter out the education item to be deleted
+      updatedEducations = updatedEducations.filter(edu => edu._id !== currentEntryId);
+    } else {
+      // This is an Add or Edit operation
+      if (currentEntryId) {
+        // Editing an existing education
+        const indexToUpdate = updatedEducations.findIndex(edu => edu._id === currentEntryId);
+        if (indexToUpdate !== -1) {
+          updatedEducations[indexToUpdate] = { ...educationData, _id: currentEntryId };
+        } else {
+          toast.error("Education not found in user profile.");
+          throw new Error("Education not found in user profile.");
+        }
+      } else {
+        // Adding a new education
+        updatedEducations.push(educationData);
+      }
+    }
+
+    // Send the updated education array to the server
+    const response = await fetch('/api', {
+      method: "PUT",
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ education: updatedEducations })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: "Unknown server error" }));
+      throw new Error(errorData.message || `Failed to update user details (status: ${response.status})`);
+    }
+    
+    return await response.json();
   };
 
   const handleSave = async () => {
+    // Basic validation
+    if (!educationData.school || !educationData.degree || !educationData.startDate || !educationData.endDate) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // Call the parent's onSave function passing the education data
-      onSave(educationData, educationData._id);
+      const updatedUserData = await updateUserWithEducation(false);
+      
+      // Use the custom event to notify the parent component
+      window.dispatchEvent(new CustomEvent('user-profile-updated', { 
+        detail: updatedUserData.data || updatedUserData
+      }));
+      
+      // Call onSave to maintain component's expected behavior
+      if (education?._id) {
+        onSave(educationData, education._id, false);
+      } else {
+        // Try to find the newly added education in the response
+        const newEducation = (updatedUserData.data?.education || updatedUserData.education)?.find(
+          (edu: Education) => 
+            edu.school === educationData.school && 
+            edu.degree === educationData.degree && 
+            (!education || education._id !== edu._id)
+        );
+        onSave(educationData, newEducation?._id || "", false);
+      }
+      
       onOpenChange(false);
-      toast.success("Education saved successfully");
+      toast.success("Education saved successfully!");
     } catch (error) {
       console.error('Error saving education:', error);
-      toast.error("Failed to save education");
+      toast.error(error instanceof Error ? error.message : "Failed to save education");
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
   const handleDelete = async () => {
+    if (!education?._id) {
+      toast.error("No education selected to delete.");
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
-      // Call the parent's onSave function with the isDeleted flag
-      onSave({} as Education, educationData._id, true);
+      const updatedUserData = await updateUserWithEducation(true);
+      
+      // Use the custom event to notify the parent component
+      window.dispatchEvent(new CustomEvent('user-profile-updated', { 
+        detail: updatedUserData.data || updatedUserData
+      }));
+      
+      // Call onSave to maintain component's expected behavior
+      onSave(educationData, education._id, true);
+      
       onOpenChange(false);
-      toast.success("Education deleted successfully");
+      toast.success("Education deleted successfully!");
     } catch (error) {
       console.error('Error deleting education:', error);
-      toast.error("Failed to delete education");
+      toast.error(error instanceof Error ? error.message : "Failed to delete education");
     } finally {
       setIsSubmitting(false);
     }
@@ -107,13 +201,13 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="border-b pb-4">
-            <DialogTitle className="text-xl font-bold">
-              {education?._id ? "Edit education" : "Add education"}
-            </DialogTitle>
-          <p className="text-sm text-muted-foreground mt-1">* Indicates required</p>
+    <Dialog open={open} onOpenChange={(val) => { if (!isSubmitting) onOpenChange(val); }}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 text-black dark:text-white">
+        <DialogHeader className="border-b pb-4 dark:border-gray-700">
+          <DialogTitle className="text-xl font-bold">
+            {education?._id ? "Edit Education" : "Add Education"}
+          </DialogTitle>
+          <p className="text-sm text-muted-foreground mt-1 dark:text-gray-400">* Indicates required</p>
         </DialogHeader>
 
         <div className="py-4 space-y-6">
@@ -130,6 +224,7 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
               onChange={handleInputChange}
               required
               onKeyDown={handleKeyDown}
+              className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
             />
           </div>
 
@@ -146,6 +241,7 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
               onChange={handleInputChange}
               required
               onKeyDown={handleKeyDown}
+              className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
             />
           </div>
 
@@ -156,13 +252,13 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
             </label>
             <div className="relative">
               <Button
+                type="button"
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !educationData.startDate && "text-muted-foreground"
+                  "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
+                  !educationData.startDate && "text-muted-foreground dark:text-gray-400"
                 )}
                 onClick={() => setStartDateCalendarOpen(!startDateCalendarOpen)}
-                type="button"
               >
                 {educationData.startDate ? (
                   format(new Date(educationData.startDate), "PPP")
@@ -172,16 +268,12 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
                 <CalendarIcon className="ml-auto h-4 w-4" />
               </Button>
               {startDateCalendarOpen && (
-                <div className="absolute z-50 right-1 bottom-1 mb-1 bg-white rounded-md shadow-md">
+                <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
                   <Calendar
                     mode="single"
                     selected={educationData.startDate ? new Date(educationData.startDate) : undefined}
-                    onSelect={(date) => {
-                      handleDateChange("startDate", date);
-                      setStartDateCalendarOpen(false);
-                    }}
+                    onSelect={(date) => handleDateChange("startDate", date)}
                     initialFocus
-                    className="p-3 pointer-events-auto"
                   />
                 </div>
               )}
@@ -191,36 +283,32 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
           {/* End Date */}
           <div className="space-y-2">
             <label htmlFor="endDate" className="text-sm font-medium">
-              End Date<span className="text-red-500">*</span>
+              End Date<span className="text-red-500">*</span> (or expected)
             </label>
             <div className="relative">
               <Button
+                type="button"
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !educationData.endDate && "text-muted-foreground"
+                  "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
+                  !educationData.endDate && "text-muted-foreground dark:text-gray-400"
                 )}
                 onClick={() => setEndDateCalendarOpen(!endDateCalendarOpen)}
-                type="button"
               >
                 {educationData.endDate ? (
                   format(new Date(educationData.endDate), "PPP")
                 ) : (
-                  <span>End Date (or expected)</span>
+                  <span>End Date</span>
                 )}
                 <CalendarIcon className="ml-auto h-4 w-4" />
               </Button>
               {endDateCalendarOpen && (
-                <div className="absolute z-50 right-1 bottom-1 mb-1 bg-white rounded-md shadow-md">
+                <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
                   <Calendar
                     mode="single"
                     selected={educationData.endDate ? new Date(educationData.endDate) : undefined}
-                    onSelect={(date) => {
-                      handleDateChange("endDate", date);
-                      setEndDateCalendarOpen(false);
-                    }}
+                    onSelect={(date) => handleDateChange("endDate", date)}
                     initialFocus
-                    className="p-3 pointer-events-auto"
                   />
                 </div>
               )}
@@ -228,22 +316,33 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
           </div>
         </div>
 
-        <div className="border-t pt-4 flex justify-between">
-          {education?._id && (
+        <DialogFooter className="border-t pt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-2 dark:border-gray-700">
+          {(education?._id) && (
             <Button 
+              type="button"
               onClick={handleDelete}
               variant="outline"
-              className="text-red-600 border-red-600 hover:bg-red-50"
+              className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900 dark:hover:text-red-300 w-full sm:w-auto"
               disabled={isSubmitting}
-              type="button"
             >
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Delete
             </Button>
           )}
-          <div className={education?._id ? "" : "ml-auto"}>
+          <div className={cn("flex gap-2 w-full sm:w-auto", (education?._id) ? "" : "ml-auto")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+              className="w-full sm:w-auto dark:border-gray-600 dark:hover:bg-gray-700"
+            >
+              Cancel
+            </Button>
             <Button 
+              type="button"
               onClick={handleSave} 
-              className="bg-red-600 hover:bg-red-700 text-white px-8"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 w-full sm:w-auto"
               disabled={
                 isSubmitting || 
                 !educationData.school || 
@@ -251,12 +350,11 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
                 !educationData.startDate || 
                 !educationData.endDate
               }
-              type="button"
             >
-              {isSubmitting ? "Saving..." : "Save"}
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Save"}
             </Button>
           </div>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

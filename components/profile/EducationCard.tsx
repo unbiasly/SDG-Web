@@ -12,6 +12,8 @@ interface EducationCardProps {
   handleEditClick?: () => void;
 }
 
+
+
 const EducationCard: React.FC<EducationCardProps> = ({
 //   logo,
   institution,
@@ -31,9 +33,9 @@ const EducationCard: React.FC<EducationCardProps> = ({
       </div> */}
       
       <div className="flex-1">
-        <h3 className="text-xl font-semibold mb-1">{institution}</h3>
+        <h3 className="text-xl font-semibold mb-1">{degree}</h3>
         <div className="text-profile-secondary">
-          <span>{degree}</span>
+          <span>{institution}</span>
         </div>
       </div>
       {authUser && (

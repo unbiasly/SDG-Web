@@ -4,7 +4,7 @@ import { useUser } from '@/lib/redux/features/user/hooks';
 import { formatDate } from '@/lib/utilities/formatDate';
 
 // Set a delay after initial load before tracking can begin
-const INITIAL_LOAD_DELAY = 10;
+// const INITIAL_LOAD_DELAY = 10;
 
 interface PostWithImpressionTrackingProps {
   post: any;
@@ -34,7 +34,7 @@ export const PostWithImpressionTracking: React.FC<PostWithImpressionTrackingProp
         // 2. Tracking is enabled (after delay)
         // 3. Not already tracked
         // 4. Either: not an initial post OR we're scrolling (isInitialPost becomes false after it leaves view once)
-        if (entry.isIntersecting && canTrackImpressions && !hasTrackedImpression && !isInitialPost.current) {
+        if (entry.isIntersecting && canTrackImpressions && !hasTrackedImpression && isInitialPost.current) {
             trackPostImpression(post._id, post.user_id._id);
             setHasTrackedImpression(true);
         }
@@ -78,7 +78,7 @@ export const PostWithImpressionTracking: React.FC<PostWithImpressionTrackingProp
   return (
     <div ref={postRef}>
       <PostCard
-        isReposted={post.original_post_id !== null}
+        isReposted={post.isReposted}
         _id={post._id}
         name={post.user_id.name || `@${post.user_id.username}`}
         handle={`@${post.user_id.username}`}

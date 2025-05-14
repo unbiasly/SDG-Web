@@ -55,44 +55,11 @@ const Deactivate: React.FC<DeactivateProps> = ({ onBack }) => {
           <h3 className="text-lg font-semibold">What else you should know</h3>
           
           <ul className="space-y-4">
-            {DEACTIVATE_CONTENT.additionalInfo.map((info, index) => {
-              // Check if info contains "Learn more" text
-              const hasLearnMore = info.includes("Learn more");
-              // Check if info mentions changing username/settings
-              const hasSettings = info.includes("edit it in your settings") || 
-                     info.includes("change them before you deactivate");
-              
-              if (hasLearnMore) {
-            const [text, learnMore] = info.split("Learn more");
-            return (
-              <li key={index}>
-                {text}
-                <Link href="#" className="text-blue-600 hover:underline">Learn more</Link>
+            {DEACTIVATE_CONTENT.additionalInfo.map((item, index) => (
+              <li key={index} className="flex items-start space-x-2">
+                <p className="text-gray-700">{item}</p>
               </li>
-            );
-              } else if (hasSettings) {
-            if (info.includes("edit it in your settings")) {
-              const [text, settings] = info.split("edit it in your");
-              return (
-                <li key={index}>
-                  {text}edit it in your 
-                  <Link href="/settings/profile" className="text-blue-600 hover:underline"> settings</Link>.
-                </li>
-              );
-            } else {
-              const [text, change] = info.split("change them");
-              return (
-                <li key={index}>
-                  {text}
-                  <Link href="/settings" className="text-blue-600 hover:underline">change them </Link> 
-                  before you deactivate this account.
-                </li>
-              );
-            }
-              } else {
-            return <li key={index}>{info}</li>;
-              }
-            })}
+            ))}
           </ul>
         </div>
 

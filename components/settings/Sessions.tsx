@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronRight, SmartphoneIcon, LaptopIcon, MonitorIcon, X } from 'lucide-react';
+import { ArrowLeft, SmartphoneIcon, LaptopIcon } from 'lucide-react';
 import { SessionsResponse } from '@/service/api.interface';
 import SessionItem from './SessionItem';
 
@@ -49,39 +49,11 @@ const Sessions: React.FC<SessionsProps> = ({ onBack }) => {
   };
 
 
-  const getDeviceInfo = (userAgent: string) => {
-    const isMobile = /mobile|android|iphone|ipad|ipod/i.test(userAgent.toLowerCase());
-    const isTablet = /tablet|ipad/i.test(userAgent.toLowerCase());
-    
-    let deviceType = 'desktop';
-    let deviceName = 'Computer';
-    
-    if (isMobile && !isTablet) {
-      deviceType = 'mobile';
-      if (/iphone/i.test(userAgent)) deviceName = 'iPhone';
-      else if (/android/i.test(userAgent)) deviceName = 'Android Phone';
-      else deviceName = 'Mobile Device';
-    } else if (isTablet) {
-      deviceType = 'tablet';
-      if (/ipad/i.test(userAgent)) deviceName = 'iPad';
-      else deviceName = 'Tablet';
+  const getDeviceIcon = (deviceId?: string) => {
+    if (deviceId === "web") {
+      return <LaptopIcon className="h-8 w-8 text-gray-500" />;
     } else {
-      if (/macintosh|mac os/i.test(userAgent)) deviceName = 'Mac';
-      else if (/windows/i.test(userAgent)) deviceName = 'Windows PC';
-      else if (/linux/i.test(userAgent)) deviceName = 'Linux';
-    }
-    
-    return { deviceType, deviceName };
-  };
-
-  const getDeviceIcon = (deviceType: string) => {
-    switch (deviceType) {
-      case 'mobile':
-        return <SmartphoneIcon className="h-8 w-8 text-gray-500" />;
-      case 'tablet':
-        return <MonitorIcon className="h-8 w-8 text-gray-500" />;
-      default:
-        return <LaptopIcon className="h-8 w-8 text-gray-500" />;
+      return <SmartphoneIcon className="h-8 w-8 text-gray-500" />;
     }
   };
   
@@ -123,14 +95,7 @@ const Sessions: React.FC<SessionsProps> = ({ onBack }) => {
     }
   };
 
-  const formatIpAddress = (ip: string): string => {
-    // Check if the IP is an IPv6-mapped IPv4 address (starts with ::ffff:)
-    if (ip && ip.startsWith('::ffff:')) {
-      // Extract only the IPv4 part after ::ffff:
-      return ip.substring(7);
-    }
-    return ip;
-  };
+
 
   const handleSessionRemoved = () => {
       fetchSessions();
@@ -178,17 +143,12 @@ const Sessions: React.FC<SessionsProps> = ({ onBack }) => {
             </p>
             
             {sessions.currentSession && (
-              <div key={sessions.currentSession._id} className="flex items-center justify-between border-b pb-4">
-                <div className="flex items-center">
-                  {getDeviceIcon(getDeviceInfo(sessions.currentSession.userAgent).deviceType)}
-                  <div className="ml-4">
-                    <div className="font-semibold">{getDeviceInfo(sessions.currentSession.userAgent).deviceName}</div>
-                    <div className="text-gray-500">Active now</div>
-                    <div className="text-xs text-gray-400">IP: {formatIpAddress(sessions.currentSession.ipAddress)}</div>
-                  </div>
-                </div>
-                {/* <ChevronRight className="h-5 w-5 text-gray-400" /> */}
-              </div>
+              <SessionItem 
+                key={sessions.currentSession._id}
+                session={sessions.currentSession}
+                isCurrentSession={true}
+                onSessionRemoved={handleSessionRemoved}
+              />
             )}
           </div>
 

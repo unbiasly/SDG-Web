@@ -448,7 +448,7 @@ export const UserProfileDialog = ({
         <div className="border-t pt-4 flex justify-end">
           <Button 
             onClick={handleProfileUpdate} 
-            className="bg-gray-200 hover:bg-gray-100 text-black cursor-pointer px-8"
+            className="bg-accent hover:bg-accent text-white cursor-pointer px-8"
             disabled={!isDataModified}
           >
             Save
