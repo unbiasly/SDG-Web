@@ -104,8 +104,9 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
           throw new Error("Education not found in user profile.");
         }
       } else {
-        // Adding a new education
-        updatedEducations.push(educationData);
+        // Adding a new education - strip out the empty ID field
+        const { _id, ...educationWithoutId } = educationData; // Remove _id from the data
+        updatedEducations.push(educationWithoutId);
       }
     }
 

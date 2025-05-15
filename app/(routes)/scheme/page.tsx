@@ -31,7 +31,7 @@ const Page = () => {
     }, []);
 
     const categoryData = tabs?.data.categoryWise || [];
-    // const stateData = tabs?.data.stateWise || [];
+    const stateData = tabs?.data.stateWise || [];
     const ministryData = tabs?.data.ministryWise || [];
 
     return (
@@ -55,21 +55,22 @@ const Page = () => {
                         </div>
                     </div>
                 )}
-                {/* {activeTab === "State/UTs" && (
+                {activeTab === "State/UTs" && (
                     <div className="animate-fade-in flex flex-col items-center">
                         <h1 className="text-3xl font-bold p-4">Find schemes based on States/UTs</h1>
                         <div className="flex flex-wrap gap-5 justify-center p-2">
                             {stateData.map((scheme, index) => (
                                 <SchemeCard
                                     key={index}
-                                    icon={findStateIcon(index)}
+                                    icon={scheme.icon}
+                                    type='state'
                                     count={scheme.count}
                                     label={scheme.label}
                                 />
                             ))}
                         </div>
                     </div>
-                )} */}
+                )}
                 {activeTab === "Central Ministeries" && (
                     <div className="animate-fade-in flex flex-col items-center">
                         <h1 className="text-3xl font-bold p-4">Find schemes based on Central Ministeries</h1>

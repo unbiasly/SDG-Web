@@ -105,8 +105,9 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
           throw new Error("Experience not found in user profile.");
         }
       } else {
-        // Adding a new experience
-        updatedExperiences.push(experienceData);
+        // Adding a new experience - strip out the empty ID field
+        const { _id, ...experienceWithoutId } = experienceData; // Remove _id from the data
+        updatedExperiences.push(experienceWithoutId);
       }
     }
 

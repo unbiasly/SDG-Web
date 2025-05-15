@@ -40,7 +40,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
     const [selectedExperienceIndex, setSelectedExperienceIndex] = useState<number | undefined>(undefined);
     
     const { user } = useUser();
-    const isOwnProfile = user?._id === profileUser?._id;
+    const isOwnProfile = user?._id == profileUser?._id;
 
     // Fetch user data by userId
     const fetchUserById = async (id: string) => {
@@ -142,9 +142,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
         fetchUserById(userId)
         getAnalytics();
         getUserPosts(userId);
-        if (isOwnProfile == false) {
-            trackProfileView(userId);
-        }
+        {!isOwnProfile && trackProfileView(userId);}
     }, []); // Add userId to dependencies to reset state when it changes
 
     useEffect(() => {
@@ -208,25 +206,10 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                 // Add new education entry with a temporary ID
                 updatedEducation.push({
                     ...education,
-                    _id: crypto.randomUUID()
+                    // _id: crypto.randomUUID()
                 });
             }
             
-            // Call the API to update the education data
-            const response = await fetch('/api/career', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ education: updatedEducation }),
-            });
-            
-            if (!response.ok) {
-                throw new Error('Failed to update education');
-            }
-            
-            // Refresh user data to show the updates
-            await fetchUserById(userId);
         } catch (error) {
             console.error("Failed to save education:", error);
         }
@@ -267,21 +250,10 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                 // Add new experience entry with a temporary ID
                 updatedExperience.push({
                     ...experience,
-                    _id: crypto.randomUUID()
+                    // _id: crypto.randomUUID()
                 });
             }
             
-            // Call the API to update the experience data
-            const response = await fetch('/api', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ experience: updatedExperience }),
-            });
-            
-            // Refresh user data to show the updates
-            await fetchUserById(userId);
         } catch (error) {
             console.error("Failed to save experience:", error);
         }

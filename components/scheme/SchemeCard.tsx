@@ -14,9 +14,9 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
     if (type === 'category') {
         type = 'schemeCategory';
     }
-    // else if (type === 'state') {
-    //     type = 'schemeState';
-    // }
+    else if (type === 'state') {
+        type = 'beneficiaryState';
+    }
     else if (type === 'ministry') {
         type = 'nodalMinistryName';
     }

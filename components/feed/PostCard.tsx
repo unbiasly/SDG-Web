@@ -180,6 +180,12 @@ export const PostCard: React.FC<PostCardProps> = ({
             return;
         }
         
+        // Check if the post is already reposted by the current user
+        if (isReposted) {
+            toast.error("You've already reposted this. Delete the existing repost if you want to repost again.");
+            return;
+        }
+        
         // Open the confirmation dialog
         setRepostConfirmOpen(true);
     };

@@ -31,7 +31,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
             });
             if (!response.ok) {
                 const errorData = await response.json();
-                toast.error(errorData?.message);
+                toast.error("Login unsuccessful: " + (errorData?.message || 'Failed to login'));
                 return;
             }
             const data = await response.json();
