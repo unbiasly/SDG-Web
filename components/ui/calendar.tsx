@@ -147,11 +147,11 @@ function Calendar({
     props.rangeMiddleClassName
   )
   const _selectedClassName = cn(
-    "[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
+    "[&>button]:bg-slate-600 [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
     props.selectedClassName
   )
   const _todayClassName = cn(
-    "[&>button]:bg-accent [&>button]:text-accent-foreground",
+    "[&>button]:bg-gray-400 [&>button]:text-accent-foreground",
     props.todayClassName
   )
   const _outsideClassName = cn(
@@ -485,7 +485,7 @@ function YearGrid({
               className={cn(
                 "h-7 w-full text-sm font-normal text-foreground",
                 displayYears.from + i === new Date().getFullYear() &&
-                  "bg-accent font-medium text-accent-foreground"
+                  "bg-slate-500 font-medium text-accent-foreground"
               )}
               variant="ghost"
               onClick={() => {

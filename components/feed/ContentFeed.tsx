@@ -15,7 +15,7 @@ export const ContentFeed: React.FC<ContentFeedProps> = ({
     children 
 }) => {
     return (
-        <div className="w-full bg-white rounded-2xl border-1 border-gray-300">
+        <div className="w-full bg-white md:rounded-2xl md:border-1 border-gray-300">
             {/* Tab Navigation */}
             <div className="border-b border-gray-300 mb-0.5">
                 <div className="flex w-full justify-evenly">

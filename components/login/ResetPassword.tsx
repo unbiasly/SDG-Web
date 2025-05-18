@@ -71,14 +71,18 @@ const ResetPassword = ({ token, email }: {
 
       const data = await response.json();
 
-      if (data.success) {
+      if (data.message === "Password reset successfully") {
         setIsSuccess(true);
-        toast.success("Password reset successful", {
-          description: "Your password has been reset successfully."
+        toast("Password reset successful", {
+            description: "Your password has been reset successfully."
         });
-      } else {
+        // Redirect to login page after 2 seconds
+        setTimeout(() => {
+            window.location.href = "/login";
+        }, 2000);
+    } else {
         toast.error(data.message || "Failed to reset password");
-      }
+    }
     } catch (error) {
       toast.error("An error occurred", {
         description: "Unable to reset password. Please try again later."

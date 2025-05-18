@@ -1,21 +1,21 @@
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { X, CalendarIcon, Plus } from "lucide-react";
-import { format } from "date-fns";
+import { CalendarIcon, Loader2 } from "lucide-react";
+import { format, isBefore } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Education } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
+import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface EducationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (education: Education, index?: number) => void;
+  onSave: (education: Education, id?: string, isDeleted?: boolean) => void;
   education?: Education;
-  index?: number;
 }
 
 export const EducationDialog: React.FC<EducationDialogProps> = ({
@@ -23,148 +23,254 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
   onOpenChange,
   onSave,
   education,
-  index,
 }) => {
-  const [educationData, setEducationData] = useState<Education>(
-    education || {
-      school: "",
-      degree: "",
-      startDate: new Date().toISOString(),
-      endDate: new Date().toISOString(),
-    }
-  );
+  // Initialize education data with provided education or new default
+  const [educationData, setEducationData] = useState<Education>({
+    _id: "",
+    school: "",
+    degree: "",
+    startDate: new Date().toISOString(),
+    endDate: new Date().toISOString(),
+  });
   const [startDateCalendarOpen, setStartDateCalendarOpen] = useState<boolean>(false);
   const [endDateCalendarOpen, setEndDateCalendarOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
-  const {
-    user,
-  } = useUser()
-
+  const [currentlyStudying, setCurrentlyStudying] = useState<boolean>(false);
+  const [dateError, setDateError] = useState<string>("");
   
+  const { user } = useUser();
+  
+  // Update local state when education prop changes
+  useEffect(() => {
+    if (education) {
+      const isCurrentEducation = education.endDate === "present" || 
+                               education.endDate === "Present" ||
+                               education.endDate === null;
+      
+      setEducationData({
+        _id: education._id || "",
+        school: education.school || "",
+        degree: education.degree || "",
+        startDate: education.startDate || new Date().toISOString(),
+        endDate: isCurrentEducation ? new Date().toISOString() : (education.endDate || new Date().toISOString()),
+      });
+      setCurrentlyStudying(isCurrentEducation);
+    } else {
+      setEducationData({
+        _id: "",
+        school: "",
+        degree: "",
+        startDate: new Date().toISOString(),
+        endDate: new Date().toISOString(),
+      });
+      setCurrentlyStudying(false);
+    }
+  }, [education, open]);
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setEducationData((prev) => ({ ...prev, [name]: value }));
+    
+    // Clear validation errors when user starts typing
+    if ((name === 'school' && !value) || (name === 'degree' && !value)) {
+      toast.dismiss(); // Dismiss any existing toast messages related to required fields
+    }
   };
 
   const handleDateChange = (field: "startDate" | "endDate", date: Date | undefined) => {
     if (date) {
-      setEducationData((prev) => ({ ...prev, [field]: date.toISOString() }));
+      // Update state first
+      setEducationData(prev => {
+        const updated = { ...prev, [field]: date.toISOString() };
+        
+        // Validate with the updated values
+        if (!currentlyStudying && updated.startDate && updated.endDate) {
+          const startDate = new Date(updated.startDate);
+          const endDate = new Date(updated.endDate);
+          
+          if (!isBefore(startDate, endDate)) {
+            setDateError("Start date must be before end date");
+          } else {
+            setDateError("");
+          }
+        }
+        
+        return updated;
+      });
+    }
+    
+    if (field === "startDate") setStartDateCalendarOpen(false);
+    if (field === "endDate") setEndDateCalendarOpen(false);
+  };
+
+  const handleCurrentlyStudyingChange = (checked: boolean) => {
+    setCurrentlyStudying(checked);
+    if (checked) {
+      // Clear any date validation errors
+      setDateError("");
+      // Also dismiss any toast errors related to end date
+      toast.dismiss();
     }
   };
 
-  const handleSave = async () => {
-    setIsSubmitting(true);
-    try {
-      // First update the education entry via API
-      await updateEducation();
-      // Then call the parent component's onSave callback
-      onSave(educationData, index);
-      onOpenChange(false);
-    //   ({
-    //     title: education?._id ? "Education updated" : "Education added",
-    //     description: "Your education details have been saved successfully.",
-    //   });
-    } catch (error) {
-      console.error('Error saving education:', error);
-    //   toast({
-    //     title: "Error",
-    //     description: "Failed to save education details. Please try again.",
-    //     variant: "destructive",
-    //   });
-    } finally {
-      setIsSubmitting(false);
+  /**
+   * Updates the user's education array on the server
+   */
+  const updateUserWithEducation = async (isDeleteOperation: boolean) => {
+    if (!user) {
+      toast.error("User data not available.");
+      throw new Error("User data not available.");
     }
-  };
 
-  const updateEducation = async () => {
-    const endpoint = '/api/careerUpdate';
-    const method = "PUT";
-    
-    // Prepare the updated education array
-    let updatedEducations = [...(user?.education || [])];
-    
-    if (index !== undefined) {
-      // Edit existing education
-      updatedEducations[index] = educationData;
+    let updatedEducations = [...(user.education || [])];
+    const currentEntryId = education?._id;
+
+    if (isDeleteOperation) {
+      if (!currentEntryId) {
+        toast.error("Cannot delete an item without an ID.");
+        throw new Error("Cannot delete an item without an ID.");
+      }
+      // Filter out the education item to be deleted
+      updatedEducations = updatedEducations.filter(edu => edu._id !== currentEntryId);
     } else {
-      // Add new education
-      updatedEducations.push(educationData);
+      // Prepare education data with "present" for currently studying
+      const preparedEducationData = {
+        ...educationData,
+        endDate: currentlyStudying ? "present" : educationData.endDate
+      };
+
+      // This is an Add or Edit operation
+      if (currentEntryId) {
+        // Editing an existing education
+        const indexToUpdate = updatedEducations.findIndex(edu => edu._id === currentEntryId);
+        if (indexToUpdate !== -1) {
+          updatedEducations[indexToUpdate] = { ...preparedEducationData, _id: currentEntryId };
+        } else {
+          toast.error("Education not found in user profile.");
+          throw new Error("Education not found in user profile.");
+        }
+      } else {
+        // Adding a new education - strip out the empty ID field
+        const { _id, ...educationWithoutId } = preparedEducationData; // Remove _id from the data
+        updatedEducations.push(educationWithoutId);
+      }
     }
-    
-    // Prepare the request body
-    const requestBody = {
-      username: user?.username,
-      name: user?.name,
-      location: user?.location,
-      gender: user?.gender,
-      dob: user?.dob,
-      bio: user?.bio,
-      portfolioLink: user?.portfolioLink,
-      education: updatedEducations,
-      experience: user?.experience || []
-    };
-    
-    const response = await fetch(endpoint, {
-      method: method,
+
+    // Send the updated education array to the server
+    const response = await fetch('/api', {
+      method: "PUT",
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify({ education: updatedEducations })
     });
-    
+
     if (!response.ok) {
-      throw new Error('Failed to update education');
+      const errorData = await response.json().catch(() => ({ message: "Unknown server error" }));
+      throw new Error(errorData.message || `Failed to update user details (status: ${response.status})`);
     }
     
     return await response.json();
   };
 
-  // Delete function using array index
+  // Optional: Add more comprehensive date validation
+  const validateDates = () => {
+    if (!currentlyStudying && educationData.startDate && educationData.endDate) {
+      const startDate = new Date(educationData.startDate);
+      const endDate = new Date(educationData.endDate);
+      
+      if (!isBefore(startDate, endDate)) {
+        setDateError("Start date must be before end date");
+        return false;
+      }
+    }
+    setDateError("");
+    return true;
+  };
+
+  const handleSave = async () => {
+    // Basic validation
+    if (!educationData.school || !educationData.degree || !educationData.startDate) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    // End date validation (only if not currently studying)
+    if (!currentlyStudying && !educationData.endDate) {
+      toast.error("Please provide an end date or select 'I am currently studying here'.");
+      return;
+    }
+    
+    // Use the validation function
+    if (!validateDates()) {
+      toast.error("Start date must be before end date.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const updatedUserData = await updateUserWithEducation(false);
+      
+      // Use the custom event to notify the parent component
+      window.dispatchEvent(new CustomEvent('user-profile-updated', { 
+        detail: updatedUserData.data || updatedUserData
+      }));
+      
+      // Prepare the education data with proper "present" handling for the callback
+      const resultEducationData = {
+        ...educationData,
+        endDate: currentlyStudying ? "present" : educationData.endDate
+      };
+      
+      // Call onSave to maintain component's expected behavior
+      if (education?._id) {
+        onSave(resultEducationData, education._id, false);
+      } else {
+        // Try to find the newly added education in the response
+        const newEducation = (updatedUserData.data?.education || updatedUserData.education)?.find(
+          (edu: Education) => 
+            edu.school === educationData.school && 
+            edu.degree === educationData.degree && 
+            (!education || education._id !== edu._id)
+        );
+        onSave(resultEducationData, newEducation?._id || "", false);
+      }
+      
+      onOpenChange(false);
+      toast.success("Education saved successfully!");
+    } catch (error) {
+      console.error('Error saving education:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to save education");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
   const handleDelete = async () => {
-    if (index === undefined) return;
+    if (!education?._id) {
+      toast.error("No education selected to delete.");
+      return;
+    }
     
     setIsSubmitting(true);
     try {
-      // Create a copy of the education array
-      let updatedEducations = [...(user?.education || [])];
+      const updatedUserData = await updateUserWithEducation(true);
       
-      // Remove the education at the specified index
-      updatedEducations.splice(index, 1);
+      // Use the custom event to notify the parent component
+      window.dispatchEvent(new CustomEvent('user-profile-updated', { 
+        detail: updatedUserData.data || updatedUserData
+      }));
       
-      // Prepare request body
-      const requestBody = {
-        username: user?.username,
-        name: user?.name,
-        location: user?.location,
-        gender: user?.gender,
-        dob: user?.dob,
-        bio: user?.bio,
-        portfolioLink: user?.portfolioLink,
-        education: updatedEducations,
-        experience: user?.experience || []
-      };
+      // Call onSave to maintain component's expected behavior
+      onSave(educationData, education._id, true);
       
-      // Send API request
-      const response = await fetch('/api/careerUpdate', {
-        method: "PUT",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete education');
-      }
-      
-      // Close dialog and notify parent with the deleted index
       onOpenChange(false);
-      onSave(educationData, index);
+      toast.success("Education deleted successfully!");
     } catch (error) {
       console.error('Error deleting education:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to delete education");
     } finally {
       setIsSubmitting(false);
     }
@@ -176,17 +282,14 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
     }
   };
 
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="border-b pb-4">
-          {/* <div className="flex justify-between items-center w-full">
-          </div> */}
-            <DialogTitle className="text-xl font-bold">
-              {index !== undefined ? "Edit education" : "Add education"}
-            </DialogTitle>
-          <p className="text-sm text-muted-foreground mt-1">* Indicates required</p>
+    <Dialog open={open} onOpenChange={(val) => { if (!isSubmitting) onOpenChange(val); }}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 text-black dark:text-white">
+        <DialogHeader className="border-b pb-4 dark:border-gray-700">
+          <DialogTitle className="text-xl font-bold">
+            {education?._id ? "Edit Education" : "Add Education"}
+          </DialogTitle>
+          <p className="text-sm text-muted-foreground mt-1 dark:text-gray-400">* Indicates required</p>
         </DialogHeader>
 
         <div className="py-4 space-y-6">
@@ -202,6 +305,8 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
               value={educationData.school}
               onChange={handleInputChange}
               required
+              onKeyDown={handleKeyDown}
+              className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
             />
           </div>
 
@@ -217,6 +322,8 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
               value={educationData.degree}
               onChange={handleInputChange}
               required
+              onKeyDown={handleKeyDown}
+              className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
             />
           </div>
 
@@ -227,10 +334,11 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
             </label>
             <div className="relative">
               <Button
+                type="button"
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !educationData.startDate && "text-muted-foreground"
+                  "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
+                  !educationData.startDate && "text-muted-foreground dark:text-gray-400"
                 )}
                 onClick={() => setStartDateCalendarOpen(!startDateCalendarOpen)}
               >
@@ -242,88 +350,116 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
                 <CalendarIcon className="ml-auto h-4 w-4" />
               </Button>
               {startDateCalendarOpen && (
-                <div className="absolute z-50 right-1 bottom-1 mb-1 bg-white rounded-md shadow-md">
+                <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
                   <Calendar
                     mode="single"
                     selected={educationData.startDate ? new Date(educationData.startDate) : undefined}
-                    onSelect={(date) => {
-                      handleDateChange("startDate", date);
-                      setStartDateCalendarOpen(false);
-                    }}
+                    onSelect={(date) => handleDateChange("startDate", date)}
                     initialFocus
-                    className="p-3 pointer-events-auto"
                   />
                 </div>
               )}
             </div>
           </div>
 
-          {/* End Date */}
-          <div className="space-y-2">
-            <label htmlFor="endDate" className="text-sm font-medium">
-              End Date<span className="text-red-500">*</span>
+          {/* Currently studying checkbox */}
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="currentlyStudying" 
+              checked={currentlyStudying} 
+              onCheckedChange={handleCurrentlyStudyingChange} 
+            />
+            <label
+              htmlFor="currentlyStudying"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              I am currently studying here
             </label>
-            <div className="relative">
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !educationData.endDate && "text-muted-foreground"
-                )}
-                onClick={() => setEndDateCalendarOpen(!endDateCalendarOpen)}
-              >
-                {educationData.endDate ? (
-                  format(new Date(educationData.endDate), "PPP")
-                ) : (
-                  <span>End Date (or expected)</span>
-                )}
-                <CalendarIcon className="ml-auto h-4 w-4" />
-              </Button>
-              {endDateCalendarOpen && (
-                <div className="absolute z-50 right-1 bottom-1 mb-1 bg-white rounded-md shadow-md">
-                  <Calendar
-                    mode="single"
-                    selected={educationData.endDate ? new Date(educationData.endDate) : undefined}
-                    onSelect={(date) => {
-                      handleDateChange("endDate", date);
-                      setEndDateCalendarOpen(false);
-                    }}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </div>
-              )}
-            </div>
           </div>
+
+          {/* End Date - conditionally shown when not currently studying */}
+          {!currentlyStudying && (
+            <div className="space-y-2">
+              <label htmlFor="endDate" className="text-sm font-medium">
+                End Date<span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
+                    !educationData.endDate && "text-muted-foreground dark:text-gray-400",
+                    dateError && "border-red-500" // Highlight the button when there's an error
+                  )}
+                  onClick={() => setEndDateCalendarOpen(!endDateCalendarOpen)}
+                >
+                  {educationData.endDate ? (
+                    format(new Date(educationData.endDate), "PPP")
+                  ) : (
+                    <span>End Date</span>
+                  )}
+                  <CalendarIcon className="ml-auto h-4 w-4" />
+                </Button>
+                {endDateCalendarOpen && (
+                  <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
+                    <Calendar
+                      mode="single"
+                      selected={educationData.endDate ? new Date(educationData.endDate) : undefined}
+                      onSelect={(date) => handleDateChange("endDate", date)}
+                      initialFocus
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* Move error message outside the conditional section so it's visible regardless */}
+          {dateError && (
+            <p className="text-red-500 text-sm">{dateError}</p>
+          )}
         </div>
 
-        <div className="border-t pt-4 flex justify-between">
-          {index !== undefined && (
+        <DialogFooter className="border-t pt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-2 dark:border-gray-700">
+          {(education?._id) && (
             <Button 
+              type="button"
               onClick={handleDelete}
               variant="outline"
-              className="text-red-600 border-red-600 hover:bg-red-50"
+              className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900 dark:hover:text-red-300 w-full sm:w-auto"
               disabled={isSubmitting}
             >
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Delete
             </Button>
           )}
-          <div className={index !== undefined ? "" : "ml-auto"}>
+          <div className={cn("flex gap-2 w-full sm:w-auto", (education?._id) ? "" : "ml-auto")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+              className="w-full sm:w-auto dark:border-gray-600 dark:hover:bg-gray-700"
+            >
+              Cancel
+            </Button>
             <Button 
+              type="button"
               onClick={handleSave} 
-              className="bg-red-600 hover:bg-red-700 text-white px-8"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 w-full sm:w-auto"
               disabled={
                 isSubmitting || 
                 !educationData.school || 
                 !educationData.degree || 
                 !educationData.startDate || 
-                !educationData.endDate
+                (!currentlyStudying && !educationData.endDate)
               }
-            >
-              {isSubmitting ? "Saving..." : "Save"}
+            >  
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Save"}
             </Button>
           </div>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

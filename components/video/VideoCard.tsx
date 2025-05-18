@@ -1,18 +1,14 @@
 "use client"
 
-import { useState } from "react";
-import { Bookmark, PlayCircle, PauseCircle, X, Volume2, Video, ExternalLink, Share2, MoreVertical, CirclePlay, Play } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Bookmark, PlayCircle, PauseCircle, X, Volume2, Video, ExternalLink, Share2, MoreVertical, CirclePlay, Play, Flag } from "lucide-react";
 import YouTube from "react-youtube";
-import { formatDistanceToNow, set } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import Image from "next/image";
-
-interface Goal {
-    _id: string;
-    name: string;
-}
+import { toast } from "sonner";
+import ReportPopover from "../post/ReportPopover";
 
 interface Goal {
     _id: string;
@@ -39,23 +35,68 @@ interface VideoCardProps {
         views?: number;
         likes?: number;
     };
+    playingVideoId: string | null; // ID of the currently playing video
+    setPlayingVideoId: (id: string | null) => void; // Function to update playing video
+    onBookmarkToggle?: () => void; // Add this prop
 }
 
-const VideoCard = ({ video }: VideoCardProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+const VideoCard = ({ video, playingVideoId, setPlayingVideoId, onBookmarkToggle }: VideoCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const isBookmarked = video.isBookmarked;
   const [isActive, setIsActive] = useState(isBookmarked);
   
+  // Menu state
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  
+  // Add state for report popover
+  const [reportOpen, setReportOpen] = useState(false);
+  
+  // Determine if this video is currently playing
+  const isPlaying = playingVideoId === video._id;
+  
   const handlePlayClick = () => {
-    setIsPlaying(true);
+    // Set this video as the playing video, which will close any other playing videos
+    setPlayingVideoId(video._id);
   };
   
   const handleVideoClose = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsPlaying(false);
+    // Stop all videos from playing
+    setPlayingVideoId(null);
   };
+
+  // Menu toggle functions
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  const closeMenu = () => setIsMenuOpen(false);
   
+  // Add click outside listener to close the menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if the click was outside both the menu and the toggle button
+      if (
+        isMenuOpen && 
+        menuRef.current && 
+        buttonRef.current && 
+        !menuRef.current.contains(event.target as Node) && 
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        closeMenu();
+      }
+    };
+    
+    // Add event listener when menu is open
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    // Clean up event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
   const handleBookmarkToggle = async () => {
     try {
       const response = await fetch(`/api/video`, {
@@ -71,7 +112,11 @@ const VideoCard = ({ video }: VideoCardProps) => {
       
       if (response.ok) {
         setIsActive(!isActive);
-        // TODO: Consistently set the IsBookmarked state
+        
+        // Call the callback if provided and unbookmarking
+        if (isActive && onBookmarkToggle) {
+          onBookmarkToggle();
+        }
       }
     } catch (error) {
       console.error("Error toggling bookmark:", error);
@@ -88,13 +133,21 @@ const VideoCard = ({ video }: VideoCardProps) => {
         console.error('Error sharing:', err);
       });
     } else {
-      // Fallback for browsers that don't support the Web Share API
       navigator.clipboard.writeText(video.link);
-      // Could add a toast notification here
     }
   };
-  
-  
+
+  const handleReport = () => {
+    closeMenu();
+    setReportOpen(true);
+  };
+
+  // Handle report submission completion
+  const handleReportSubmitted = () => {
+    toast.success("Thank you for your report");
+    // If you have a callback to refresh videos data, you could call it here
+  };
+
   const formattedDate = video.published_date
     ? formatDistanceToNow(new Date(video.published_date), { addSuffix: true })
     : '';
@@ -104,13 +157,25 @@ const VideoCard = ({ video }: VideoCardProps) => {
     height: '100%',
     width: '100%',
     playerVars: {
-      // https://developers.google.com/youtube/player_parameters
       autoplay: 1,
     },
   };
 
   // Determine if this is a podcast
   const isPodcast = video.type === "podcast";
+
+  const menuOptions = [
+    // { 
+    //   icon: <Share2 className="h-5 w-5 text-gray-500" />, 
+    //   label: "Share", 
+    //   onClick: handleShare 
+    // },
+    { 
+      icon: <Flag className="h-5 w-5 text-gray-500" />, 
+      label: "Report", 
+      onClick: handleReport 
+    },
+  ];
 
   return (
     <div 
@@ -143,7 +208,6 @@ const VideoCard = ({ video }: VideoCardProps) => {
         </button>
       </div>
       
-      {/* Modified image container with reduced height but contained image */}
       <div className="relative h-full">
         {isPlaying ? (
           <div className="relative w-full h-full aspect-video overflow-hidden">
@@ -151,7 +215,7 @@ const VideoCard = ({ video }: VideoCardProps) => {
               videoId={video.video_id}
               opts={opts}
               className="w-full h-full"
-              onEnd={() => setIsPlaying(false)}
+              onEnd={() => setPlayingVideoId(null)}
             />
             <button 
               onClick={handleVideoClose}
@@ -189,43 +253,73 @@ const VideoCard = ({ video }: VideoCardProps) => {
             <span className="mx-2">•</span>
             <span>{video.channel_name}</span>
           </div>
-          {/* {formattedDate && <span>{formattedDate}</span>} */}
         </div>
         
-        {/* Hover Actions Panel - Positioned below content */}
-        {isHovered && !isPlaying && (
-          <div className="mt-3 pt-3 border-t border-gray-200 animate-fade-in">
-
-            <div className="flex justify-between">
-                <button 
-                    onClick={handlePlayClick}
-                    className="text-white font-semibold flex items-center gap-2 py-2 px-4 bg-zinc-400 cursor-pointer  rounded-lg transition-colors"
-                    aria-label="Play video"
-                    >
-                        <Play color="white" className="fill-white" />
-                        <span>Preview</span>
-                    </button>
-                <div className="flex">
-                {/* <button 
-                    onClick={handleOpenExternal}
-                    className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-100 rounded-lg transition-colors"
-                    aria-label="Open in new tab"
-                >
-                    <MoreVertical className="h-5 w-5 text-gray-700" />
-                </button> */}
-                <Link href={`/videos/${video._id}`} 
-                    className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-100 rounded-lg transition-colors"
-                    aria-label="Open in new tab"
-                >
-                    <CirclePlay className=" h-5 w-5 text-gray-700" />
-                </Link>
-                
-                </div>
+        <div className={cn(
+          "overflow-hidden transition-all duration-300",
+          isHovered && !isPlaying ? "max-h-24 mt-3 pt-3 border-t border-gray-200" : "max-h-0"
+        )}>
+          <div className="flex justify-between">
+            <button 
+              onClick={handlePlayClick}
+              className="text-white font-semibold flex items-center gap-2 py-2 px-4 bg-zinc-400 cursor-pointer rounded-lg transition-colors"
+              aria-label="Play video"
+            >
+              <Play color="white" className="fill-white" />
+              <span>Preview</span>
+            </button>
+            <div className="flex items-center">
+              <button
+                ref={buttonRef}
+                onClick={toggleMenu}
+                className="p-2 rounded-full cursor-pointer hover:bg-gray-100 transition-colors"
+                aria-label="More options"
+              >
+                <MoreVertical className="h-5 w-5 text-gray-500" />
+              </button>
               
+              {isMenuOpen && (
+                <div 
+                  ref={menuRef}
+                  className="absolute bottom-5 right-0 mt-2 w-64 rounded-lg bg-white shadow-lg z-50 border border-gray-100 overflow-hidden"
+                  onClick={closeMenu}
+                >
+                  <div className="py-1">
+                    {menuOptions.map((item, index) => (
+                      <button 
+                        key={index}
+                        className="w-full cursor-pointer text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-100 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          item.onClick();
+                        }}
+                      >
+                        {item.icon}
+                        <span className="text-gray-700">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <Link href={`/videos/${video._id}`} 
+                className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Open in new tab"
+              >
+                <CirclePlay className="h-5 w-5 text-gray-700" />
+              </Link>
             </div>
           </div>
-        )}
+        </div>
       </div>
+      
+      {/* Add ReportPopover component */}
+      <ReportPopover 
+        open={reportOpen} 
+        onOpenChange={setReportOpen} 
+        id={video._id}
+        type="video"
+        onReportSubmitted={handleReportSubmitted}
+      />
     </div>
   );
 };

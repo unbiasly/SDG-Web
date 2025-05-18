@@ -103,11 +103,20 @@ export const SETTINGS_OPTIONS: SettingOption[] = [
     //     // icon: <div />
     // },
     {
-        id: 'additional-resources',
-        label: 'Additional Resources',
-        description: 'See information about your account and download an archive of your data or learn more about your deactivation options.',
-        subOptions: ADDITIONAL_RESOURCES_OPTIONS,
-        // icon: <div />
+        id: 'terms-and-conditions',
+        label: 'Terms and Conditions',
+        description: "",
+        // link: '/terms-and-conditions',
+    },
+    {
+        id: 'privacy-policy',
+        label: 'Privacy Policy',
+        description: ""
+    },
+    {
+        id: 'about-us',
+        label: 'About Us',
+        description: ""
     },
 ]
 
@@ -116,9 +125,9 @@ export const DEACTIVATE_CONTENT = {
     description: "You're about to start the process of deactivating your TSS account. Your display name, username, and public profile will no longer be viewable on TSS.com, TSS for iOS, or TSS for Android.",
     additionalInfo: [
         "You can restore your account if it was accidentally or wrongfully deactivated for up to 30 days after deactivation.",
-        "Some account information may still be available in search engines, such as Google or Bing. Learn more",
-        "If you just want to change your username, you don't need to deactivate your account — edit it in your settings.",
-        "To use your current username or email address with a different Unbiasly account, change them before you deactivate this account.",
-        "If you want to download your data, you'll need to complete both the request and download process before deactivating your account. Links to download your data cannot be sent to deactivated accounts."
+        "Some account information may still be available in search engines, such as Google or Bing.",
+        // "If you just want to change your username, you don't need to deactivate your account — edit it in your settings.",
+        // "To use your current username or email address with a different TSS account, change them before you deactivate this account.",
+        // "If you want to download your data, you'll need to complete both the request and download process before deactivating your account. Links to download your data cannot be sent to deactivated accounts."
     ]
 }

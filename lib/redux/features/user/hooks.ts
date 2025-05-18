@@ -5,8 +5,8 @@ import {
   selectUserLoading, 
   selectUserError, 
   selectIsAuthenticated,
-  selectExperience,
-  selectEducation
+//   selectExperience,
+//   selectEducation
 } from "./selectors";
 import { 
   fetchUserStart, 
@@ -29,8 +29,8 @@ export const useUser = () => {
   const userLoading = useAppSelector(selectUserLoading);
   const error = useAppSelector(selectUserError);
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  const experience = useAppSelector(selectExperience);
-  const education = useAppSelector(selectEducation);
+//   const experience = useAppSelector(selectExperience);
+//   const education = useAppSelector(selectEducation);
   
   const dispatch = useAppDispatch();
 
@@ -54,10 +54,10 @@ export const useUser = () => {
     userLoading,
     error,
     isAuthenticated,
-    experience,
-    selectExperience,
-    selectEducation,
-    education,
+    // experience,
+    // selectExperience,
+    // selectEducation,
+    // education,
     updateUser,
     // addUserEducation,
     // addUserExperience

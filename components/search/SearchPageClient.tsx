@@ -2,7 +2,7 @@
 import { SEARCH_RESULT_CATEGORIES } from '@/lib/constants/index-constants';
 import React, { useEffect, useState } from 'react'
 import { Article, ArticleCard } from '../feed/SDGNews';
-import PersonCard, { User } from '../profile/PersonCard';
+import PersonCard, { User } from './PersonCard';
 import { ArrowLeft, Search } from 'lucide-react';
 import { Post, SearchResultResponse, SDGVideoData } from '@/service/api.interface';
 import Link from 'next/link';
