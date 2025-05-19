@@ -107,9 +107,9 @@ export function SocialPostDialog({
         
         // Get updated data from API response
         const data = await response.json();
-        if (data.likesCount !== undefined) {
-            setLocalLikesCount(data.likesCount);
-        }
+        if (onPostUpdate) {
+        onPostUpdate();
+      }
     } catch (error) {
         console.error('Error liking post:', error);
     }
@@ -160,6 +160,7 @@ export function SocialPostDialog({
       // Invalidate query to fetch updated posts
       if (onPostUpdate) {
         onPostUpdate();
+        window.scrollTo(0, 0);
       }
     } catch (error) {
       console.error('Error reposting:', error);

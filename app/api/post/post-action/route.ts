@@ -20,7 +20,7 @@ export async function PATCH(req: NextRequest) {
             };
         } else if (actionType === 'share') {
             bodyToSend = { 
-                shareData: requestBody.shareData 
+                shareDestination: requestBody.shareData 
             };
         }
         

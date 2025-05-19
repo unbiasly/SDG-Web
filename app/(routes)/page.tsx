@@ -57,9 +57,7 @@ export default function Home() {
   
   const handlePostUpdate = () => {
     // Invalidate the posts query to refetch data
-    queryClient.invalidateQueries({ queryKey: ['posts'] }).then(() => {
-        window.scrollTo(0, 0);
-    })
+    queryClient.invalidateQueries({ queryKey: ['posts'] })
   };
 
   // Flatten the pages into a single array of posts

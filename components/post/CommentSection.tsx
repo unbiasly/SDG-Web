@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import ProfileAvatar from "../profile/ProfileAvatar";
-// import { MoreVertical, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommentData } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";

@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils';
 import SocialSignIn from './SocialSignIn';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { Eye, EyeOff, Lock } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface SignUpFormProps {
     className?: string;
@@ -12,6 +14,11 @@ interface SignUpFormProps {
 const SignUpForm: React.FC<SignUpFormProps> = ({ className }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -28,36 +35,55 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ className }) => {
                     device_token: 'web',
                     isSignUp: false, 
                 }),
-            }).then(res => res.json());
-            if (response.jwtToken) {
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                toast.error(data?.error || data?.message);
+                return;
+            }
+            
+            if (data.jwtToken) {
                 const cookieResponse = await fetch('/api/setCookieToken', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        jwtToken: response.jwtToken,
-                        refreshToken: response.refreshToken,
-                        sessionId: response.sessionId,
-                        userId: response.userId,
+                        jwtToken: data.jwtToken,
+                        refreshToken: data.refreshToken,
+                        sessionId: data.sessionId,
+                        userId: data.userId,
                     }),
                     credentials: 'include' // Important for cookies to be sent/received
                 });
                 
-                console.log(cookieResponse)
-                console.log("Login Successful, JWT Token:", response.jwtToken)
-            // Redirect to home page or dashboard
-            window.location.href = '/';
+                const cookieData = await cookieResponse.json();
+                
+                if (cookieResponse.ok) {
+                    toast.success('Account created successfully!', {
+                        description: data?.message || 'Welcome to SDG Story!'
+                    });
+                    window.location.href = '/';
+                } else {
+                    toast.error(cookieData?.error || 'Session error', {
+                        description: cookieData?.message || 'Failed to create session'
+                    });
+                }
             } else {
-                toast.error(response?.message);
+                toast.error(data?.error || 'Signup failed', {
+                    description: data?.message || 'Please try again later'
+                });
             }
             
         } catch (error) {
-            console.error("Login unsuccessful", error);
+            console.error("Signup unsuccessful", error);
+            toast.error("Signup failed", {
+                description: "An unexpected error occurred. Please try again."
+            });
         } 
     };
-
-
 
   return (
     <div className={cn("w-full max-w-lg lg:max-w-md px-6 py-8", className)}>
@@ -78,14 +104,30 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ className }) => {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <input
-            type="password"
-            placeholder="Password*"
-            className="form-input w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <Lock className="h-5 w-5 text-gray-400" />
+            </div>
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password*"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="px-10 py-6 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
+              required
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 flex items-center cursor-pointer pr-3"
+              onClick={togglePasswordVisibility}
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5 text-gray-400" />
+              ) : (
+                <Eye className="h-5 w-5 text-gray-400" />
+              )}
+            </button>
+          </div>
         </div>
         <p className='text-sm'>Must be between 8-14 characters, including an uppercase and lowercase letter, a number and a special character.</p>
         

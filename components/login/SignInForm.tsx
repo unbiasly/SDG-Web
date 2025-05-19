@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils';
 import SocialSignIn from './SocialSignIn';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { Eye, EyeOff, Lock } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface SignInFormProps {
     className?: string;
@@ -12,6 +14,11 @@ interface SignInFormProps {
 const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
 
     const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -29,12 +36,13 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
                     isSignin: true, 
                 }),
             });
+            const data = await response.json();
+            
             if (!response.ok) {
-                const errorData = await response.json();
-                toast.error("Login unsuccessful: " + (errorData?.message || 'Failed to login'));
+                toast.error(data?.error || data?.message);
                 return;
             } 
-            const data = await response.json();
+            
             if (data.jwtToken) {
                 const cookieResponse = await fetch('/api/setCookieToken', {
                     method: 'POST',
@@ -50,24 +58,27 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
                     credentials: 'include' // Important for cookies to be sent/received
                 });
                 
-                console.log(cookieResponse)
+                const cookieData = await cookieResponse.json();
+                
                 if (cookieResponse.ok) {
-                    toast.success('Signed in successfully!');
+                    toast.success('Signed in successfully!', {
+                        description: data?.message
+                    });
                     window.location.href = '/';
                 } else {
-                    const cookieError = await cookieResponse.json();
-                    toast.error('Authentication error: ' + (cookieError?.message || 'Failed to set session'));
+                    toast.error(cookieData?.error || cookieData?.message);
                 }
             } else {
-                toast.error(data?.message || data?.error || 'Login failed');
+                toast.error(data?.error || data?.message);
             }
             
         } catch (error) {
             console.error("Login unsuccessful", error);
+            toast.error("Login failed", {
+                description: "An unexpected error occurred. Please try again."
+            });
         } 
     };
-
-
 
   return (
     <div className={cn("w-full max-w-lg lg:max-w-md px-6 py-8", className)}>
@@ -79,7 +90,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
       </div>
 
       <form onSubmit={handleSignIn} className="space-y-5">
-        <div className='space-y-2 '>
+        <div className='space-y-2'>
           <input
             type="email"
             placeholder="Email*"
@@ -88,14 +99,30 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <input
-            type="password"
-            placeholder="Password*"
-            className="form-input w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <Lock className="h-5 w-5 text-gray-400" />
+            </div>
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password*"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="px-10 py-6 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
+              required
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 flex items-center cursor-pointer pr-3"
+              onClick={togglePasswordVisibility}
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5 text-gray-400" />
+              ) : (
+                <Eye className="h-5 w-5 text-gray-400" />
+              )}
+            </button>
+          </div>
         </div>
         
         <div className="flex justify-end">

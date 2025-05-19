@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
         const data = await response.json();
 
-        return Response.json(data);
+        return Response.json(data, {status: response.status});
     } catch (error) {
         console.error('Login error:', error);
         return Response.json(

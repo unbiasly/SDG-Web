@@ -20,7 +20,7 @@ export async function GET() {
         
         
         const data = await response.json();
-        return NextResponse.json(data);
+        return NextResponse.json(data, { status: response.status });
     } catch (error) {
         console.log("api/route.ts error:", error);
         return NextResponse.json(

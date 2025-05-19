@@ -9,6 +9,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
 import ReportPopover from "../post/ReportPopover";
+import ShareContent from "../post/ShareContent"; // Import ShareContent component
 
 interface Goal {
     _id: string;
@@ -52,6 +53,8 @@ const VideoCard = ({ video, playingVideoId, setPlayingVideoId, onBookmarkToggle 
   
   // Add state for report popover
   const [reportOpen, setReportOpen] = useState(false);
+  // Add state for share dialog
+  const [shareOpen, setShareOpen] = useState(false);
   
   // Determine if this video is currently playing
   const isPlaying = playingVideoId === video._id;
@@ -124,17 +127,8 @@ const VideoCard = ({ video, playingVideoId, setPlayingVideoId, onBookmarkToggle 
   };
   
   const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: video.title,
-        text: video.description || '',
-        url: video.link,
-      }).catch(err => {
-        console.error('Error sharing:', err);
-      });
-    } else {
-      navigator.clipboard.writeText(video.link);
-    }
+    closeMenu(); // Close the menu first
+    setShareOpen(true); // Open the ShareContent dialog
   };
 
   const handleReport = () => {
@@ -165,11 +159,11 @@ const VideoCard = ({ video, playingVideoId, setPlayingVideoId, onBookmarkToggle 
   const isPodcast = video.type === "podcast";
 
   const menuOptions = [
-    // { 
-    //   icon: <Share2 className="h-5 w-5 text-gray-500" />, 
-    //   label: "Share", 
-    //   onClick: handleShare 
-    // },
+    { 
+      icon: <Share2 className="h-5 w-5 text-gray-500" />, 
+      label: "Share", 
+      onClick: handleShare 
+    },
     { 
       icon: <Flag className="h-5 w-5 text-gray-500" />, 
       label: "Report", 
@@ -319,6 +313,14 @@ const VideoCard = ({ video, playingVideoId, setPlayingVideoId, onBookmarkToggle 
         id={video._id}
         type="video"
         onReportSubmitted={handleReportSubmitted}
+      />
+      
+      {/* Add ShareContent component */}
+      <ShareContent 
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        contentUrl={`/videos/${video._id}`}
+        itemId={video._id}
       />
     </div>
   );

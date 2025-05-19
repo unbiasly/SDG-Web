@@ -9,6 +9,7 @@ import {
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { SOCIAL_AUTH_PROVIDERS } from '@/lib/constants/login-constants';
+import { toast } from 'sonner';
 
 interface SocialSignInProps {
   className?: string;
@@ -55,9 +56,16 @@ const SocialSignIn: React.FC<SocialSignInProps> = ({ className }) => {
         
         const data = await response.json();
         
+        if (!response.ok) {
+          toast.error(data?.error || `${provider} sign-in failed`, {
+            description: data?.message || "Authentication failed. Please try again."
+          });
+          return;
+        }
+        
         if (data.jwtToken) {
           // Set cookies with the JWT token from your backend
-          await fetch('/api/setCookieToken', {
+          const cookieResponse = await fetch('/api/setCookieToken', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -71,14 +79,29 @@ const SocialSignIn: React.FC<SocialSignInProps> = ({ className }) => {
             credentials: 'include'
           });
           
-          console.log("Social login successful");
-          router.push('/');
+          const cookieData = await cookieResponse.json();
+          
+          if (cookieResponse.ok) {
+            toast.success(`${provider} sign-in successful!`, {
+              description: data?.message || "You are now logged in."
+            });
+            router.push('/');
+          } else {
+            toast.error(cookieData?.error || "Session error", {
+              description: cookieData?.message || "Failed to create session"
+            });
+          }
         } else {
-          console.error("Social login failed:", data);
+          toast.error(data?.error || "Authentication failed", {
+            description: data?.message || `${provider} sign-in was not successful`
+          });
         }
       }
     } catch (error) {
       console.error(`${provider} sign-in error:`, error);
+      toast.error(`${provider} sign-in error`, {
+        description: "An unexpected error occurred. Please try again."
+      });
     }
   };
 

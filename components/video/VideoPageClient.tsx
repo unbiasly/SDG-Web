@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { da } from 'date-fns/locale';
 import Link from 'next/link';
+import ShareContent from '../post/ShareContent'; // Import the ShareContent component
 
 const VideoPageClient = ({ videoId }: { videoId: string }) => {
     const { user } = useUser();
@@ -20,6 +21,7 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
     const [isBookmarked, setIsBookmarked] = useState(data?.isBookmarked);
     const [likesCount, setLikesCount] = useState(0);
     const [commentText, setCommentText] = useState(''); // Add state for comment input
+    const [shareOpen, setShareOpen] = useState(false); // Add state for share dialog
     
     const opts = {
         height: '100%',
@@ -190,6 +192,10 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
         setIsPlaying(true);
     };
 
+    const handleShareClick = () => {
+        setShareOpen(true);
+    };
+    
     useEffect(() => {
         if (videoId) {
             fetchVideoById();
@@ -306,11 +312,11 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                                     text: isBookmarked ? "Saved" : "Save",
                                     onClick: handleBookmarkToggle 
                                 },
-                                // { 
-                                //     icon: <Share2 className="w-5 h-5" />,
-                                //     text: "Share",
-                                //     onClick: () => {} 
-                                // }
+                                { 
+                                    icon: <Share2 className="w-5 h-5" />,
+                                    text: "Share",
+                                    onClick: handleShareClick 
+                                }
                             ].map((item, index) => (
                                 <Button key={index} variant="ghost" className="flex items-center p-0 gap-2" onClick={item.onClick}>
                                     {item.icon}
@@ -330,6 +336,14 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
 
                 {/* Comments Section */}
             </div>
+            
+            {/* ShareContent component for sharing the video */}
+            <ShareContent 
+                open={shareOpen}
+                onOpenChange={setShareOpen}
+                contentUrl={`/videos/${videoId}`}
+                itemId={videoId}
+            />
         </div>
     );
 };
