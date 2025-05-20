@@ -22,6 +22,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useUser } from '@/lib/redux/features/user/hooks';
+import { toast } from 'sonner';
 
 interface EditPostProps {
   open: boolean;
@@ -29,9 +30,10 @@ interface EditPostProps {
   postId: string;
   initialContent?: string;
   images?: string[];
+  onPostUpdate?: () => void; // Add this prop
 }
 
-const EditPost = ({ open, onOpenChange, postId, initialContent = '', images = [] }: EditPostProps) => {
+const EditPost = ({ open, onOpenChange, postId, initialContent = '', images = [], onPostUpdate }: EditPostProps) => {
   // State variables
   const { user, userLoading } = useUser();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -118,7 +120,7 @@ const EditPost = ({ open, onOpenChange, postId, initialContent = '', images = []
           postData.append('images', file);
         });
 
-        // Add deleteImageUrls as a JSON string array to ensure it's processed as an array
+        // Add deleteImageUrls as a JSON string array
         postData.append('deleteImageUrls', JSON.stringify(deletedImageUrls));
 
         const response = await fetch('/api/post', {
@@ -126,18 +128,30 @@ const EditPost = ({ open, onOpenChange, postId, initialContent = '', images = []
           body: postData,
         });
         
+        // Get the response text first for error handling
+        const responseText = await response.text();
+        
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Error updating post:', errorText);
-          throw new Error('Failed to update post');
+          throw new Error(`Failed to update post: ${response.status}`);
         }
         
-        // Close modal and reset form
+        // Show success message
+        toast.success('Post updated successfully');
+        
+        // Call onPostUpdate before closing the modal to ensure it runs
+        if (typeof onPostUpdate === 'function') {
+          // Add a small delay to ensure UI updates properly
+          setTimeout(() => {
+            onPostUpdate();
+          }, 100);
+        }
+        
+        // Close modal and reset form - do this last
         onOpenChange(false);
         
-        console.log('Post updated successfully');
       } catch (error) {
         console.error('Error in handlePost:', error);
+        toast.error('Failed to update post. Please try again.');
       } finally {
         setIsLoading(false);
       }

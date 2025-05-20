@@ -3,11 +3,11 @@ import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from '
 import { useUser } from '@/lib/redux/features/user/hooks';
 import { Camera, Pencil, X, Loader2 } from 'lucide-react';
 import Image from 'next/image';
-import { Button } from '../ui/button'; // Assuming you have a Button component
-import { toast } from 'sonner'; // For notifications
+import { Button } from '../ui/button';
+import { toast } from 'sonner';
 
 const BackgroundImageDialog = () => {
-    const { user } = useUser(); // Assuming fetchUser can refresh user data
+    const { user } = useUser();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -37,20 +37,19 @@ const BackgroundImageDialog = () => {
         formData.append('profileBackgroundImage', selectedFile);
 
         try {
-            const response = await fetch('/api', { // Uses app/api/route.ts
+            const response = await fetch('/api', {
                 method: 'PUT',
                 body: formData,
-                // Headers are not explicitly set for FormData; browser handles 'multipart/form-data'
             });
 
             const result = await response.json();
 
             if (response.ok && result.success) {
                 toast.success('Background image updated successfully!');
-                setIsOpen(false); // Close dialog
+                setIsOpen(false);
                 setSelectedFile(null);
                 setPreviewUrl(null);
-                window.location.reload(); // Reload the page
+                window.location.reload();
             } else {
                 toast.error(result.message || 'Failed to update background image.');
             }
@@ -62,24 +61,25 @@ const BackgroundImageDialog = () => {
         }
     };
 
-    const currentImageSrc = previewUrl || (typeof user?.profileBackgroundImage === 'string' ? user.profileBackgroundImage : '/placeholder-background.jpg'); // Fallback placeholder
+    const currentImageSrc = previewUrl || (typeof user?.profileBackgroundImage === 'string' ? user.profileBackgroundImage : '/placeholder-background.jpg');
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild onClick={() => setIsOpen(true)}>
-                <div className="absolute top-4 right-4 bg-black/50  rounded-full p-2 shadow-sm cursor-pointer transition-transform duration-100 hover:scale-105">
-                    <Camera size={20} color='white'/>
+                <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-black/50 rounded-full p-3 shadow-sm cursor-pointer transition-transform duration-100 hover:scale-105 z-10">
+                    <Camera size={20} className="sm:w-6 sm:h-6" color='white'/>
                 </div>
             </DialogTrigger>
-            <DialogContent showDialogClose={false} className='bg-[#1e1e1e] text-white border-none w-full'>
-                <DialogTitle className='text-center text-lg font-semibold'>Cover Photo</DialogTitle>
-                <div className="flex flex-col items-center space-y-6 justify-center py-4">
-                    <div className="w-full h-[200px] aspect-video rounded-lg overflow-hidden relative bg-gray-700">
+            <DialogContent showDialogClose={false} className='bg-[#1e1e1e] text-white border-none w-full max-w-md mx-auto'>
+                <DialogTitle className='text-center text-lg font-semibold mb-4'>Cover Photo</DialogTitle>
+                <div className="flex flex-col items-center space-y-4 w-full">
+                    <div className="w-full relative rounded-lg overflow-hidden bg-gray-700 aspect-[4/1]" >
                         <Image
                             src={currentImageSrc}
                             alt="Background Preview"
-                            layout="fill"
-                            objectFit="cover"
+                            fill
+                            sizes="100vw"
+                            className="object-cover"
                             priority
                         />
                     </div>
@@ -91,15 +91,15 @@ const BackgroundImageDialog = () => {
                         accept="image/*"
                         className="hidden"
                     />
-                    <div className='flex items-center justify-around w-full h-full pt-2'>
-                        <Button variant="outline" onClick={handleEditClick} className="flex items-center gap-2 bg-transparent hover:bg-gray-700 border-gray-600">
-                            <Pencil size={16} />
+                    <div className='flex items-center justify-between w-full px-4 mt-4'>
+                        <button onClick={handleEditClick} className="flex flex-col items-center px-4 py-2 rounded-lg cursor-pointer gap-1 bg-transparent hover:bg-gray-700 border-none">
+                            <Pencil size={20} color='white'/>
                             Edit
-                        </Button>
+                        </button>
                         <Button 
                             onClick={handleUpdate} 
                             disabled={isLoading || !selectedFile}
-                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500"
+                            className="bg-accent hover:bg-accent/90 disabled:bg-gray-500"
                         >
                             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             Update

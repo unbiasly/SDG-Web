@@ -27,7 +27,7 @@ export const ContentFeed: React.FC<ContentFeedProps> = ({
                                     : 'border-b-2 text-gray-400 border-b-transparent'
                             }`}>
                                 <button
-                                    className={`flex cursor-pointer justify-center text-xl ${activeTab === tab ? 'font-bold' : 'text-gray-400'}`}
+                                    className={`flex cursor-pointer justify-center text-md md:text-xl  ${activeTab === tab ? 'font-bold' : 'text-gray-400'}`}
                                     onClick={() => setActiveTab(tab)}
                                 >
                                     {tab}

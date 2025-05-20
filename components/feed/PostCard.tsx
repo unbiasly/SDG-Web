@@ -25,7 +25,7 @@ import DeletePostModal from "../post/DeletePostModal";
 import Link from "next/link";
 import { toast } from "sonner";
 import ConfirmationDialog from "../ConfirmationDialog";
-import SharePost from "../post/ShareContent";
+import ShareContent from "../post/ShareContent";
 
 interface PostCardProps {
     _id: string;
@@ -76,7 +76,6 @@ export const PostCard: React.FC<PostCardProps> = ({
     const [isLocalLiked, setIsLocalLiked] = useState(isLiked);
     // const [isRepostActive, setIsRepostActive] = useState(isReposted);
     const [localRepostsCount, setLocalRepostsCount] = useState(repostsCount);
-    const [isLargeScreen, setIsLargeScreen] = useState(false);
 
     // PostMenu state
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -85,10 +84,11 @@ export const PostCard: React.FC<PostCardProps> = ({
     const [reportOpen, setReportOpen] = useState(false);
     const [editPostOpen, setEditPostOpen] = useState(false);
     const [deletePostOpen, setDeletePostOpen] = useState(false);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false); // New state for delete confirmation
     const [isBookmarkActive, setIsBookmarkActive] = useState(isBookmarked);
     const [isFollowedActive, setIsFollowedActive] = useState(isFollowed);
     const [repostConfirmOpen, setRepostConfirmOpen] = useState(false);
-    const [sharePostOpen, setSharePostOpen] = useState(false);
+    const [shareContentOpen, setShareContentOpen] = useState(false);
 
     const { user } = useUser();
     const currentUserId = user?._id;
@@ -129,22 +129,6 @@ export const PostCard: React.FC<PostCardProps> = ({
         // setIsRepostActive(isReposted);
         setLocalRepostsCount(repostsCount);
     }, [isLiked, likesCount, isReposted, repostsCount]);
-
-    useEffect(() => {
-        const checkScreenSize = () => {
-            // Tailwind lg breakpoint is 1024px
-            setIsLargeScreen(window.innerWidth >= 1024);
-        };
-
-        // Set initial value
-        checkScreenSize();
-
-        // Add event listener for resize
-        window.addEventListener("resize", checkScreenSize);
-
-        // Cleanup
-        return () => window.removeEventListener("resize", checkScreenSize);
-    }, []);
 
     const toggleComments = () => {
         setIsCommentsOpen(!isCommentsOpen);
@@ -282,7 +266,35 @@ export const PostCard: React.FC<PostCardProps> = ({
 
     const handleDeletePost = () => {
         setIsMenuOpen(false);
-        setDeletePostOpen(true);
+        setDeleteConfirmOpen(true); // Open confirmation dialog instead
+    };
+
+    // New function to handle deletion after confirmation
+    const handleDeleteConfirm = async () => {
+        try {
+            const response = await fetch(`/api/post`, {
+                method: 'DELETE',
+                body: JSON.stringify({ postId: _id }),
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to delete post');
+            }
+            
+            // Handle successful deletion
+            toast.success('Post deleted successfully');
+            
+            // Refresh posts data after successful deletion
+            if (onPostUpdate) {
+                onPostUpdate();
+            }
+        } catch (error) {
+            console.error('Error deleting post:', error);
+            toast.error('Failed to delete post. Please try again.');
+        } finally {
+            // Close the dialog
+            setDeleteConfirmOpen(false);
+        }
     };
 
     const handleFollow = async () => {
@@ -330,7 +342,7 @@ export const PostCard: React.FC<PostCardProps> = ({
     };
 
     const handleShare = () => {
-        setSharePostOpen(true);
+        setShareContentOpen(true);
     };
 
     const menuOptions = [
@@ -350,44 +362,99 @@ export const PostCard: React.FC<PostCardProps> = ({
 
         ...(userId !== currentUserId
             ? [
-                  {
-                      icon: (
-                          <UserPlus
-                              className={`h-5 w-5 ${
-                                  isFollowedActive
-                                      ? "fill-current text-accent"
-                                      : "text-gray-500"
-                              }`}
-                          />
-                      ),
-                      label: isFollowedActive ? "Unfollow" : "Follow",
-                      onClick: handleFollow,
-                  },
-                  {
-                      icon: <Flag className="h-5 w-5 text-gray-500" />,
-                      label: "Report post",
-                      onClick: handleReportClick,
-                  },
-              ]
+                {
+                    icon: (
+                        <UserPlus
+                            className={`h-5 w-5 ${
+                                isFollowedActive
+                                    ? "fill-current text-accent"
+                                    : "text-gray-500"
+                            }`}
+                        />
+                    ),
+                    label: isFollowedActive ? "Unfollow" : "Follow",
+                    onClick: handleFollow,
+                },
+                {
+                    icon: <Flag className="h-5 w-5 text-gray-500" />,
+                    label: "Report post",
+                    onClick: handleReportClick,
+                },
+            ]
             : []),
 
         ...(userId === currentUserId
             ? [
-                  {
-                      icon: <Pencil className="h-5 w-5 text-gray-500" />,
-                      label: "Edit post",
-                      onClick: handleEditPost,
-                  },
-                  {
-                      icon: <Trash className="h-5 w-5 text-gray-500" />,
-                      label: "Delete post",
-                      onClick: handleDeletePost,
-                  },
-              ]
+                {
+                    icon: <Pencil className="h-5 w-5 text-gray-500" />,
+                    label: "Edit post",
+                    onClick: handleEditPost,
+                },
+                {
+                    icon: <Trash className="h-5 w-5 text-gray-500" />,
+                    label: "Delete post",
+                    onClick: handleDeletePost,
+                },
+            ]
             : []),
     ];
 
-    const postOptions = [];
+    const postOptions = [
+        {
+            icon: (
+                <ThumbsUp
+                    size={18}
+                    className={
+                        isActive
+                            ? "fill-current font-bold"
+                            : "text-gray-500"
+                    }
+                />
+            ),
+            label: isActive ? "Liked" : "Like",
+            onClick: handleLike,
+            isActive: isActive,
+        },
+        {
+            icon: (
+                <MessageCircle
+                    size={18}
+                    className={
+                        isCommentsOpen
+                            ? "fill-current"
+                            : "text-gray-500"
+                    }
+                />
+            ),
+            label: "Comment",
+            onClick: toggleComments,
+            isActive: isCommentsOpen,
+        },
+        ...(userId !== currentUserId
+            ? [
+                {
+                    icon: (
+                        <Repeat
+                            size={18}
+                            className={
+                                isReposted
+                                    ? "fill-current"
+                                    : "text-gray-500"
+                            }
+                        />
+                    ),
+                    label: isReposted ? "Reposted" : "Repost",
+                    onClick: handleRepost,
+                },
+            ]
+            : []),
+        {
+            icon: <Send size={18} className="text-gray-500" />,
+            label: "Share",
+            onClick: handleShare,
+            isActive: false,
+        },
+    ];
 
     const getComments = async () => {
         try {
@@ -414,11 +481,9 @@ export const PostCard: React.FC<PostCardProps> = ({
     };
 
     const handleImageClick = () => {
-        if (isLargeScreen) {
-            setIsDialogOpen(true);
-            getComments();
-        }
-        // Do nothing if on smaller screens
+        // Remove the condition that restricts mobile screens
+        setIsDialogOpen(true);
+        getComments();
     };
 
     // Handle successful comment addition
@@ -515,9 +580,7 @@ export const PostCard: React.FC<PostCardProps> = ({
                 <p className="text-sm mb-3">{content}</p>
                 {imageUrl && imageUrl.length > 0 && (
                     <div
-                        className={`rounded-lg overflow-hidden aspect-video bg-gray-50 ${
-                            isLargeScreen ? "cursor-pointer" : ""
-                        }`}
+                        className="rounded-lg overflow-hidden aspect-video bg-gray-50 cursor-pointer"
                         onClick={handleImageClick}
                     >
                         {imageUrl.length === 1 ? (
@@ -553,69 +616,12 @@ export const PostCard: React.FC<PostCardProps> = ({
           <span>{repostsCount} reposts</span> */}
                 </div>
             </div>
-
             <div className="w-full border border-gray-200" />
-
             <div className="flex justify-evenly pt-2 ">
-                {[
-                    {
-                        icon: (
-                            <ThumbsUp
-                                size={18}
-                                className={
-                                    isActive
-                                        ? "fill-current font-bold"
-                                        : "text-gray-500"
-                                }
-                            />
-                        ),
-                        label: isActive ? "Liked" : "Like",
-                        onClick: handleLike,
-                        isActive: isActive,
-                    },
-                    {
-                        icon: (
-                            <MessageCircle
-                                size={18}
-                                className={
-                                    isCommentsOpen
-                                        ? "fill-current"
-                                        : "text-gray-500"
-                                }
-                            />
-                        ),
-                        label: "Comment",
-                        onClick: toggleComments,
-                        isActive: isCommentsOpen,
-                    },
-                    ...(userId !== currentUserId
-                        ? [
-                              {
-                                  icon: (
-                                      <Repeat
-                                          size={18}
-                                          className={
-                                              isReposted
-                                                  ? "fill-current"
-                                                  : "text-gray-500"
-                                          }
-                                      />
-                                  ),
-                                  label: isReposted ? "Reposted" : "Repost",
-                                  onClick: handleRepost,
-                              },
-                          ]
-                        : []),
-                    {
-                        icon: <Send size={18} className="text-gray-500" />,
-                        label: "Share",
-                        onClick: handleShare,
-                        isActive: false,
-                    },
-                ].map((action, index) => (
+                {postOptions.map((action, index) => (
                     <button
                         key={index}
-                        className={`w-50 flex items-center cursor-pointer justify-center gap-2 py-1.5 rounded-xl transition-colors duration-200 ${
+                        className={`w-full flex items-center cursor-pointer justify-center gap-2 py-2 rounded-xl transition-colors duration-200 ${
                             action.isActive
                                 ? "font-bold"
                                 : "font-medium hover:bg-gray-200 "
@@ -623,7 +629,7 @@ export const PostCard: React.FC<PostCardProps> = ({
                         onClick={action.onClick}
                     >
                         {action.icon}
-                        <span className="text-sm">{action.label}</span>
+                        <span className="text-xs md:text-sm">{action.label}</span>
                     </button>
                 ))}
             </div>
@@ -635,7 +641,6 @@ export const PostCard: React.FC<PostCardProps> = ({
                     onCommentAdded={handleCommentAdded} // Use the new handler
                 />
             </div>
-
             {/* Modals and Popovers */}
             <ReportPopover
                 open={reportOpen}
@@ -648,13 +653,16 @@ export const PostCard: React.FC<PostCardProps> = ({
                 onOpenChange={setEditPostOpen}
                 postId={_id}
                 initialContent={content}
+                onPostUpdate={onPostUpdate}
                 images={Array.isArray(imageUrl) ? imageUrl : [imageUrl]}
             />
-            <DeletePostModal
-                open={deletePostOpen}
-                onOpenChange={setDeletePostOpen}
-                postId={_id}
-                onPostUpdate={onPostUpdate} // Pass the callback here
+            {/* Replace DeletePostModal with ConfirmationDialog */}
+            <ConfirmationDialog
+                open={deleteConfirmOpen}
+                onOpenChange={setDeleteConfirmOpen}
+                clickFunc={handleDeleteConfirm}
+                subject="Delete"
+                object="post"
             />
             <SocialPostDialog
                 open={isDialogOpen}
@@ -676,13 +684,6 @@ export const PostCard: React.FC<PostCardProps> = ({
                 comments={comments}
                 onPostUpdate={onPostUpdate} // Pass the callback here
             />
-            {!isLargeScreen && imageUrl && imageUrl.length > 0 && (
-                <div className="text-right mb-2">
-                    <Link href={`/post/${_id}`} className="text-xs text-accent">
-                        View full post
-                    </Link>
-                </div>
-            )}
             {/* Add this near the bottom of your component, with the other dialogs */}
             <ConfirmationDialog
                 open={repostConfirmOpen}
@@ -691,7 +692,12 @@ export const PostCard: React.FC<PostCardProps> = ({
                 subject="Repost"
                 object="post"
             />
-            <SharePost open={sharePostOpen} onOpenChange={setSharePostOpen} contentUrl={`/post/${_id}`} itemId={_id}/>
+            <ShareContent
+                open={shareContentOpen}
+                onOpenChange={setShareContentOpen}
+                contentUrl={`/post/${_id}`}
+                itemId={_id}
+            />
         </div>
     );
 };

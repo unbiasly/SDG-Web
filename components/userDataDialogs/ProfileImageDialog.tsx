@@ -70,19 +70,19 @@ const ProfileImageDialog = () => {
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild onClick={() => setIsOpen(true)}>
                 <div className="absolute bottom-1 right-1 bg-black/50  rounded-full p-2 shadow-sm cursor-pointer transition-transform duration-100 hover:scale-105">
-                    <Camera size={18} color='white' />
+                    <Camera size={22} color='white' />
                 </div>
             </DialogTrigger>
             <DialogContent showDialogClose={false} className='bg-[#1e1e1e] text-white border-none w-full'>
                 <DialogTitle className='text-center text-lg font-semibold'>Profile Photo</DialogTitle>
                 <div className="flex flex-col items-center space-y-6 justify-center py-4">
                     
-                    <div className="relative w-full flex justify-center h-full ">
+                    <div className="relative w-64 h-64 aspect-square mx-auto">
                         <Image
                             src={currentImageSrc as string}
                             alt="Profile"
-                            width={256}
-                            height={256}
+                            fill
+                            sizes="256px"
                             className="object-cover rounded-lg shadow-lg"
                             priority
                         />

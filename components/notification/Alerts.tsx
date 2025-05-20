@@ -35,7 +35,7 @@ const Alerts = ({ _id, post, category, type, message, isRead, userProfile }: Not
         if (!isRead) {
             handleRead(_id);
         } else {
-            if (type === "post") {
+            if (type === "post" || type === "like" || type === "comment" || type === "repost") {
                 window.location.href = `/post/${post}`;
             } else if(type === "follow") {
                 window.location.href = `/profile/${post}`;
@@ -65,7 +65,7 @@ const Alerts = ({ _id, post, category, type, message, isRead, userProfile }: Not
             const responseData = await response.json();
             
             if (responseData.success) {
-                if (type === "post") {
+                if (type === "post"  || type === "like") {
                     window.location.href = `/post/${post}`;
                 } else if(type === "follow") {
                     window.location.href = `/profile/${post}`;

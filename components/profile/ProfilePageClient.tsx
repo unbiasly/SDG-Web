@@ -284,7 +284,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
         <div className="w-full min-h-screen flex flex-1 flex-col border-gray-300 rounded-2xl border-1 pb-20">
           {/* Header with gray background */}
           {/* Standard Profile Background Banner Height = 201px */}
-          <div className="h-[201px] aspect-video rounded-t-xl relative overflow-hidden">
+          <div className="h-full aspect-[4/1] rounded-t-xl relative overflow-hidden">
             {profileUser?.profileBackgroundImage ? (
               <Image 
                 src={typeof profileUser.profileBackgroundImage === 'string' ? profileUser.profileBackgroundImage : ''}
@@ -306,7 +306,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             
           </div>
           {/* Main content */}
-          <div className="w-full mx-auto px-4 sm:px-6 -mt-20 relative z-10">
+          <div className="w-full mx-auto px-4 sm:px-6 -mt-20 relative z-5">
             {/* Profile header */}
             <div className="flex justify-between items-end mb-8">
                 <div className='relative'>

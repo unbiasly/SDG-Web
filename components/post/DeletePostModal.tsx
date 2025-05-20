@@ -44,7 +44,7 @@ const DeletePostModal = ({ open, onOpenChange, postId, onPostUpdate }: DeletePos
         <DialogHeader className="text-center">
           <DialogTitle className="text-center">Delete Post</DialogTitle>
           <DialogDescription className="text-center text-lg">
-            Are you sure you want to delete this post? This action cannot be undone.
+            Are you sure you want to delete this post?
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-center gap-3 mt-4">

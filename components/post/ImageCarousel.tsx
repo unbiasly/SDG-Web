@@ -45,8 +45,9 @@ const ImageCarousel = ({ images, className }: ImageCarouselProps) => {
                 src={imageUrl}
                 alt={`Image ${index + 1}`}
                 fill
-                sizes="(max-width: 768px) 100vw, 66vw"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 66vw"
                 className="object-contain p-2"
+                style={{ objectFit: 'contain' }}
                 priority={index === currentIndex}
               />
             </div>
@@ -73,22 +74,12 @@ const ImageCarousel = ({ images, className }: ImageCarouselProps) => {
             <ChevronRight className="h-6 w-6 text-white" color='white' />
           </button>
           
-          {/* Indicator dots */}
-          {/* <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-20">
-            {images.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={cn(
-                  "w-2.5 h-2.5 rounded-full transition-colors",
-                  currentIndex === index 
-                    ? "bg-white" 
-                    : "bg-white/50 hover:bg-white/80"
-                )}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div> */}
+          {/* Simple counter indicator */}
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center z-20">
+            <div className="bg-black/60 rounded-full px-3 py-1 text-white text-xs">
+              {currentIndex + 1}/{images.length}
+            </div>
+          </div>
         </>
       )}
     </div>

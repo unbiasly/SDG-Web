@@ -22,8 +22,8 @@ export async function POST(req: NextRequest) {
             name: 'jwtToken',
             value: jwtToken,
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
             maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
             path: '/'
         });
@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
                 name: 'refreshToken',
                 value: refreshToken,
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
                 maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
                 path: '/'
             });
@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
                 name: 'sessionId',
                 value: sessionId,
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
                 maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
                 path: '/'
         })}
@@ -54,8 +54,8 @@ export async function POST(req: NextRequest) {
                 name: 'userId',
                 value: userId,
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
                 maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
             });
         }

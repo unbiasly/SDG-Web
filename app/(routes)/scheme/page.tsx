@@ -5,8 +5,26 @@ import { SCHEME_TABS } from '@/lib/constants/index-constants';
 import { SchemeAnalyticsResponse } from '@/service/api.interface';
 import React, { useEffect, useState } from 'react'
 
+// Interface for tab configuration
+interface SchemeDataItem {
+  icon: string;
+  count: number;
+  label: string;
+  [key: string]: any;
+}
+
+interface TabConfigItem {
+  title: string;
+  data: SchemeDataItem[];
+  type: "category" | "state" | "ministry";
+}
+
+interface TabConfig {
+  [key: string]: TabConfigItem;
+}
+
 const Page = () => {
-    const [activeTab, setActiveTab] = useState("Categories");
+    const [activeTab, setActiveTab] = useState<string>("Categories");
     const [tabs, setTabs] = useState<SchemeAnalyticsResponse | null>(null);
 
     // Helper function to find icon for a scheme by label/id
@@ -30,67 +48,61 @@ const Page = () => {
         getTabs();
     }, []);
 
-    const categoryData = tabs?.data.categoryWise || [];
-    const stateData = tabs?.data.stateWise || [];
-    const ministryData = tabs?.data.ministryWise || [];
+    const categoryData = tabs?.data?.categoryWise || [];
+    const stateData = tabs?.data?.stateWise || [];
+    const ministryData = tabs?.data?.ministryWise || [];
+
+    // Tab configuration mapping with proper typing
+    const tabConfig: TabConfig = {
+        "Categories": {
+            title: "Find schemes based on Categories",
+            data: categoryData,
+            type: "category"
+        },
+        "State/UTs": {
+            title: "Find schemes based on States/UTs",
+            data: stateData,
+            type: "state"
+        },
+        "Central Ministeries": {
+            title: "Find schemes based on Central Ministeries",
+            data: ministryData,
+            type: "ministry"
+        }
+    };
+
+    // Check if we have actual data to display
+    const hasData = tabs?.data && Object.keys(tabs.data).length > 0;
 
     return (
         <div className='flex flex-1 overflow-hidden'>
             <ContentFeed activeTab={activeTab} setActiveTab={setActiveTab} tabs={SCHEME_TABS}>
-
-            {SCHEME_TABS && <>
-                {activeTab === "Categories" && (
-                    <div className="flex flex-col items-center">
-                        <h1 className="text-xl md:text-2xl font-bold p-4">Find schemes based on Categories</h1>
-                        <div className="flex flex-wrap gap-4 justify-center p-2">
-                            {categoryData.map((scheme, index) => (
-                                <SchemeCard
-                                    key={index}
-                                    icon={scheme.icon}
-                                    count={scheme.count}
-                                    label={scheme.label}
-                                    type='category'
-                                />
+                {SCHEME_TABS && activeTab && tabConfig[activeTab] && hasData ? (
+                    <div className="w-full animate-fade-in">
+                        <h1 className="text-xl md:text-2xl font-bold p-2 md:p-4 text-center">
+                            {tabConfig[activeTab].title}
+                        </h1>
+                        <div className="flex flex-wrap justify-center gap-3 p-2">
+                            {tabConfig[activeTab].data.map((scheme, index) => (
+                                <div key={index} className=" mb-3">
+                                    <SchemeCard
+                                        icon={scheme.icon}
+                                        count={scheme.count}
+                                        label={scheme.label}
+                                        type={tabConfig[activeTab].type}
+                                    />
+                                </div>
                             ))}
                         </div>
                     </div>
-                )}
-                {activeTab === "State/UTs" && (
-                    <div className="animate-fade-in flex flex-col items-center">
-                        <h1 className="text-xl md:text-2xl font-bold p-4">Find schemes based on States/UTs</h1>
-                        <div className="flex flex-wrap gap-5 justify-center p-2">
-                            {stateData.map((scheme, index) => (
-                                <SchemeCard
-                                    key={index}
-                                    icon={scheme.icon}
-                                    type='state'
-                                    count={scheme.count}
-                                    label={scheme.label}
-                                />
-                            ))}
-                        </div>
+                ) : (
+                    <div className="w-full flex justify-center items-center p-8">
+                        <p className="text-gray-500">Loading scheme data...</p>
                     </div>
                 )}
-                {activeTab === "Central Ministeries" && (
-                    <div className="animate-fade-in flex flex-col items-center">
-                        <h1 className="text-xl md:text-2xl font-bold p-4">Find schemes based on Central Ministeries</h1>
-                        <div className="flex flex-wrap gap-4 justify-center p-2">
-                            {ministryData.map((scheme, index) => (
-                                <SchemeCard
-                                    key={index}
-                                    icon={scheme.icon}
-                                    count={scheme.count}
-                                    label={scheme.label}
-                                    type='ministry'
-                                />
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </>}
             </ContentFeed>
         </div>
-    )
+    );
 }
 
 export default Page

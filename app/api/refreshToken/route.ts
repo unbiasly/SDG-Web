@@ -64,8 +64,8 @@ export async function POST() {
             value: tokenData.jwtToken,
             httpOnly: true,
             secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 60 * 60, // 10 minutes in seconds
+            sameSite: 'lax',
+            maxAge: 4 * 60 * 60, // 1 hoour in seconds
             path: '/'
         });
         
@@ -74,7 +74,7 @@ export async function POST() {
             value: tokenData.refreshToken,
             httpOnly: true,
             secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'lax',
             maxAge: 4 * 60 * 60, // 1 hour in seconds
             path: '/'
         });

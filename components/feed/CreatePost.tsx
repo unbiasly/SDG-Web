@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { useUser } from '@/lib/redux/features/user/hooks';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 const CreatePost = () => {
   // State variables
@@ -31,10 +32,10 @@ const CreatePost = () => {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [content, setContent] = useState('');
   const [visibility, setVisibility] = useState('Public');
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
-//   const videoInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const queryClient = useQueryClient();
@@ -72,7 +73,6 @@ const CreatePost = () => {
     },
     onError: (error: Error) => {
       console.error('Error creating post:', error);
-    //   toast.error('Failed to create post. Please try again.');
     }
   });
 
@@ -128,8 +128,89 @@ const CreatePost = () => {
     }
   };
 
+  const postContent = (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <ProfileAvatar src={user?.profileImage || ''} alt={`@${user?.username}`} size='sm' />
+        
+        <div className="flex flex-col">
+          <span className="font-semibold text-xl">{user?.name || `@${user?.username}`}</span>
+        </div>
+      </div>
+      
+      <div>
+        <textarea
+          ref={textareaRef}
+          value={content}
+          onChange={handleInputChange}
+          placeholder={`What's on your mind, ${user?.name || `@${user?.username}`}?`}
+          className="w-full min-h-[190px] text-lg resize-none hide-scrollbar outline-none border-0 focus:ring-0"
+          data-gramm="false"
+        />
+      </div>
+      
+      {/* Preview images */}
+      {previewUrls.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {previewUrls.map((url, index) => (
+            <div key={index} className="relative">
+              <img 
+                src={url} 
+                alt={`Preview ${index}`} 
+                className="h-20 w-20 object-cover rounded" 
+              />
+              <button
+                aria-label='remove'
+                className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                onClick={() => removeFile(index)}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const actionButtons = (
+    <div className="w-full justify-between items-center flex space-x-1">
+      {/* More Options Div */}
+      <div className="flex items-center justify-between rounded-lg border border-gray-400 px-2 p-1 dark:border-gray-800">
+        <div className="flex items-center gap-1">
+          <span className="text-sm font-medium text-gray-500">Add to your post</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <button 
+            className="p-2 cursor-pointer rounded-full hover:bg-gray-100" 
+            title="Add Photo" 
+            onClick={handlePhotoClick}
+          >
+            <ImageIcon className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+      
+      <button
+        className={cn(
+          'px-8 py-3 rounded-full bg-gray-300 font-bold text-black hover:bg-gray-400',
+          content.trim() 
+            ? 'cursor-pointer ' 
+            : 'cursor-not-allowed',
+          createPostMutation.isPending && 'opacity-75 cursor-not-allowed'
+        )}
+        onClick={handlePost}
+        disabled={!content.trim() || createPostMutation.isPending}
+      >
+        {createPostMutation.isPending ? 'Posting...' : 'Post'}
+      </button>
+    </div>
+  );
+
   return (
     <div className="bg-white p-4 border-b border-gray-300 mb-4">
+      {/* Responsive Dialog for all screen sizes */}
       <Dialog open={open} onOpenChange={setOpen}>
         <div className='flex w-full items-center gap-2'>
           <ProfileAvatar 
@@ -144,135 +225,17 @@ const CreatePost = () => {
           </DialogTrigger>
         </div>
         
-        <DialogContent className='w-full'>
+        <DialogContent className='w-full max-w-[95vw] md:max-w-[500px] h-auto'>
           <DialogHeader className="">
             <div className="flex justify-between">
-              <DialogTitle className="text-2xl font-bold">Create a post</DialogTitle>
+              <DialogTitle className="text-xl md:text-2xl font-bold">Create a post</DialogTitle>
             </div>
           </DialogHeader>
           
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <ProfileAvatar src={user?.profileImage || ''} alt={`@${user?.username}`} size='sm' />
-              
-              <div className="flex flex-col">
-                <span className="font-semibold text-xl">{user?.name || `@${user?.username}`}</span>
-                {/* <button
-                  className="flex w-fit cursor-pointer items-center gap-1 border-gray-500 border text-sm text-gray-600 hover:bg-gray-100 rounded-full px-4 py-1"
-                  onClick={() => {
-                    const nextVisibility = visibility === 'Public' ? 'Private' : 'Public';
-                    setVisibility(nextVisibility);
-                    // toast.info(`Visibility changed to ${nextVisibility}`);
-                  }}
-                >
-                  <Globe className="h-4 w-4" />
-                  <span>{visibility}</span>
-                  <ChevronDown className="h-4 w-4" />
-                </button> */}
-              </div>
-            </div>
-            
-            <div>
-              <textarea
-                ref={textareaRef}
-                value={content}
-                onChange={handleInputChange}
-                placeholder={`What's on your mind, ${user?.name || `@${user?.username}`}?`}
-                className="w-full min-h-[190px] text-lg resize-none hide-scrollbar outline-none border-0 focus:ring-0"
-                data-gramm="false"
-              />
-            </div>
-            
-            {/* Preview images */}
-            {previewUrls.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {previewUrls.map((url, index) => (
-                  <div key={index} className="relative">
-                    <img 
-                      src={url} 
-                      alt={`Preview ${index}`} 
-                      className="h-20 w-20 object-cover rounded" 
-                    />
-                    <button
-                      aria-label='remove'
-                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                      onClick={() => removeFile(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          <div className="w-full justify-between items-center flex space-x-1">
-            {/* More Options Div */}
-            <div className="flex items-center justify-between rounded-lg border border-gray-400 px-2 p-1 dark:border-gray-800">
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-medium text-gray-500">Add to your post</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                {[
-                  { title: "Add Photo", icon: <ImageIcon className="h-5 w-5" />, onClick: handlePhotoClick }
-                ].map((button, index) => (
-                  <button 
-                    key={index}
-                    className="p-2 cursor-pointer rounded-full hover:bg-gray-100" 
-                    title={button.title} 
-                    onClick={button.onClick}
-                  >
-                    {button.icon}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <button
-              className={cn(
-                'px-8 py-3 rounded-full bg-gray-300 font-bold text-black hover:bg-gray-400',
-                content.trim() 
-                  ? 'cursor-pointer ' 
-                  : 'cursor-not-allowed',
-                createPostMutation.isPending && 'opacity-75 cursor-not-allowed'
-              )}
-              onClick={handlePost}
-              disabled={!content.trim() || createPostMutation.isPending}
-            >
-              {createPostMutation.isPending ? 'Posting...' : 'Post'}
-            </button>
-          </div>
+          {postContent}
+          {actionButtons}
         </DialogContent>
       </Dialog>
-      
-      {/* <div className="flex justify-evenly text-xl mt-2 space-x-4">
-        <button 
-          className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-2xl transition"
-          onClick={handlePhotoClick}
-        >
-          <ImageIcon size={20} className="mr-2" />
-          <span>Photo</span>
-        </button>
-        
-        <button 
-          className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-2xl transition"
-          onClick={handleVideoClick}
-        >
-          <Video size={20} className="mr-2" />
-          <span>Video</span>
-        </button>
-        
-        <button className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-2xl transition">
-          <SmilePlus size={20} className="mr-2" />
-          <span>GIF</span>
-        </button>
-        
-        <button className="flex items-center text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-2xl transition">
-          <Calendar size={20} className="mr-2" />
-          <span>Event</span>
-        </button>
-      </div> */}
       
       {/* Hidden file inputs */}
       <input 
@@ -284,16 +247,6 @@ const CreatePost = () => {
         multiple 
         onChange={handleFileChange} 
       />
-      {/* <input 
-        aria-label='video-input'
-        type="file" 
-        ref={videoInputRef} 
-        className="hidden" 
-        accept="video/*" 
-        onChange={handleFileChange}
-      /> */}
-      {/* Display selected images */}
-      
     </div>
   );
 };

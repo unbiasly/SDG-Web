@@ -4,8 +4,9 @@ import { cn } from '@/lib/utils';
 import SocialSignIn from './SocialSignIn';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { Eye, EyeOff, Lock } from 'lucide-react';
+import { Eye, EyeOff, Lock, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import Loader from '../Loader';
 
 interface SignInFormProps {
     className?: string;
@@ -15,6 +16,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
@@ -22,6 +24,8 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
 
     const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
+        
         try {
             const response = await fetch('/login/api', {
                 method: 'POST',
@@ -79,6 +83,17 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
             });
         } 
     };
+
+    if (isLoading) {
+        return (
+            <div className='flex items-center justify-center h-screen z-50 inset-0'>
+                {/* // <Loader /> */}
+                <div className="flex flex-col justify-center text-center space-y-4">
+                    <Loader2 className='animate-spin' color='black' size={62} />
+                </div>
+            </div>
+        );
+    }
 
   return (
     <div className={cn("w-full max-w-lg lg:max-w-md px-6 py-8", className)}>

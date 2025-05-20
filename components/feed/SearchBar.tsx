@@ -90,7 +90,7 @@ const SearchBar = ({
       />
       
       {isFocused && (
-        <div className="absolute top-full left-0 w-full mt-1 bg-white rounded-lg shadow-lg z-10 border border-gray-200 max-h-60 overflow-y-auto">
+        <div className="absolute top-full left-0 w-full mt-1 bg-white rounded-lg shadow-lg z-50 border border-gray-200 max-h-60 overflow-y-auto">
           <div className="p-2">
             <h4 className="text-xs font-medium text-gray-500 mb-2">Recent Searches</h4>
             {isLoading ? (

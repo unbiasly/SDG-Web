@@ -1,9 +1,8 @@
 "use client"
 import { ContentFeed } from '@/components/feed/ContentFeed'
 import CreatePost from '@/components/feed/CreatePost';
-// import { PostCard } from '@/components/feed/PostCard';
-// import SDGNews from '@/components/feed/SDGNews';
-import { FEED_TABS } from '@/lib/constants/index-constants'
+import SDGNews from '@/components/feed/SDGNews';
+import { FEED_TABS, MOBILE_FEED_TABS } from '@/lib/constants/index-constants'
 import { formatDate } from '@/lib/utilities/formatDate';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useRef } from 'react'
@@ -11,11 +10,20 @@ import { useInView } from 'react-intersection-observer';
 import Loading from '@/components/Loader';
 import { PostsFetchResponse } from '@/service/api.interface';
 import { PostWithImpressionTracking } from '@/components/feed/PostWithImpressionTracking';
+import { useMediaQuery } from '@/hooks/use-media-query'; // Import the useMediaQuery hook
+
 
 
 export default function Home() {
-  const [activeTab, setActiveTab] = React.useState("For You");
+const isMobile = useMediaQuery("(max-width: 1024px)");
+const getFeedTabs = (isMobile: boolean) => {
+    return isMobile ? MOBILE_FEED_TABS : FEED_TABS;
+};
+
+  const feedTabs = getFeedTabs(isMobile);
+  const [activeTab, setActiveTab] = React.useState(feedTabs[0]);
   const { ref, inView } = useInView();
+  
   async function fetchPosts(cursor?: string): Promise<PostsFetchResponse> {
     const url = cursor 
       ? `/api/post?cursor=${cursor}` 
@@ -90,8 +98,8 @@ export default function Home() {
 
   return (
     <div className="flex flex-1 overflow-hidden">
-        <ContentFeed activeTab={activeTab} setActiveTab={setActiveTab} tabs={FEED_TABS}>
-            {FEED_TABS && (
+        <ContentFeed activeTab={activeTab} setActiveTab={setActiveTab} tabs={feedTabs}>
+            {feedTabs && (
             <>
                 {activeTab === "For You" && (
                 <>
@@ -128,11 +136,10 @@ export default function Home() {
                     </div>
                 </>
                 )}
-                {/* {activeTab === "The SDG News" && <SDGNews />} */}
+                {activeTab === "The SDG News" && <SDGNews />}
             </>
             )}
         </ContentFeed>
-
     </div>
   )
 }

@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CalendarIcon, Loader2 } from "lucide-react";
@@ -26,6 +35,9 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
   onSuccess,
   experience,
 }) => {
+  // Check for mobile screen
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  
   // Initialize experience data with provided experience or new default
   const [experienceData, setExperienceData] = useState<Experience>({
     _id: "",
@@ -268,6 +280,203 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
     }
   };
 
+  // Form content component to be shared between Dialog and Drawer
+  const FormContent = () => (
+    <>
+      <div className="py-4 space-y-6">
+        {/* Company */}
+        <div className="space-y-2">
+          <label htmlFor="company" className="text-sm font-medium">
+            Company<span className="text-red-500">*</span>
+          </label>
+          <Input
+            id="company"
+            name="company"
+            placeholder="Ex: Unbiasly"
+            value={experienceData.company}
+            onChange={handleInputChange}
+            required
+            onKeyDown={handleKeyDown}
+            className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+          />
+        </div>
+
+        {/* Role */}
+        <div className="space-y-2">
+          <label htmlFor="role" className="text-sm font-medium">
+            Role<span className="text-red-500">*</span>
+          </label>
+          <Input
+            id="role"
+            name="role"
+            placeholder="Ex: Software Engineer"
+            value={experienceData.role}
+            onChange={handleInputChange}
+            required
+            onKeyDown={handleKeyDown}
+            className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+          />
+        </div>
+
+        {/* Start Date */}
+        <div className="space-y-2">
+          <label htmlFor="startDate" className="text-sm font-medium">
+            Start Date<span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
+                !experienceData.startDate && "text-muted-foreground dark:text-gray-400"
+              )}
+              onClick={() => setStartDateCalendarOpen(!startDateCalendarOpen)}
+            >
+              {experienceData.startDate ? (
+                format(new Date(experienceData.startDate), "PPP")
+              ) : (
+                <span>Start Date</span>
+              )}
+              <CalendarIcon className="ml-auto h-4 w-4" />
+            </Button>
+            {startDateCalendarOpen && (
+              <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
+                <Calendar
+                  mode="single"
+                  selected={experienceData.startDate ? new Date(experienceData.startDate) : undefined}
+                  onSelect={(date) => handleDateChange("startDate", date)}
+                  initialFocus
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Currently working checkbox */}
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="currentlyWorking" 
+            checked={currentlyWorking} 
+            onCheckedChange={handleCurrentlyWorkingChange} 
+          />
+          <label
+            htmlFor="currentlyWorking"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            I am currently working here
+          </label>
+        </div>
+
+        {/* End Date - conditionally shown when not currently working */}
+        {!currentlyWorking && (
+          <div className="space-y-2">
+            <label htmlFor="endDate" className="text-sm font-medium">
+              End Date<span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Button
+                type="button"
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
+                  !experienceData.endDate && "text-muted-foreground dark:text-gray-400"
+                )}
+                onClick={() => setEndDateCalendarOpen(!endDateCalendarOpen)}
+              >
+                {experienceData.endDate ? (
+                  format(new Date(experienceData.endDate), "PPP")
+                ) : (
+                  <span>End Date</span>
+                )}
+                <CalendarIcon className="ml-auto h-4 w-4" />
+              </Button>
+              {endDateCalendarOpen && (
+                <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
+                  <Calendar
+                    mode="single"
+                    selected={experienceData.endDate ? new Date(experienceData.endDate) : undefined}
+                    onSelect={(date) => handleDateChange("endDate", date)}
+                    initialFocus
+                  />
+                </div>
+              )}
+            </div>
+            {dateError && (
+              <p className="text-red-500 text-sm mt-1">{dateError}</p>
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  // Footer content component to be shared between Dialog and Drawer
+  const FooterContent = () => (
+    <>
+      {(experience?._id) && (
+        <Button 
+          type="button"
+          onClick={handleDelete}
+          variant="outline"
+          className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900 dark:hover:text-red-300 w-full sm:w-auto"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Delete
+        </Button>
+      )}
+      <div className={cn("flex gap-2 w-full sm:w-auto", (experience?._id) ? "" : "ml-auto")}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+          disabled={isSubmitting}
+          className="w-1/2 sm:w-auto dark:border-gray-600 dark:hover:bg-gray-700"
+        >
+          Cancel
+        </Button>
+        <Button 
+          type="button"
+          onClick={handleSave} 
+          className="bg-accent  hover:bg-accent/80 text-white px-6 sm:px-8 w-1/2 sm:w-auto"
+          disabled={
+            isSubmitting || 
+            !experienceData.company || 
+            !experienceData.role || 
+            !experienceData.startDate || 
+            (!currentlyWorking && !experienceData.endDate) ||
+            !!dateError
+          }
+        >
+          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Save"}
+        </Button>
+      </div>
+    </>
+  );
+
+  // Conditionally render Dialog or Drawer based on screen size
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className="max-h-[85vh]">
+          <DrawerHeader className="border-b pb-4 dark:border-gray-700">
+            <DrawerTitle className="text-xl font-bold">
+              {experience?._id ? "Edit Experience" : "Add Experience"}
+            </DrawerTitle>
+            <p className="text-sm text-muted-foreground mt-1 dark:text-gray-400">* Indicates required</p>
+          </DrawerHeader>
+          <div className="p-4 overflow-y-auto flex-1">
+            <FormContent />
+          </div>
+          <DrawerFooter className="border-t pt-4 flex flex-col gap-2 dark:border-gray-700">
+            <FooterContent />
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!isSubmitting) onOpenChange(val); }}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 text-black dark:text-white">
@@ -277,172 +486,9 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1 dark:text-gray-400">* Indicates required</p>
         </DialogHeader>
-
-        <div className="py-4 space-y-6">
-          {/* Company */}
-          <div className="space-y-2">
-            <label htmlFor="company" className="text-sm font-medium">
-              Company<span className="text-red-500">*</span>
-            </label>
-            <Input
-              id="company"
-              name="company"
-              placeholder="Ex: Unbiasly"
-              value={experienceData.company}
-              onChange={handleInputChange}
-              required
-              onKeyDown={handleKeyDown}
-              className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-            />
-          </div>
-
-          {/* Role */}
-          <div className="space-y-2">
-            <label htmlFor="role" className="text-sm font-medium">
-              Role<span className="text-red-500">*</span>
-            </label>
-            <Input
-              id="role"
-              name="role"
-              placeholder="Ex: Software Engineer"
-              value={experienceData.role}
-              onChange={handleInputChange}
-              required
-              onKeyDown={handleKeyDown}
-              className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-            />
-          </div>
-
-          {/* Start Date */}
-          <div className="space-y-2">
-            <label htmlFor="startDate" className="text-sm font-medium">
-              Start Date<span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <Button
-                type="button"
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
-                  !experienceData.startDate && "text-muted-foreground dark:text-gray-400"
-                )}
-                onClick={() => setStartDateCalendarOpen(!startDateCalendarOpen)}
-              >
-                {experienceData.startDate ? (
-                  format(new Date(experienceData.startDate), "PPP")
-                ) : (
-                  <span>Start Date</span>
-                )}
-                <CalendarIcon className="ml-auto h-4 w-4" />
-              </Button>
-              {startDateCalendarOpen && (
-                <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
-                  <Calendar
-                    mode="single"
-                    selected={experienceData.startDate ? new Date(experienceData.startDate) : undefined}
-                    onSelect={(date) => handleDateChange("startDate", date)}
-                    initialFocus
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Currently working checkbox */}
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="currentlyWorking" 
-              checked={currentlyWorking} 
-              onCheckedChange={handleCurrentlyWorkingChange} 
-            />
-            <label
-              htmlFor="currentlyWorking"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              I am currently working here
-            </label>
-          </div>
-
-          {/* End Date - conditionally shown when not currently working */}
-          {!currentlyWorking && (
-            <div className="space-y-2">
-              <label htmlFor="endDate" className="text-sm font-medium">
-                End Date<span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
-                    !experienceData.endDate && "text-muted-foreground dark:text-gray-400"
-                  )}
-                  onClick={() => setEndDateCalendarOpen(!endDateCalendarOpen)}
-                >
-                  {experienceData.endDate ? (
-                    format(new Date(experienceData.endDate), "PPP")
-                  ) : (
-                    <span>End Date</span>
-                  )}
-                  <CalendarIcon className="ml-auto h-4 w-4" />
-                </Button>
-                {endDateCalendarOpen && (
-                  <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
-                    <Calendar
-                      mode="single"
-                      selected={experienceData.endDate ? new Date(experienceData.endDate) : undefined}
-                      onSelect={(date) => handleDateChange("endDate", date)}
-                      initialFocus
-                    />
-                  </div>
-                )}
-              </div>
-              {dateError && (
-                <p className="text-red-500 text-sm mt-1">{dateError}</p>
-              )}
-            </div>
-          )}
-        </div>
-
+        <FormContent />
         <DialogFooter className="border-t pt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-2 dark:border-gray-700">
-          {(experience?._id) && (
-            <Button 
-              type="button"
-              onClick={handleDelete}
-              variant="outline"
-              className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900 dark:hover:text-red-300 w-full sm:w-auto"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Delete
-            </Button>
-          )}
-          <div className={cn("flex gap-2 w-full sm:w-auto", (experience?._id) ? "" : "ml-auto")}>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-              className="w-full sm:w-auto dark:border-gray-600 dark:hover:bg-gray-700"
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="button"
-              onClick={handleSave} 
-              className="bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 w-full sm:w-auto"
-              disabled={
-                isSubmitting || 
-                !experienceData.company || 
-                !experienceData.role || 
-                !experienceData.startDate || 
-                (!currentlyWorking && !experienceData.endDate) ||
-                !!dateError
-              }
-            >
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Save"}
-            </Button>
-          </div>
+          <FooterContent />
         </DialogFooter>
       </DialogContent>
     </Dialog>

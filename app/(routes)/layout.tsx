@@ -11,6 +11,7 @@ import { getRandomColor } from "@/lib/utilities/generateColor";
 import SearchBar from "@/components/feed/SearchBar";
 import { setupAPIInterceptor } from "@/lib/utilities/interceptor";
 import { useTokenRefresh } from "@/lib/hooks/useTokenRefresh";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function RootLayout({
   children,
@@ -50,8 +51,8 @@ export default function RootLayout({
       };
     
   return (
-      <main className="flex-1 flex overflow-hidden md:p-3 md:gap-3 lg:gap-6 max-container">
-        <aside className="space-y-3 sticky h-fit">
+      <main className="flex-1  flex overflow-hidden md:p-3 md:gap-3  max-container">
+        <aside className="space-y-3 sticky top-0 h-screen  self-start overflow-y-auto hidden-scrollbar">
             <Link href='/' className="justify-center items-center gap-2 px-2 hidden lg:flex">    
                 <Image src='/Logo.svg' alt='SDG Logo' width={40} height={40}  />
                 <h1 className='text-xl font-bold'>The SDG Story</h1>
@@ -65,12 +66,12 @@ export default function RootLayout({
                 <UserSidebar />
                 <SearchBar className="w-fit"/>
             </div>
-            <div className="pb-4">
+            <div className="pb-4 max-h-[calc(100vh-4rem)] md:max-h-[calc(100vh-2rem)] overflow-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {children}
             </div>
         </div>
         
-        <aside className="hidden xl:block sticky space-y-3">
+        <aside className="hidden xl:block sticky top-0 h-screen  overflow-y-auto hidden-scrollbar space-y-2 self-start">
             <SearchBar />
             <TrendingSection />
         </aside>

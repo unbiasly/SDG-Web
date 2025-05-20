@@ -213,15 +213,15 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
 
     // Render consistent UI only after data is loaded
     return (
-        <div className="flex-col m-auto px-4 py-6 flex gap-4">
-            <div className="sticky top-0 bg-white z-10 flex items-center p-3 border-b border-gray-200">
-                <Link href="/videos" aria-label='back-button' className="mr-4">
-                    <ArrowLeft size={20} />
+        <div className="flex-col w-full max-w-3xl m-auto px-2 sm:px-4 py-3 sm:py-6 md:px-0 flex gap-2 sm:gap-4">
+            <div className="sticky top-0 bg-white z-10 flex items-center p-2 sm:p-3 border-b border-gray-200">
+                <Link href="/videos" aria-label='back-button' className="mr-2 sm:mr-4 p-1 sm:p-0">
+                    <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
                 </Link>
-                <h1 className="text-lg font-semibold flex-1">Video</h1>
+                <h1 className="text-base sm:text-lg font-semibold flex-1">Video</h1>
             </div>
             {/* Video Player */}
-            <div className="aspect-video w-full bg-blue-500 rounded-lg overflow-hidden mb-4">
+            <div className="aspect-video w-full bg-black rounded-lg overflow-hidden mb-2 sm:mb-4">
                 {isPlaying ? (
                 <div className="relative w-full h-full aspect-video overflow-hidden">
                     <YouTube
@@ -235,7 +235,7 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                         className="absolute cursor-pointer top-2 right-2 bg-black/60 rounded-full p-1 text-white hover:bg-black/80 z-10"
                         aria-label="Close video"
                     >
-                    <X className="h-5 w-5" color="white"/>
+                    <X className="h-4 w-4 sm:h-5 sm:w-5" color="white"/>
                     </button>
                 </div>
                 ) : (
@@ -246,20 +246,20 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                     <img 
                     src={data?.thumbnail_url} 
                     alt={data?.title}
-                    className="w-full "
+                    className="w-full"
                     />
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/20">
-                        <PlayCircle className="h-12 w-12 text-white" />
+                        <PlayCircle className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
                     </div>
                 </div>
                 )}
             </div>
             {/* Main Content */}
-            <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2 sm:gap-4">
+                <div className="flex flex-col gap-3 sm:gap-5">
                     {/* Video Info */}
                     <div className="flex flex-col justify-between">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-start sm:items-center gap-2 sm:gap-4">
                             <Image
                                 src={'/placeholder.png'}
                                 alt={data?.title || ""}
@@ -267,9 +267,9 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                                 height={0}
                                 sizes='100vw'
                                 objectFit='cover'
-                                className="rounded-full w-20 h-20"
+                                className="rounded-full w-14 h-14 sm:w-20 sm:h-20"
                             />
-                            <div className="flex flex-col h-full w-2">
+                            <div className="flex flex-col h-14 sm:h-20 w-1 sm:w-2">
                                 <div className="flex-1 bg-[#E5243B]"/>
                                 <div className="flex-1 bg-[#DDA63A]"/>
                                 <div className="flex-1 bg-[#4C9F38]"/>
@@ -288,32 +288,32 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                                 <div className="flex-1 bg-[#00689D]"/>
                                 <div className="flex-1 bg-[#19486A]"/>
                             </div>
-                            <h2 className="text-2xl font-semibold">{data?.title || "Video Title"}</h2>
+                            <h2 className="text-lg sm:text-2xl font-semibold">{data?.title || "Video Title"}</h2>
                         </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                            <span className="text-md text-gray-600">{data?.views} views</span>
-                            <span className="text-md text-gray-600">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+                        <div className="flex items-center gap-2 sm:gap-4">
+                            <span className="text-sm sm:text-md text-gray-600">{data?.views} views</span>
+                            <span className="text-sm sm:text-md text-gray-600">
                                 {data?.published_date 
                                     ? `${Math.floor((Date.now() - new Date(data.published_date).getTime()) / (1000 * 60 * 60 * 24))} days ago`
                                     : ""}
                             </span>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-between sm:justify-start gap-1 sm:gap-4">
                             {[
                                 { 
-                                    icon: <ThumbsUp className={cn("w-5 h-5", isLiked ? "fill-current text-blue-500" : "text-gray-400")} />,
+                                    icon: <ThumbsUp className={cn("w-4 h-4 sm:w-5 sm:h-5", isLiked ? "fill-current text-blue-500" : "text-gray-400")} />,
                                     text: likesCount.toString(),
                                     onClick: handleLikeToggle 
                                 },
                                 { 
-                                    icon: <Bookmark className={cn("w-5 h-5", isBookmarked ? "fill-current text-blue-500" : "fill-none")} />,
+                                    icon: <Bookmark className={cn("w-4 h-4 sm:w-5 sm:h-5", isBookmarked ? "fill-current text-blue-500" : "fill-none")} />,
                                     text: isBookmarked ? "Saved" : "Save",
                                     onClick: handleBookmarkToggle 
                                 },
                                 { 
-                                    icon: <Share2 className="w-5 h-5" />,
+                                    icon: <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />,
                                     text: "Share",
                                     onClick: handleShareClick 
                                 }
@@ -329,7 +329,7 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
 
                 {/* Description */}
                 <div className="p-2 border rounded-lg border-gray-400">
-                    <p className="text-lg text-gray-700 mb-8">
+                    <p className="text-base sm:text-lg text-gray-700 mb-8">
                         {data?.description || "No description available"}
                     </p>
                 </div>

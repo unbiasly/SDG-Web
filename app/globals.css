@@ -364,3 +364,13 @@ body {
   .animate-fade-in {
     animation: fade-in 0.5s ease-in-out;
   }
+
+  /* Add this to your existing global CSS file */
+.hidden-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hidden-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}

@@ -2,8 +2,19 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Define paths that don't require authentication
-const publicPaths = ['/login', '/sign-up', '/forgot-password', '/reset-password', '/terms-of-service', '/privacy-policy', '/email-verified'];
+const publicPaths = [
+  '/login', 
+  '/sign-up', 
+  '/forgot-password', 
+  '/reset-password', 
+  '/terms-of-service', 
+  '/privacy-policy', 
+  '/email-verified',
+  '/post/*',  // Allow access to post listing
+  '/video/*'       // Alternative path for posts
+];
 
+// Paths that should redirect to home if already logged in
 const authPaths = ['/login', '/sign-up', '/reset-password' ]
 
 export function middleware(request: NextRequest) {
@@ -31,7 +42,11 @@ export function middleware(request: NextRequest) {
   }
   
   // If no token and trying to access protected route, redirect to login
-  if (!sessionId && !publicPaths.some(path => pathname.startsWith(path))) {
+  // Check for public paths OR post-specific paths (which start with /app/posts/ or /posts/ and likely contain an ID)
+  if (!sessionId && 
+      !publicPaths.some(path => pathname.startsWith(path)) &&
+      !pathname.match(/^\/app\/posts\/[^\/]+$/) &&   // Pattern for /app/posts/{id}
+      !pathname.match(/^\/posts\/[^\/]+$/)) {        // Pattern for /posts/{id}
     const loginUrl = new URL('/login', request.url);
     return NextResponse.redirect(loginUrl);
   }

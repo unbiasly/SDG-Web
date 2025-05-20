@@ -214,6 +214,35 @@ export function SocialPostDialog({
     setDeletePostOpen(true);
   }
 
+  const handleDeleteConfirmed = async () => {
+    try {
+      const response = await fetch(`/api/post/${_id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete post');
+      }
+
+      toast.success("Post deleted successfully");
+      
+      // Close the dialog and refresh posts
+      setDeletePostOpen(false);
+      onOpenChange(false);
+      
+      // Update posts if callback is provided
+      if (onPostUpdate) {
+        onPostUpdate();
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast.error("Failed to delete post. Please try again.");
+    }
+  };
+
   // Handle report submission completion
   const handleReportSubmitted = () => {
     // Refresh posts data after successful report
@@ -308,12 +337,12 @@ export function SocialPostDialog({
   ];
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="min-w-6xl rounded-lg h-[80vh] flex p-0">
+      <DialogContent className="lg:min-w-6xl rounded-lg h-[80vh] flex flex-col lg:flex-row p-0">
         <DialogTitle className="sr-only">Social Media Post</DialogTitle>
         <DialogDescription className="sr-only">{content}</DialogDescription>
         
-        {/* Left side - Image Carousel */}
-        <div className="h-full w-2/3 rounded-lg border-r-2 bg-[#1E1E1E] overflow-hidden">
+        {/* Left side - Image Carousel - Fixed height to prevent shrinking */}
+        <div className="h-[40vh] lg:h-full w-full lg:w-2/3 rounded-lg border-r-2 bg-[#1E1E1E] overflow-hidden flex-shrink-0">
           {imageUrl && imageUrl.length > 0 && (
             <ImageCarousel 
               images={Array.isArray(imageUrl) ? imageUrl : [imageUrl]} 
@@ -322,68 +351,67 @@ export function SocialPostDialog({
           )}
         </div>
         
-        {/* Right side - Content */}
-        <div className="flex flex-col h-full w-1/3">
-        
-        {/* Header with profile info */}
-        <div className="flex px-4 my-8 justify-between ">
-            <div className="flex items-center">
-                <ProfileAvatar src={avatar} alt={name} size='sm' className='' />
-                <div className="ml-2">
-                <div className="flex items-center">
-                    <h4 className="font-semibold text-sm">{name}</h4>
-                    {/* <span className="text-xs text-gray-500 ml-1.5">• Following</span> */}
-                </div>
-                <div className="flex  justify-center text-xs text-gray-500">
-                    <span>{handle}</span>
-                    <span className="mx-1.5">•</span>
-                    <span>{time}</span>
-                </div>
-                </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <button 
-                  onClick={toggleMenu}
-                  className="p-2 rounded-full cursor-pointer hover:bg-gray-100 transition-colors"
-                  aria-label="More options"
-                >
-                  <MoreVertical className="h-5 w-5 text-gray-500" />
-                </button>
-
-                {isMenuOpen && (
-                  <div 
-                    className="absolute right-0 mt-2 w-64 rounded-lg bg-white shadow-lg z-50 border border-gray-100 overflow-hidden"
-                    onClick={closeMenu}
-                  >
-                    <div className="py-1">
-                      {menuOptions.map((item, index) => (
-                        <button 
-                          key={index}
-                          className="w-full cursor-pointer text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-100 transition-colors"
-                          onClick={item.onClick}
-                        >
-                          {item.icon}
-                          <span className="text-gray-700">{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
+        {/* Right side - Content with fixed layout */}
+        <div className="flex flex-col h-full w-full lg:w-1/3 overflow-hidden">
+          {/* Header with profile info - Fixed height, non-scrollable */}
+          <div className="flex px-4 my-2 lg:my-4 justify-between flex-shrink-0">
+              <div className="flex items-center">
+                  <ProfileAvatar src={avatar} alt={name} size='sm' className='' />
+                  <div className="ml-2">
+                  <div className="flex items-center">
+                      <h4 className="font-semibold text-sm">{name}</h4>
+                      {/* <span className="text-xs text-gray-500 ml-1.5">• Following</span> */}
                   </div>
-                )}
+                  <div className="flex  justify-center text-xs text-gray-500">
+                      <span>{handle}</span>
+                      <span className="mx-1.5">•</span>
+                      <span>{time}</span>
+                  </div>
+                  </div>
               </div>
-            </div>
-      </div>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <button 
+                    onClick={toggleMenu}
+                    className="p-2 rounded-full cursor-pointer hover:bg-gray-100 transition-colors"
+                    aria-label="More options"
+                  >
+                    <MoreVertical className="h-5 w-5 text-gray-500" />
+                  </button>
+
+                  {isMenuOpen && (
+                    <div 
+                      className="absolute right-0 mt-2 w-64 rounded-lg bg-white shadow-lg z-50 border border-gray-100 overflow-hidden"
+                      onClick={closeMenu}
+                    >
+                      <div className="py-1">
+                        {menuOptions.map((item, index) => (
+                          <button 
+                            key={index}
+                            className="w-full cursor-pointer text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-100 transition-colors"
+                            onClick={item.onClick}
+                          >
+                            {item.icon}
+                            <span className="text-gray-700">{item.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+        </div>
         
         
         {/* Content area with scrolling */}
-        <div className="overflow-y-auto flex-1">
-            <div className="px-4">
-            <h2 className=" text-lg font-medium mb-3">
+        <div className="overflow-y-auto flex-1 flex flex-col max-h-[calc(100vh-15rem)] lg:max-h-none">
+            <div className="px-4 flex-shrink-0">
+            <h2 className="text-lg font-medium mb-3">
                 {content}
             </h2>
             
             {/* Engagement stats */}
-            <div className="flex justify-between text-sm text-gray-500  mb-3">
+            <div className="flex justify-between text-sm text-gray-500 mb-3">
                 <div className="flex items-center">
                 <div className="bg-blue-500 rounded-full w-5 h-5 flex items-center justify-center mr-1">
                     <ThumbsUp size={12} color="white" />
@@ -444,7 +472,7 @@ export function SocialPostDialog({
             
             
             {/* Comments section */}
-            <div className="space-y-4 pb-10">
+            <div className="flex-1 overflow-y-auto px-4 pb-2 border-t border-gray-100 pt-2">
                 <CommentSection 
                     post_id={_id}
                     isOpen={true} 
@@ -465,16 +493,19 @@ export function SocialPostDialog({
         />
         <EditPost 
           open={editPostOpen} 
-          onOpenChange={setEditPostOpen} // Replace setEditPostOpen with handleEditPostClose
+          onOpenChange={setEditPostOpen}
           postId={_id} 
           initialContent={content}
           images={Array.isArray(imageUrl) ? imageUrl : [imageUrl]}
+          onPostUpdate={onPostUpdate}
         />
-        <DeletePostModal 
+        {/* Replace DeletePostModal with ConfirmationDialog */}
+        <ConfirmationDialog 
           open={deletePostOpen}
           onOpenChange={setDeletePostOpen}
-          postId={_id}
-          onPostUpdate={onPostUpdate} // Pass the callback here
+          clickFunc={handleDeleteConfirmed}
+          subject="Delete"
+          object="post"
         />
         <ConfirmationDialog 
           open={repostConfirmOpen}

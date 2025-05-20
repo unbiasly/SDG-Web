@@ -67,6 +67,8 @@ export async function POST(req: NextRequest) {
             body: forwardFormData
         });
         
+
+        
         // Handle non-JSON responses
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.indexOf("application/json") !== -1) {
@@ -148,8 +150,15 @@ export async function PUT(req: NextRequest) {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
             },
-            body: (requestData)
+            body: requestData // Removed unnecessary parentheses
         });
+        
+        // Better error logging with await
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Server error response:", errorText);
+            throw new Error(`Failed to update post: ${response.status} ${response.statusText}`);
+        }
         
         // Handle non-JSON responses
         const contentType = response.headers.get("content-type");
@@ -175,20 +184,37 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-    const { postId } = await req.json();
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
     if (!jwtToken) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const { postId } = await req.json();
 
-    const response = await fetch(`${baseURL}/post/${postId}`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${jwtToken}`
+    try {
+        
+        
+        if (!postId) {
+            return NextResponse.json({ error: "Post ID is required" }, { status: 400 });
         }
-    })
-    console.log(response.json())
-    return NextResponse.json({ message: "Post deleted" });
+
+        const response = await fetch(`${baseURL}/post/${postId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${jwtToken}`
+            }
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Delete error response:", errorText);
+            return NextResponse.json({ error: `Failed to delete post: ${response.status}` }, { status: response.status });
+        }
+        
+        return NextResponse.json({ message: "Post deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting post:", error);
+        return NextResponse.json({ error: "Failed to delete post" });
+    }
 }

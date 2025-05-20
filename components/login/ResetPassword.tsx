@@ -95,17 +95,17 @@ const ResetPassword = ({ token, email }: {
 
   if (isSuccess) {
     return (
-      <div className="text-center  py-16">
-        <div className="flex flex-col items-center justify-center space-y-4">
-          <div className="rounded-full p-3 inline-flex">
-            <CheckCircle2 className="h-12 w-12 text-accent" />
+      <div className="text-center py-6 sm:py-16 w-full px-4 sm:px-0">
+        <div className="flex flex-col items-center justify-center space-y-3 sm:space-y-4">
+          <div className="rounded-full p-2 sm:p-3 inline-flex">
+            <CheckCircle2 className="h-8 w-8 sm:h-12 sm:w-12 text-accent" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800">Password Reset Successful</h2>
-          <p className="text-gray-600 max-w-sm mx-auto">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Password Reset Successful</h2>
+          <p className="text-sm sm:text-base text-gray-600 max-w-sm mx-auto">
             Your password has been updated successfully. You can now login with your new credentials.
           </p>
           <Button 
-            className="mt-4 bg-accent hover:bg-accent/80 text-white transition-all"
+            className="mt-2 sm:mt-4 bg-accent hover:bg-accent/80 text-white transition-all py-2 sm:py-6 h-auto text-sm sm:text-base px-4 sm:px-6"
             onClick={() => window.location.href = "/login"}
           >
             Go to Login
@@ -116,18 +116,18 @@ const ResetPassword = ({ token, email }: {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="min-w-xs lg:min-w-sm space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900">Reset Password</h1>
-        <p className="text-black ">Create your new password</p>
+    <form onSubmit={handleSubmit} className="w-full max-w-xs sm:max-w-sm space-y-4 sm:space-y-6 px-2 sm:px-0">
+      <div className="space-y-1 sm:space-y-2 text-center">
+        <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-gray-900">Reset Password</h1>
+        <p className="text-sm sm:text-base text-black">Create your new password</p>
       </div>
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <label htmlFor="password">New Password</label>
-          <div className="relative ">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="space-y-1 sm:space-y-2">
+          <label htmlFor="password" className="text-sm sm:text-base">New Password</label>
+          <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
+              <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             </div>
             <Input
               id="password"
@@ -135,7 +135,7 @@ const ResetPassword = ({ token, email }: {
               placeholder="Create a secure password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="px-10 py-6 rounded-lg border border-gray-500 bg-white"
+              className="px-10 py-4 sm:py-6 rounded-lg border border-gray-500 bg-white text-sm sm:text-base"
               required
             />
             <button
@@ -144,20 +144,20 @@ const ResetPassword = ({ token, email }: {
               onClick={togglePasswordVisibility}
             >
               {showPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400" />
+                <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
               ) : (
-                <Eye className="h-5 w-5 text-gray-400" />
+                <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
               )}
             </button>
           </div>
           <PasswordStrengthMeter password={password} />
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="confirm-password">Confirm Password</label>
+        <div className="space-y-1 sm:space-y-2">
+          <label htmlFor="confirm-password" className="text-sm sm:text-base">Confirm Password</label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
+              <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             </div>
             <Input
               id="confirm-password"
@@ -165,7 +165,7 @@ const ResetPassword = ({ token, email }: {
               placeholder="Confirm your new password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className={`px-10 py-6 rounded-lg border border-gray-500 bg-white ${
+              className={`px-10 py-4 sm:py-6 rounded-lg border border-gray-500 bg-white text-sm sm:text-base ${
                 confirmPassword && password !== confirmPassword
                   ? "border-red-500 focus:ring-red-500"
                   : ""
@@ -178,41 +178,32 @@ const ResetPassword = ({ token, email }: {
               onClick={toggleConfirmPasswordVisibility}
             >
               {showConfirmPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400" />
+                <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
               ) : (
-                <Eye className="h-5 w-5 text-gray-400" />
+                <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
               )}
             </button>
           </div>
           {confirmPassword && password !== confirmPassword && (
-            <p className="text-sm text-red-500">Passwords don't match</p>
+            <p className="text-xs sm:text-sm text-red-500">Passwords don't match</p>
           )}
         </div>
       </div>
 
       <Button
         type="submit"
-        className="w-full rounded-full bg-accent hover:bg-[#1A2530] text-white transition-all shadow-sm"
+        className="w-full rounded-full bg-accent hover:bg-[#1A2530] text-white transition-all shadow-sm py-2 sm:py-6 h-auto text-sm sm:text-base"
         disabled={isLoading}
       >
         {isLoading ? (
           <div className="flex items-center justify-center">
-            <div className="animate-spin h-5 w-5 mr-2 border-2 border-white border-t-transparent rounded-full"></div>
+            <div className="animate-spin h-4 w-4 sm:h-5 sm:w-5 mr-2 border-2 border-white border-t-transparent rounded-full"></div>
             Resetting Password...
           </div>
         ) : (
           "Reset Password"
         )}
       </Button>
-
-      {/* <div className="text-center">
-        <p className="text-sm text-gray-500">
-          Remember your password?{" "}
-          <Link href="/login" className="text-accent hover:text-[#2980B9] font-bold hover:underline">
-            Back to login
-          </Link>
-        </p>
-      </div> */}
     </form>
   );
 };

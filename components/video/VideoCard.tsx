@@ -9,7 +9,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
 import ReportPopover from "../post/ReportPopover";
-import ShareContent from "../post/ShareContent"; // Import ShareContent component
+import ShareContent from "../post/ShareContent";
+import { useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
 
 interface Goal {
     _id: string;
@@ -45,6 +46,7 @@ const VideoCard = ({ video, playingVideoId, setPlayingVideoId, onBookmarkToggle 
   const [isHovered, setIsHovered] = useState(false);
   const isBookmarked = video.isBookmarked;
   const [isActive, setIsActive] = useState(isBookmarked);
+  const queryClient = useQueryClient(); // Get the query client instance
   
   // Menu state
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -120,9 +122,16 @@ const VideoCard = ({ video, playingVideoId, setPlayingVideoId, onBookmarkToggle 
         if (isActive && onBookmarkToggle) {
           onBookmarkToggle();
         }
+        
+        // Invalidate relevant queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ['sdgVideos'] });
+        
+        // Show success toast
+        toast.success(isActive ? "Video removed from bookmarks" : "Video added to bookmarks");
       }
     } catch (error) {
       console.error("Error toggling bookmark:", error);
+      toast.error("Failed to update bookmarks");
     }
   };
   
@@ -139,7 +148,9 @@ const VideoCard = ({ video, playingVideoId, setPlayingVideoId, onBookmarkToggle 
   // Handle report submission completion
   const handleReportSubmitted = () => {
     toast.success("Thank you for your report");
-    // If you have a callback to refresh videos data, you could call it here
+    
+    // Invalidate queries to refresh data after report submission
+    queryClient.invalidateQueries({ queryKey: ['sdgVideos'] });
   };
 
   const formattedDate = video.published_date
