@@ -42,7 +42,7 @@ const SocialSignIn: React.FC<SocialSignInProps> = ({ className }) => {
         const idToken = await result.user.getIdToken();
         
         // Send the token to your backend
-        const response = await fetch('/login/api', {
+        const response = await fetch('/api/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

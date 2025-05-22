@@ -21,11 +21,11 @@ import ReportPopover from "../post/ReportPopover";
 import EditPost from "../post/EditPost";
 import { useUser } from "@/lib/redux/features/user/hooks";
 import { BentoImageGrid } from "../post/BentoGrid";
-import DeletePostModal from "../post/DeletePostModal";
 import Link from "next/link";
 import { toast } from "sonner";
 import ConfirmationDialog from "../ConfirmationDialog";
 import ShareContent from "../post/ShareContent";
+import { is } from "date-fns/locale";
 
 interface PostCardProps {
     _id: string;
@@ -52,7 +52,6 @@ export const PostCard: React.FC<PostCardProps> = ({
     name,
     handle,
     time,
-    //   isVerified,
     isReposted,
     content,
     imageUrl,
@@ -122,13 +121,16 @@ export const PostCard: React.FC<PostCardProps> = ({
         };
     }, [isMenuOpen]);
 
+    // Update this useEffect to properly sync with all prop changes 
     useEffect(() => {
         setIsActive(isLiked);
         setIsLocalLiked(isLiked);
         setLocalLikesCount(likesCount);
-        // setIsRepostActive(isReposted);
+        setIsBookmarkActive(isBookmarked);
         setLocalRepostsCount(repostsCount);
-    }, [isLiked, likesCount, isReposted, repostsCount]);
+        setLocalCommentsCount(commentsCount);
+        setIsFollowedActive(isFollowed);
+    }, [isLiked, likesCount, isReposted, repostsCount, isBookmarked, commentsCount, isFollowed]);
 
     const toggleComments = () => {
         setIsCommentsOpen(!isCommentsOpen);
@@ -249,6 +251,9 @@ export const PostCard: React.FC<PostCardProps> = ({
                 // Revert changes if API call fails
                 setIsBookmarkActive(!newBookmarkState);
                 throw new Error("Failed to bookmark post");
+            }
+            if (onPostUpdate) {
+                onPostUpdate();
             }
 
             // Get updated data from API response
@@ -480,17 +485,23 @@ export const PostCard: React.FC<PostCardProps> = ({
         }
     };
 
-    const handleImageClick = () => {
-        // Remove the condition that restricts mobile screens
-        setIsDialogOpen(true);
-        getComments();
-    };
-
-    // Handle successful comment addition
+    // Update comment handling
     const handleCommentAdded = () => {
         // Increment the local comment count
         setLocalCommentsCount((prevCount) => prevCount + 1);
+        
         // Refresh comments
+        getComments();
+        
+        // Notify any parent components
+        if (onPostUpdate) {
+            onPostUpdate();
+        }
+    };
+
+    // When dialog is open, ensure we have latest data
+    const handleImageClick = () => {
+        setIsDialogOpen(true);
         getComments();
     };
 
@@ -672,17 +683,21 @@ export const PostCard: React.FC<PostCardProps> = ({
                 handle={handle}
                 userId={userId}
                 time={time}
-                // isVerified={isVerified}
                 content={content}
-                isLiked={isLiked}
-                isBookmarked={isBookmarked}
+                isLiked={isLocalLiked} // Use local state here
+                isBookmarked={isBookmarkActive} // Use local state here
                 imageUrl={Array.isArray(imageUrl) ? imageUrl : [imageUrl]}
                 avatar={avatar}
-                likesCount={localLikesCount}
-                commentsCount={commentsCount}
-                repostsCount={repostsCount}
+                likesCount={localLikesCount} // Use local state here
+                commentsCount={localCommentsCount} // Use local state here
+                repostsCount={localRepostsCount} // Use local state here 
                 comments={comments}
-                onPostUpdate={onPostUpdate} // Pass the callback here
+                onPostUpdate={() => {
+                    // First update local state
+                    getComments();
+                    // Then propagate update to parent
+                    if (onPostUpdate) onPostUpdate();
+                }}
             />
             {/* Add this near the bottom of your component, with the other dialogs */}
             <ConfirmationDialog

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   Drawer,
@@ -19,7 +19,7 @@ import { Experience } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
-import { isBefore } from "date-fns";
+import { isBefore, isEqual } from "date-fns";
 
 // Change interface to match EducationDialog but for Experience
 interface ExperienceDialogProps {
@@ -46,40 +46,82 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
     startDate: new Date().toISOString(),
     endDate: new Date().toISOString(),
   });
+  
+  // Store the original data for comparison
+  const [originalData, setOriginalData] = useState<Experience | null>(null);
+  
   const [startDateCalendarOpen, setStartDateCalendarOpen] = useState<boolean>(false);
   const [endDateCalendarOpen, setEndDateCalendarOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [currentlyWorking, setCurrentlyWorking] = useState<boolean>(false);
+  const [originallyWorking, setOriginallyWorking] = useState<boolean>(false);
   const [dateError, setDateError] = useState<string>("");
   
   const { user } = useUser();
   
-  // Update local state when experience prop changes
+  // Update local state when experience prop changes or dialog opens
   useEffect(() => {
-    if (experience) {
-      const isCurrentJob = experience.endDate === "present" || 
-                          experience.endDate === "Present" || 
-                          experience.endDate === null;
-      
-      setExperienceData({
-        _id: experience._id || "",
-        company: experience.company || "",
-        role: experience.role || "",
-        startDate: experience.startDate || new Date().toISOString(),
-        endDate: isCurrentJob ? new Date().toISOString() : (experience.endDate || new Date().toISOString()),
-      });
-      setCurrentlyWorking(isCurrentJob);
-    } else {
-      setExperienceData({
-        _id: "",
-        company: "",
-        role: "",
-        startDate: new Date().toISOString(),
-        endDate: new Date().toISOString(),
-      });
-      setCurrentlyWorking(false);
+    if (open) {
+      if (experience) {
+        const isCurrentJob = experience.endDate === "present" || 
+                            experience.endDate === "Present" || 
+                            experience.endDate === null;
+        
+        const newData = {
+          _id: experience._id || "",
+          company: experience.company || "",
+          role: experience.role || "",
+          startDate: experience.startDate || new Date().toISOString(),
+          endDate: isCurrentJob ? new Date().toISOString() : (experience.endDate || new Date().toISOString()),
+        };
+        
+        setExperienceData(newData);
+        setOriginalData(newData);
+        setCurrentlyWorking(isCurrentJob);
+        setOriginallyWorking(isCurrentJob);
+      } else {
+        const defaultData = {
+          _id: "",
+          company: "",
+          role: "",
+          startDate: new Date().toISOString(),
+          endDate: new Date().toISOString(),
+        };
+        setExperienceData(defaultData);
+        setOriginalData(defaultData);
+        setCurrentlyWorking(false);
+        setOriginallyWorking(false);
+      }
+      setDateError("");
     }
   }, [experience, open]);
+
+  // Check if form data has changed compared to original
+  const hasChanges = () => {
+    if (!originalData) return false;
+    
+    // Compare working status
+    if (currentlyWorking !== originallyWorking) return true;
+    
+    // For new entries, any data is a change
+    if (!experience?._id && (experienceData.company || experienceData.role)) return true;
+    
+    // Compare basic fields
+    if (experienceData.company !== originalData.company) return true;
+    if (experienceData.role !== originalData.role) return true;
+    
+    // Compare dates (handling ISO strings)
+    const startDateEqual = new Date(experienceData.startDate).getTime() === new Date(originalData.startDate).getTime();
+    if (!startDateEqual) return true;
+    
+    // Only compare end dates if not currently working
+    if (!currentlyWorking && originalData.endDate) {
+      const endDateEqual = new Date(experienceData.endDate || "").getTime() === new Date(originalData.endDate || "").getTime();
+      if (!endDateEqual) return true;
+    }
+    
+    return false;
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -439,14 +481,15 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
         <Button 
           type="button"
           onClick={handleSave} 
-          className="bg-accent  hover:bg-accent/80 text-white px-6 sm:px-8 w-1/2 sm:w-auto"
+          className="bg-accent hover:bg-accent/80 text-white px-6 sm:px-8 w-1/2 sm:w-auto"
           disabled={
             isSubmitting || 
             !experienceData.company || 
             !experienceData.role || 
             !experienceData.startDate || 
             (!currentlyWorking && !experienceData.endDate) ||
-            !!dateError
+            !!dateError ||
+            !hasChanges() // Disable if no changes detected
           }
         >
           {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Save"}

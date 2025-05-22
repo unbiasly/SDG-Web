@@ -1,52 +1,47 @@
+'use client'
 import { Notification } from "@/service/api.interface";
 import { ChevronRight, MessageSquare, Video, UserPlus, BriefcaseBusiness, FileCheck, FileText, FileEdit, Bell } from "lucide-react";
 import ProfileAvatar from "../profile/ProfileAvatar";
-
+import { useCallback } from "react";
 
 const Alerts = ({ _id, post, category, type, message, isRead, userProfile }: Notification) => {
     // Determine the alert style based on type
-    let alertStyle;
-    let Icon;
-    let iconStyle;
+    let alertStyle = "";
+    let Icon = Bell; // Default icon
+    let iconStyle = "";
     
     switch (category) {
         case "post":
-            alertStyle = !isRead ? "bg-blue-50  border-blue-500" : "bg-white";
+            alertStyle = !isRead ? "bg-blue-50 border-blue-500" : "bg-white";
             Icon = MessageSquare;
             iconStyle = "bg-blue-200";
             break;
         case "videos":
-            alertStyle = !isRead ? "bg-pink-50  border-pink-500" : "bg-white";
+            alertStyle = !isRead ? "bg-pink-50 border-pink-500" : "bg-white";
             Icon = Video;
             iconStyle = "bg-[#19484A]";
             break;
         case "follow":
-            alertStyle = !isRead ? "bg-purple-50  border-purple-500" : "bg-white";
+            alertStyle = !isRead ? "bg-purple-50 border-purple-500" : "bg-white";
             Icon = UserPlus;
             iconStyle = "bg-[#19484A]";
             break;
         default:
-            alertStyle = !isRead ? "bg-gray-50  border-gray-400" : "bg-white";
-            Icon = Bell;
+            alertStyle = !isRead ? "bg-gray-50 border-gray-400" : "bg-white";
             iconStyle = "bg-[#19484A]";
     }
-
-    const handleClick = () => {
-        if (!isRead) {
-            handleRead(_id);
+// 'share', 'sdg-news', 'sdg-video'
+    const navigateTo = useCallback(() => {
+        if (type === "post" || type === "like" || type === "comment" || type === "repost") {
+            window.location.href = `/post/${post}`;
+        } else if(type === "follow") {
+            window.location.href = `/profile/${post}`;
         } else {
-            if (type === "post" || type === "like" || type === "comment" || type === "repost") {
-                window.location.href = `/post/${post}`;
-            } else if(type === "follow") {
-                window.location.href = `/profile/${post}`;
-            } else {
-                // Handle other notification types differently
-                // For now, just refresh the page to show updated notification state
-                window.location.reload();
-            }
+            window.location.reload();
         }
-    };
-    const handleRead = async (notificationId: string) => {
+    }, [type, post]);
+    
+    const handleRead = useCallback(async (notificationId: string) => {
         try {
             const response = await fetch(`/api/notifications`, {
                 method: 'PUT',
@@ -65,15 +60,7 @@ const Alerts = ({ _id, post, category, type, message, isRead, userProfile }: Not
             const responseData = await response.json();
             
             if (responseData.success) {
-                if (type === "post"  || type === "like") {
-                    window.location.href = `/post/${post}`;
-                } else if(type === "follow") {
-                    window.location.href = `/profile/${post}`;
-                } else {
-                    // Handle other notification types differently
-                    // For now, just refresh the page to show updated notification state
-                    window.location.reload();
-                }
+                navigateTo();
             } else {
                 throw new Error("Failed to update notification");
             }
@@ -81,7 +68,15 @@ const Alerts = ({ _id, post, category, type, message, isRead, userProfile }: Not
         catch (err) {
             console.error("Error marking notification as read:", err);
         }
-    };
+    }, [navigateTo]);
+
+    const handleClick = useCallback(() => {
+        if (!isRead) {
+            handleRead(_id);
+        } else {
+            navigateTo();
+        }
+    }, [isRead, _id, handleRead, navigateTo]);
 
     return (
         <div 
@@ -89,18 +84,18 @@ const Alerts = ({ _id, post, category, type, message, isRead, userProfile }: Not
             onClick={handleClick}
         >
             <div className="flex-shrink-0">
-            <div className={`w-12 h-12 rounded-md flex items-center justify-center ${iconStyle} shadow-xs p-5`}>
-                <ProfileAvatar src={userProfile || ''} size='xs' />
-            </div>
+                <div className={`w-12 h-12 rounded-md flex items-center justify-center ${iconStyle} shadow-xs p-5`}>
+                    <ProfileAvatar src={userProfile || ''} size='xs' />
+                </div>
             </div>
             <div className="ml-4 flex-grow pr-4 overflow-hidden">
-            <div className="text-sm font-medium text-acent mb-1">
-              {type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()}
-            </div>
-            <div className="text-xs font-medium text-black truncate">{message}</div>
+                <div className="text-sm font-medium text-accent mb-1">
+                    {type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()}
+                </div>
+                <div className="text-xs font-medium text-black truncate">{message}</div>
             </div>
             <div className="text-gray-400 flex-shrink-0">
-            {!isRead && <ChevronRight size={20} />}
+                {!isRead && <ChevronRight size={20} />}
             </div>
         </div>
     );

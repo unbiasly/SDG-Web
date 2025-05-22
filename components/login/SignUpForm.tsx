@@ -23,7 +23,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ className }) => {
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await fetch('/login/api', {
+            const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

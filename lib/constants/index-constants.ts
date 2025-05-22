@@ -3,7 +3,6 @@ import { Notification } from "@/service/api.interface";
 // Base tabs for desktop (we'll keep it minimal for desktop)
 export const FEED_TABS = [
     "For You",
-    // "The SDG News" - Commented out for desktop
 ];
 
 // Mobile-specific tabs (showing more options on mobile)
@@ -11,11 +10,11 @@ export const MOBILE_FEED_TABS = [
     "For You",
     "The SDG News"
 ];
-
 export const NOTIFICATION_TABS = [
-    "All",
-    // "Job Alerts",
-    // "SDG Talks",
+    "Posts", // - post
+    //"Job Alerts", // - job
+    //"SDG Talks", // - sdg-video
+    //"SDG News", // - sdg-news
     // "The SDG Event",
 ];
 

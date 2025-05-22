@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
     const searchParams = req.nextUrl.searchParams;
-    const limit = searchParams.get('limit') || 20;
+    const limit = 30;
     const cursor = searchParams.get('cursor') || '';
     
     try {

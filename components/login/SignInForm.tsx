@@ -27,7 +27,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
         setIsLoading(true);
         
         try {
-            const response = await fetch('/login/api', {
+            const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -44,6 +44,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
             
             if (!response.ok) {
                 toast.error(data?.error || data?.message);
+                setIsLoading(false);
                 return;
             } 
             
@@ -73,6 +74,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
                     toast.error(cookieData?.error || cookieData?.message);
                 }
             } else {
+                setIsLoading(false);
                 toast.error(data?.error || data?.message);
             }
             

@@ -38,7 +38,7 @@ export async function POST() {
             name: 'jwtToken',
             value: '',
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             maxAge: 0, // Expire immediately
             path: '/'
@@ -49,8 +49,7 @@ export async function POST() {
             name: 'refreshToken',
             value: '',
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',            sameSite: 'lax',
             maxAge: 0, // Expire immediately
             path: '/'
         });
@@ -58,7 +57,7 @@ export async function POST() {
             name: 'sessionId',
             value: '',
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             maxAge: 0, // Expire immediately
             path: '/'

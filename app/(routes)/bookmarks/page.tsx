@@ -1,113 +1,136 @@
 'use client'
-import { PostCard } from '@/components/feed/PostCard'
 import { BOOKMARKS_TABS } from '@/lib/constants/index-constants'
 import { cn } from '@/lib/utils'
 import { formatSDGLink } from '@/lib/utilities/sdgLinkFormat'
 import { PostBookmarkData, SDGArticleData, SDGVideoData } from '@/service/api.interface'
 import { ArrowLeft, Bookmark } from 'lucide-react'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import Link from 'next/link'
+import { PostCard } from '@/components/feed/PostCard'
 import VideoCard from '@/components/video/VideoCard'
 import Loader from '@/components/Loader'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
+import { 
+  useInfiniteQuery, 
+  useQueryClient
+} from '@tanstack/react-query'
+import { useNewsBookmarkSync } from '@/hooks/useNewsBookmarkSync'
 
-const Page = () => {
-    // Add state for tracking playing video
+// Define pagination interface
+interface Pagination {
+    limit: string;
+    cursor: string | null;
+    nextCursor: string | null;
+    hasMore: boolean;
+}
+
+// Response interfaces
+interface BookmarkResponse<T> {
+    data: T[];
+    pagination: Pagination;
+}
+
+// Wrap the main component with QueryClientProvider
+const BookmarksPage = () => {
+    return <BookmarksContent />; // Render BookmarksContent directly
+}
+
+const BookmarksContent = () => {
+    const queryClient = useQueryClient(); // This will now get the global QueryClient
     const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
-    
+    const router = useRouter();
     const [selectedCategory, setSelectedCategory] = useState<string>("All");
-    const [postBookmarks, setPostBookmarks] = useState<PostBookmarkData[]>([]);
-    const [newsBookmarks, setNewsBookmarks] = useState<SDGArticleData[]>([]);
-    const [videoBookmarks, setVideoBookmarks] = useState<SDGVideoData[]>([]);
-    const [loadingPosts, setLoadingPosts] = useState<boolean>(false);
-    const [loadingNews, setLoadingNews] = useState<boolean>(false);
-    const [loadingVideos, setLoadingVideos] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
+
+    // Define fetch functions for each bookmark type
+    const fetchPosts = async ({ pageParam = null }: { pageParam?: string | null }) => {
+        const url = new URL('/api/post/bookmark', window.location.origin);
+        if (pageParam) url.searchParams.append('cursor', pageParam);
+        
+        const response = await fetch(url.toString());
+        if (!response.ok) throw new Error('Failed to fetch post bookmarks');
+        
+        return response.json() as Promise<BookmarkResponse<PostBookmarkData>>;
+    };
     
-    // Cache state to track which data we've already fetched
-    const [hasFetchedPosts, setHasFetchedPosts] = useState<boolean>(false);
-    const [hasFetchedNews, setHasFetchedNews] = useState<boolean>(false);
-    const [hasFetchedVideos, setHasFetchedVideos] = useState<boolean>(false);
+    const fetchNews = async ({ pageParam = null }: { pageParam?: string | null }) => {
+        const url = new URL('/api/sdgNews/bookmark', window.location.origin);
+        if (pageParam) url.searchParams.append('cursor', pageParam);
+        
+        const response = await fetch(url.toString());
+        if (!response.ok) throw new Error('Failed to fetch news bookmarks');
+        
+        return response.json() as Promise<BookmarkResponse<SDGArticleData>>;
+    };
+    
+    const fetchVideos = async ({ pageParam = null }: { pageParam?: string | null }) => {
+        const url = new URL('/api/video/bookmark', window.location.origin);
+        if (pageParam) url.searchParams.append('cursor', pageParam);
+        
+        const response = await fetch(url.toString());
+        if (!response.ok) throw new Error('Failed to fetch video bookmarks');
+        
+        return response.json() as Promise<BookmarkResponse<SDGVideoData>>;
+    };
 
-    // Get post bookmarks with caching
-    const getPostBookmarks = useCallback(async () => {
-        // Skip if we already have this data
-        if (hasFetchedPosts && postBookmarks.length > 0) return;
-        
-        setError(null);
-        setLoadingPosts(true);
-        
-        try {
-            const response = await fetch('/api/post/bookmark');
-            
-            if (!response.ok) {
-                throw new Error('Failed to fetch post bookmarks');
-            }
-            
-            const data = await response.json();
-            setPostBookmarks(data.data || []);
-            setHasFetchedPosts(true);
-        } catch (error) {
-            console.error('Error fetching post bookmarks:', error);
-            setError('Failed to load post bookmarks. Please try again later.');
-        } finally {
-            setLoadingPosts(false);
-        }
-    }, [hasFetchedPosts, postBookmarks.length]);
+    // Set up infinite queries
+    const {
+        data: postsData,
+        fetchNextPage: fetchNextPosts,
+        hasNextPage: hasMorePosts,
+        isFetchingNextPage: isFetchingMorePosts,
+        isLoading: isLoadingPosts,
+        isError: isPostsError,
+        error: postsError
+    } = useInfiniteQuery({
+        queryKey: ['bookmarkedPosts'],
+        queryFn: fetchPosts,
+        getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
+        initialPageParam: null
+    });
 
-    // Get news bookmarks with caching
-    const getNewsBookmarks = useCallback(async () => {
-        // Skip if we already have this data
-        if (hasFetchedNews && newsBookmarks.length > 0) return;
-        
-        setError(null);
-        setLoadingNews(true);
-        
-        try {
-            const response = await fetch('/api/sdgNews/bookmark');
-            
-            if (!response.ok) {
-                throw new Error('Failed to fetch news bookmarks');
-            }
-            
-            const data = await response.json();
-            setNewsBookmarks(data.data || []);
-            setHasFetchedNews(true);
-        } catch (error) {
-            console.error('Error fetching news bookmarks:', error);
-            setError('Failed to load news bookmarks. Please try again later.');
-        } finally {
-            setLoadingNews(false);
-        }
-    }, [hasFetchedNews, newsBookmarks.length]);
+    const {
+        data: newsData,
+        fetchNextPage: fetchNextNews,
+        hasNextPage: hasMoreNews,
+        isFetchingNextPage: isFetchingMoreNews,
+        isLoading: isLoadingNews,
+        isError: isNewsError,
+        error: newsError
+    } = useInfiniteQuery({
+        queryKey: ['bookmarkedNews'],
+        queryFn: fetchNews,
+        getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
+        initialPageParam: null
+    });
 
-    // Get video bookmarks with caching
-    const getVideoBookmarks = useCallback(async () => {
-        // Skip if we already have this data
-        if (hasFetchedVideos && videoBookmarks.length > 0) return;
-        
-        setError(null);
-        setLoadingVideos(true);
-        
-        try {
-            const response = await fetch('/api/video/bookmark');
-            
-            // if (!response.ok) {
-            //     throw new Error('Failed to fetch video bookmarks');
-            // }
-            
-            const data = await response.json();
-            setVideoBookmarks(data.data || []);
-            setHasFetchedVideos(true);
-        } catch (error) {
-            console.error('Error fetching video bookmarks:', error);
-            setError('Failed to load video bookmarks. Please try again later.');
-        } finally {
-            setLoadingVideos(false);
-        }
-    }, [hasFetchedVideos, videoBookmarks.length]);
+    const {
+        data: videosData,
+        fetchNextPage: fetchNextVideos,
+        hasNextPage: hasMoreVideos,
+        isFetchingNextPage: isFetchingMoreVideos,
+        isLoading: isLoadingVideos,
+        isError: isVideosError,
+        error: videosError
+    } = useInfiniteQuery({
+        queryKey: ['bookmarkedVideos'],
+        queryFn: fetchVideos,
+        getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
+        initialPageParam: null
+    });
 
-    // Adapter function to transform SDGVideoData into the format expected by VideoCard
+    // Flatten the pages data for rendering
+    const postBookmarks = postsData?.pages.flatMap(page => page.data) || [];
+    const newsBookmarks = newsData?.pages.flatMap(page => page.data) || [];
+    const videoBookmarks = videosData?.pages.flatMap(page => page.data) || [];
+
+    // Handle tab change
+    const handleTabChange = (category: string) => {
+        setSelectedCategory(category);
+        setPlayingVideoId(null);
+    };
+
+    // Adapter function for video card
     const adaptVideoForCard = useCallback((video: SDGVideoData) => {
         return {
             ...video,
@@ -115,86 +138,67 @@ const Page = () => {
         };
     }, []);
 
-    // Combined bookmarks for "All" tab
-    const allBookmarks = useMemo(() => {
-        const loading = loadingPosts || loadingNews || loadingVideos;
-        const isEmpty = postBookmarks.length === 0 && newsBookmarks.length === 0 && videoBookmarks.length === 0;
+    // Create invalidation functions instead of direct handlers
+    const createPostInvalidationCallback = useCallback((postId: string) => {
+      // This function will be passed to PostCard's onPostUpdate prop
+      return () => {
+        // Just invalidate the query, let PostCard handle the API call
+        queryClient.invalidateQueries({queryKey: ['bookmarkedPosts']});
+        toast.success("Post removed from bookmarks");
+      };
+    }, [queryClient]);
+    
+    const createVideoInvalidationCallback = useCallback((videoId: string) => {
+      // This function will be passed to VideoCard's onBookmarkToggle prop
+      return () => {
+        // Just invalidate the query, let VideoCard handle the API call
+        queryClient.invalidateQueries({queryKey: ['bookmarkedVideos']});
+      };
+    }, [queryClient]);
+    
+    // Use the specialized news bookmark hook
+    const { toggleNewsBookmark } = useNewsBookmarkSync();
+    
+    // Updated handler for news unbookmark - uses the same mutation as TrendingNow
+    const handleNewsUnbookmark = useCallback((newsId: string) => {
+        console.log('Bookmarks page: Toggling bookmark for news ID:', newsId, 'Current state: true');
         
-        return { loading, isEmpty };
-    }, [loadingPosts, loadingNews, loadingVideos, postBookmarks.length, newsBookmarks.length, videoBookmarks.length]);
+        // Explicitly call the mutation with the correct parameters
+        toggleNewsBookmark.mutate({
+            newsId: newsId,
+            currentState: true // News in bookmarks are always already bookmarked
+        });
+    }, [toggleNewsBookmark]);
 
-    // Fetch data based on selected category
-    useEffect(() => {
-        getPostBookmarks();
-        getVideoBookmarks();
-        getNewsBookmarks();
-    }, []);
-
-    // Handle tab change
-    const handleTabChange = (category: string) => {
-        setSelectedCategory(category);
-        setPlayingVideoId(null); // Stop any playing videos when changing tabs
-    };
-
-    // Handlers for removing items after unbookmarking
-    
-    // For posts
-    const handlePostUnbookmark = useCallback((postId: string) => {
-        setPostBookmarks(prev => prev.filter(post => post._id !== postId));
-    }, []);
-    
-    // For videos
-    const handleVideoUnbookmark = useCallback((videoId: string) => {
-        setVideoBookmarks(prev => prev.filter(video => video._id !== videoId));
-    }, []);
-    
-    // For news
-    const handleNewsUnbookmark = useCallback(async (newsId: string) => {
-        try {
-            const response = await fetch('/api/sdgNews', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    newsId,
-                    actionType: 'bookmark',
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to unbookmark news');
-            }
-            
-            // Remove the news item from the list
-            setNewsBookmarks(prev => prev.filter(news => news._id !== newsId));
-            toast.success("News removed from bookmarks");
-        } catch (error) {
-            console.error('Error unbookmarking news:', error);
-            toast.error("Failed to remove bookmark");
-        }
-    }, []);
-
-    // Render loading state
+    // Helper rendering components
     const renderLoading = () => (
         <div className="flex justify-center items-center p-8">
             <Loader />
         </div>
     );
 
-    // Render error state
-    const renderError = () => (
-        <div className="flex justify-center items-center p-8 text-red-500">
-            {error}
+    const renderLoadingMore = () => (
+        <div className="flex justify-center items-center p-4">
+            <Loader/>
         </div>
     );
 
-    // Render empty state
+    const renderError = (error: Error) => (
+        <div className="flex justify-center items-center p-8 text-red-500">
+            {error.message || 'An error occurred. Please try again.'}
+        </div>
+    );
+
     const renderEmpty = () => (
         <div className="flex justify-center items-center p-8 text-gray-500">
             No bookmarks found
         </div>
     );
+
+    // Check if all data is loading for "All" tab
+    const isAllLoading = isLoadingPosts || isLoadingNews || isLoadingVideos;
+    const isAllEmpty = !isAllLoading && postBookmarks.length === 0 && newsBookmarks.length === 0 && videoBookmarks.length === 0;
+    const hasAnyError = isPostsError || isNewsError || isVideosError;
     
     return (
         <div className='flex flex-1 flex-col overflow-hidden'>
@@ -211,7 +215,7 @@ const Page = () => {
                         key={category}
                         onClick={() => handleTabChange(category)}
                         className={cn(
-                            "md:px-8  px-3 py-1 rounded-full cursor-pointer md:text-lg  font-semibold whitespace-nowrap",
+                            "md:px-8 px-3 py-1 rounded-full cursor-pointer md:text-lg font-semibold whitespace-nowrap",
                             selectedCategory === category
                             ? "bg-accent text-white"
                             : "bg-white text-accent border border-accent"
@@ -222,14 +226,20 @@ const Page = () => {
                 ))}
             </div>
 
-            {error && renderError()}
+            {hasAnyError && (
+                <div className="p-4">
+                    {isPostsError && renderError(postsError as Error)}
+                    {isNewsError && renderError(newsError as Error)}
+                    {isVideosError && renderError(videosError as Error)}
+                </div>
+            )}
 
             {/* All Bookmarks Tab */}
             {selectedCategory === "All" && (
                 <div className="flex flex-col gap-4 p-4">
-                    {allBookmarks.loading ? (
+                    {isAllLoading ? (
                         renderLoading()
-                    ) : allBookmarks.isEmpty ? (
+                    ) : isAllEmpty ? (
                         renderEmpty()
                     ) : (
                         <>
@@ -238,25 +248,34 @@ const Page = () => {
                                 <>
                                     <h2 className="text-lg font-semibold">Posts</h2>
                                     {postBookmarks.map((bookmark) => (
-                                        <PostCard 
-                                            key={bookmark._id}
-                                            _id={bookmark._id}
-                                            name={bookmark.user_id.name || bookmark.user_id.username}
-                                            handle={bookmark.user_id.username}
-                                            time={bookmark.createdAt}
-                                            // isVerified={bookmark.user_id.isFollowing || false}
-                                            content={bookmark.content}
-                                            isLiked={bookmark.isLiked}
-                                            isBookmarked={bookmark.isBookmarked}
-                                            imageUrl={bookmark.images}
-                                            avatar={bookmark.user_id.profileImage || ''}
-                                            likesCount={bookmark.poststat_id.likes}
-                                            commentsCount={bookmark.poststat_id.comments}
-                                            repostsCount={bookmark.poststat_id.reposts}
-                                            userId={bookmark.user_id._id}
-                                            onPostUpdate={() => handlePostUnbookmark(bookmark._id)}
-                                        />
+                                        <div key={bookmark._id}>
+                                            <PostCard 
+                                                _id={bookmark._id}
+                                                name={bookmark.user_id.name || bookmark.user_id.username}
+                                                handle={bookmark.user_id.username}
+                                                time={bookmark.createdAt}
+                                                content={bookmark.content}
+                                                isLiked={bookmark.isLiked}
+                                                isBookmarked={bookmark.isBookmarked}
+                                                imageUrl={bookmark.images}
+                                                avatar={bookmark.user_id.profileImage || ''}
+                                                likesCount={bookmark.poststat_id.likes}
+                                                commentsCount={bookmark.poststat_id.comments}
+                                                repostsCount={bookmark.poststat_id.reposts}
+                                                userId={bookmark.user_id._id}
+                                                onPostUpdate={createPostInvalidationCallback(bookmark._id)}
+                                            />
+                                        </div>
                                     ))}
+                                    {hasMorePosts && (
+                                        <button 
+                                            onClick={() => fetchNextPosts()}
+                                            className="w-full py-2 text-accent hover:bg-gray-50 rounded-md"
+                                            disabled={isFetchingMorePosts}
+                                        >
+                                            {isFetchingMorePosts ? renderLoadingMore() : 'Load more posts'}
+                                        </button>
+                                    )}
                                 </>
                             )}
 
@@ -266,7 +285,10 @@ const Page = () => {
                                     <h2 className="text-lg font-semibold mt-4">News</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {newsBookmarks.map((news) => (
-                                            <div key={news._id} className="border rounded-lg p-4 shadow-sm relative">
+                                            <div 
+                                                key={news._id} 
+                                                className="border rounded-lg p-4 shadow-sm relative"
+                                            >
                                                 <button 
                                                     onClick={() => handleNewsUnbookmark(news._id)}
                                                     className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded-full"
@@ -287,6 +309,15 @@ const Page = () => {
                                             </div>
                                         ))}
                                     </div>
+                                    {hasMoreNews && (
+                                        <button 
+                                            onClick={() => fetchNextNews()}
+                                            className="w-full py-2 text-accent hover:bg-gray-50 rounded-md"
+                                            disabled={isFetchingMoreNews}
+                                        >
+                                            {isFetchingMoreNews ? renderLoadingMore() : 'Load more news'}
+                                        </button>
+                                    )}
                                 </>
                             )}
 
@@ -296,15 +327,25 @@ const Page = () => {
                                     <h2 className="text-lg font-semibold mt-4">Videos</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {videoBookmarks.map((video) => (
-                                            <VideoCard 
-                                                key={video._id} 
-                                                video={adaptVideoForCard(video)}
-                                                playingVideoId={playingVideoId}
-                                                setPlayingVideoId={setPlayingVideoId}
-                                                onBookmarkToggle={() => handleVideoUnbookmark(video._id)}
-                                            />
+                                            <div key={video._id}>
+                                                <VideoCard 
+                                                    video={adaptVideoForCard(video)}
+                                                    playingVideoId={playingVideoId}
+                                                    setPlayingVideoId={setPlayingVideoId}
+                                                    onBookmarkToggle={createVideoInvalidationCallback(video._id)}
+                                                />
+                                            </div>
                                         ))}
                                     </div>
+                                    {hasMoreVideos && (
+                                        <button 
+                                            onClick={() => fetchNextVideos()}
+                                            className="w-full py-2 text-accent hover:bg-gray-50 rounded-md"
+                                            disabled={isFetchingMoreVideos}
+                                        >
+                                            {isFetchingMoreVideos ? renderLoadingMore() : 'Load more videos'}
+                                        </button>
+                                    )}
                                 </>
                             )}
                         </>
@@ -315,31 +356,42 @@ const Page = () => {
             {/* Posts Tab */}
             {selectedCategory === "Posts" && (
                 <div className="flex flex-col gap-4 p-4">
-                    {loadingPosts ? (
+                    {isLoadingPosts ? (
                         renderLoading()
                     ) : postBookmarks.length === 0 ? (
                         renderEmpty()
                     ) : (
-                        postBookmarks.map((bookmark) => (
-                            <PostCard 
-                                key={bookmark._id}
-                                _id={bookmark._id}
-                                name={bookmark.user_id.name || bookmark.user_id.username}
-                                handle={bookmark.user_id.username}
-                                time={bookmark.createdAt}
-                                // isVerified={bookmark.user_id.isFollowing || false}
-                                content={bookmark.content}
-                                isLiked={bookmark.isLiked}
-                                isBookmarked={bookmark.isBookmarked}
-                                imageUrl={bookmark.images}
-                                avatar={bookmark.user_id.profileImage || ''}
-                                likesCount={bookmark.poststat_id.likes}
-                                commentsCount={bookmark.poststat_id.comments}
-                                repostsCount={bookmark.poststat_id.reposts}
-                                userId={bookmark.user_id._id}
-                                onPostUpdate={() => handlePostUnbookmark(bookmark._id)}
-                            />
-                        ))
+                        <>
+                            {postBookmarks.map((bookmark) => (
+                                <div key={bookmark._id}>
+                                    <PostCard 
+                                        _id={bookmark._id}
+                                        name={bookmark.user_id.name || bookmark.user_id.username}
+                                        handle={bookmark.user_id.username}
+                                        time={bookmark.createdAt}
+                                        content={bookmark.content}
+                                        isLiked={bookmark.isLiked}
+                                        isBookmarked={bookmark.isBookmarked}
+                                        imageUrl={bookmark.images}
+                                        avatar={bookmark.user_id.profileImage || ''}
+                                        likesCount={bookmark.poststat_id.likes}
+                                        commentsCount={bookmark.poststat_id.comments}
+                                        repostsCount={bookmark.poststat_id.reposts}
+                                        userId={bookmark.user_id._id}
+                                        onPostUpdate={createPostInvalidationCallback(bookmark._id)}
+                                    />
+                                </div>
+                            ))}
+                            {hasMorePosts && (
+                                <button 
+                                    onClick={() => fetchNextPosts()}
+                                    className="w-full py-2 text-accent hover:bg-gray-50 rounded-md"
+                                    disabled={isFetchingMorePosts}
+                                >
+                                    {isFetchingMorePosts ? renderLoadingMore() : 'Load more posts'}
+                                </button>
+                            )}
+                        </>
                     )}
                 </div>
             )}
@@ -347,34 +399,48 @@ const Page = () => {
             {/* News Tab */}
             {selectedCategory === "News" && (
                 <div className="flex flex-col gap-4 p-4">
-                    {loadingNews ? (
+                    {isLoadingNews ? (
                         renderLoading()
                     ) : newsBookmarks.length === 0 ? (
                         renderEmpty()
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {newsBookmarks.map((news) => (
-                                <div key={news._id} className="border rounded-lg p-4 shadow-sm relative">
-                                    <button 
-                                        onClick={() => handleNewsUnbookmark(news._id)}
-                                        className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded-full"
-                                        aria-label="Remove bookmark"
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {newsBookmarks.map((news) => (
+                                    <div 
+                                        key={news._id} 
+                                        className="border rounded-lg p-4 shadow-sm relative"
                                     >
-                                        <Bookmark className="h-5 w-5 fill-current text-accent" />
-                                    </button>
-                                    <h3 className="font-medium mb-2 pr-8">{news.title}</h3>
-                                    <p className="text-sm text-gray-600 mb-2">{news.publisher}</p>
-                                    <a 
-                                        href={formatSDGLink(news.link)} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="text-accent text-sm hover:underline"
-                                    >
-                                        Read article
-                                    </a>
-                                </div>
-                            ))}
-                        </div>
+                                        <button 
+                                            onClick={() => handleNewsUnbookmark(news._id)}
+                                            className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded-full"
+                                            aria-label="Remove bookmark"
+                                        >
+                                            <Bookmark className="h-5 w-5 fill-current text-accent" />
+                                        </button>
+                                        <h3 className="font-medium mb-2 pr-8">{news.title}</h3>
+                                        <p className="text-sm text-gray-600 mb-2">{news.publisher}</p>
+                                        <a 
+                                            href={formatSDGLink(news.link)} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-accent text-sm hover:underline"
+                                        >
+                                            Read article
+                                        </a>
+                                    </div>
+                                ))}
+                            </div>
+                            {hasMoreNews && (
+                                <button 
+                                    onClick={() => fetchNextNews()}
+                                    className="w-full py-2 text-accent hover:bg-gray-50 rounded-md"
+                                    disabled={isFetchingMoreNews}
+                                >
+                                    {isFetchingMoreNews ? renderLoadingMore() : 'Load more news'}
+                                </button>
+                            )}
+                        </>
                     )}
                 </div>
             )}
@@ -382,22 +448,34 @@ const Page = () => {
             {/* Videos Tab */}
             {selectedCategory === "Videos" && (
                 <div className="flex flex-col gap-4 p-4">
-                    {loadingVideos ? (
+                    {isLoadingVideos ? (
                         renderLoading()
                     ) : videoBookmarks.length === 0 ? (
                         renderEmpty()
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {videoBookmarks.map((video) => (
-                                <VideoCard 
-                                    key={video._id} 
-                                    video={adaptVideoForCard(video)}
-                                    playingVideoId={playingVideoId}
-                                    setPlayingVideoId={setPlayingVideoId}
-                                    onBookmarkToggle={() => handleVideoUnbookmark(video._id)}
-                                />
-                            ))}
-                        </div>
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {videoBookmarks.map((video) => (
+                                    <div key={video._id}>
+                                        <VideoCard 
+                                            video={adaptVideoForCard(video)}
+                                            playingVideoId={playingVideoId}
+                                            setPlayingVideoId={setPlayingVideoId}
+                                            onBookmarkToggle={createVideoInvalidationCallback(video._id)}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            {hasMoreVideos && (
+                                <button 
+                                    onClick={() => fetchNextVideos()}
+                                    className="w-full py-2 text-accent hover:bg-gray-50 rounded-md"
+                                    disabled={isFetchingMoreVideos}
+                                >
+                                    {isFetchingMoreVideos ? renderLoadingMore() : 'Load more videos'}
+                                </button>
+                            )}
+                        </>
                     )}
                 </div>
             )}
@@ -405,4 +483,4 @@ const Page = () => {
     );
 }
 
-export default Page;
+export default BookmarksPage;

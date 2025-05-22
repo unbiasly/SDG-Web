@@ -3,9 +3,6 @@ import { PostCard } from './PostCard';
 import { useUser } from '@/lib/redux/features/user/hooks';
 import { formatDate } from '@/lib/utilities/formatDate';
 
-// Set a delay after initial load before tracking can begin
-// const INITIAL_LOAD_DELAY = 10;
-
 interface PostWithImpressionTrackingProps {
   post: any;
   onPostUpdate: () => void;
@@ -14,35 +11,24 @@ interface PostWithImpressionTrackingProps {
 export const PostWithImpressionTracking: React.FC<PostWithImpressionTrackingProps> = ({ post, onPostUpdate }) => {
   const { user } = useUser();
   const postRef = useRef<HTMLDivElement>(null);
-  const [hasTrackedImpression, setHasTrackedImpression] = useState(false);
-  const [canTrackImpressions, setCanTrackImpressions] = useState(true);
-
-  // Track if this post was present on initial load
-  const isInitialPost = useRef(true);
+  const [hasTracked, setHasTracked] = useState(false);
   
-  
-  // Set up intersection observer
+  // Set up intersection observer for immediate tracking
   useEffect(() => {
-    if (!postRef.current || !user?._id) return;
+    if (!postRef.current || !user?._id || hasTracked) return;
     
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
         
-        // Only track impression if:
-        // 1. Post is visible
-        // 2. Tracking is enabled (after delay)
-        // 3. Not already tracked
-        // 4. Either: not an initial post OR we're scrolling (isInitialPost becomes false after it leaves view once)
-        if (entry.isIntersecting && canTrackImpressions && !hasTrackedImpression && isInitialPost.current) {
-            trackPostImpression(post._id, post.user_id._id);
-            setHasTrackedImpression(true);
-        }
-        
-        // If post leaves view, it's no longer considered an initial post
-        // This way when it comes back into view during scrolling, it will be tracked
-        if (!entry.isIntersecting && isInitialPost.current) {
-          isInitialPost.current = false;
+        // Only track if post is visible and hasn't been tracked yet
+        if (entry.isIntersecting && !hasTracked) {
+          console.log("Tracking impression for post:", post._id);
+          trackPostImpression(post._id, post.user_id._id);
+          setHasTracked(true);
+          
+          // Disconnect observer after tracking once
+          observer.disconnect();
         }
       },
       { threshold: 0.5 } // Consider post viewed when 50% visible
@@ -50,7 +36,7 @@ export const PostWithImpressionTracking: React.FC<PostWithImpressionTrackingProp
     
     observer.observe(postRef.current);
     return () => observer.disconnect();
-  }, [post._id, hasTrackedImpression, canTrackImpressions, user?._id]);
+  }, [post._id, hasTracked, user?._id]);
   
   // Track post impression function
   const trackPostImpression = async (postId: string, userId: string) => {

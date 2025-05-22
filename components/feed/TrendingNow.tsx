@@ -7,6 +7,9 @@ import { formatSDGLink } from '@/lib/utilities/sdgLinkFormat';
 import { ScrollArea } from '../ui/scroll-area';
 import { Bookmark, Flag, MoreVertical, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useUser } from '@/lib/redux/features/user/hooks';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'; // Add this import
+import { toast } from 'sonner'; // Add toast for feedback
+import { useNewsBookmarkSync } from '@/hooks/useNewsBookmarkSync';
 
 interface TrendingItemProps {
   _id: string;
@@ -18,57 +21,35 @@ interface TrendingItemProps {
 }
 
 const TrendingItem: React.FC<TrendingItemProps> = ({ _id, title, publisher, link, isBookmarked }) => {
-    const [isActive, setIsActive] = useState(false);
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isBookmarkedActive, setIsBookmarkedActive] = useState(isBookmarked);
-    const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+    // Use the specialized news bookmark hook
+    const { toggleNewsBookmark } = useNewsBookmarkSync();
 
-    const handleBookmark = async () => {
-        try {
-            // Update local state immediately for a seamless experience
-            setIsBookmarkedActive(!isBookmarkedActive);
-            
-            // Then make the API call
-            const response = await fetch('/api/sdgNews', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    newsId: _id,
-                    actionType: 'bookmark',
-                }),
-            });
-
-            if (!response.ok) {
-                // If API call fails, revert to original state
-                setIsBookmarkedActive(isBookmarkedActive);
-                throw new Error('Failed to bookmark article');
-            }
-
-            const data = await response.json();
-            console.log('Article bookmarked:', data);
-        } catch (error) {
-            console.error('Error bookmarking article:', error);
-            // Optional: Show error toast here
-        }
+    const handleBookmark = () => {
+        console.log('TrendingNow: Toggling bookmark for news ID:', _id, 'Current state:', isBookmarked);
+        
+        // Explicitly call the mutation with the correct parameters
+        toggleNewsBookmark.mutate({ 
+            newsId: _id, 
+            currentState: isBookmarked 
+        });
     }
 
     return (
-        <div className=' rounded-sm mb-2 shadow-sm border p-2'>
+        <div className='rounded-sm mb-2 shadow-sm border p-2'>
             <Link key={_id} href={link} target='_blank' className="mb-2">
                 <h4 className="text-sm font-medium line-clamp-2">{title}</h4>
                 <span className='text-xs text-gray-500'>{publisher}</span>
             </Link>
             <div className="flex justify-between items-center mt-2" onClick={(e) => e.stopPropagation()}>
                 <button 
-                    aria-label={isBookmarkedActive ? "remove bookmark" : "bookmark"} 
+                    aria-label={isBookmarked ? "remove bookmark" : "bookmark"} 
                     className="rounded-full hover:bg-gray-200 cursor-pointer p-1" 
                     onClick={handleBookmark}
+                    disabled={toggleNewsBookmark.isPending}
                 >
                     <Bookmark 
                         size={15} 
-                        className={`${isBookmarkedActive ? "fill-current text-accent" : "text-gray-500"}`} 
+                        className={`${isBookmarked ? "fill-current text-accent" : "text-gray-500"}`} 
                     />
                 </button>
             </div>
@@ -77,49 +58,46 @@ const TrendingItem: React.FC<TrendingItemProps> = ({ _id, title, publisher, link
 };
 
 export const TrendingSection: React.FC = () => {
-    const [articles, setArticles] = useState<Article[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-
     const { user } = useUser();
-    const News = async () => {
-        try {
-            
-            setIsLoading(true);
-            const response = await fetch('/api/sdgNews', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userId: user?._id,
-                }),
+    const queryClient = useQueryClient();
 
-            }
-            );
-            
-            // if (!response.ok) {
-            //     throw new Error('Failed to fetch SDG news');
-            // }
-            
-            const data = await response.json();
-            console.log('Fetched SDG news:', data);
-            setArticles(data.data || []);
-        } catch (error) {
-            console.error('Error fetching SDG news:', error);
-        } finally {
-            setIsLoading(false);
+    // Use React Query to fetch news data
+    const { data: newsData, error } = useQuery({
+      queryKey: ['sdgNews', user?._id],
+      queryFn: async () => {
+        const response = await fetch('/api/sdgNews', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: user?._id,
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch SDG news');
         }
-    }
+        
+        return response.json();
+      },
+      enabled: !!user?._id, // Only run when user ID is available
+      staleTime: 5 * 60 * 1000, // 5 minutes before refetching
+      refetchOnWindowFocus: false,
+    });
 
+    // Extract articles from the query response
+    const articles = newsData?.data || [];
+
+    // Set loading state based on query status
     useEffect(() => {
-        if (user) {
-            News();
-        }
-    }, [user]);
+      setIsLoading(!newsData && !error);
+    }, [newsData, error]);
 
     if (isLoading) {
         return (
-            <div className="w-64 bg-white p-3 rounded-2xl border border-gray-300">
+            <div className=" bg-white p-3 rounded-2xl border border-gray-300">
                 <div className="h-6 w-32 bg-gray-200 rounded-2xl mb-1 animate-pulse"></div>
                 <div className="h-4 w-24 bg-gray-200 rounded-2xl mb-4 animate-pulse"></div>
                 
@@ -135,13 +113,22 @@ export const TrendingSection: React.FC = () => {
         );
     }
 
+    if (error) {
+      return (
+        <div className="bg-white p-3 rounded-2xl border border-gray-300">
+          <h3 className="text-xl text-accent font-semibold mb-1">SDG News</h3>
+          <p className="text-sm text-red-500 mb-4">Failed to load news</p>
+        </div>
+      );
+    }
+
     return (
-        <div className="w-64 bg-white p-3 rounded-2xl border border-gray-300 animate-fade-in">
+        <div className=" bg-white p-3 rounded-2xl border border-gray-300 animate-fade-in">
             <h3 className="text-xl text-accent font-semibold mb-1">SDG News</h3>
             <p className="text-sm text-gray-500 mb-4">@TheSDG story</p>
             
             <ScrollArea className="h-[800px]">
-                {articles.map((article) => (
+                {articles.map((article:any) => (
                     <TrendingItem 
                         key={article._id}
                         _id={article._id}

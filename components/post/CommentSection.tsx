@@ -1,10 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ProfileAvatar from "../profile/ProfileAvatar";
 import { cn } from "@/lib/utils";
 import { CommentData } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
-import { SendHorizonal } from "lucide-react";
+import { Loader2, SendHorizonal } from "lucide-react";
 import Link from "next/link";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInView } from "react-intersection-observer";
+
+// New interface for pagination response
+interface PaginationResponse {
+    limit: string;
+    cursor: string | null;
+    nextCursor: string | null;
+    hasMore: boolean;
+}
+
+// New interface for comments response
+interface CommentsResponse {
+    data: CommentData[];
+    pagination: PaginationResponse;
+}
 
 interface CommentSectionProps {
     post_id: string;
@@ -12,7 +29,7 @@ interface CommentSectionProps {
     commentCount?: number;
     comments: CommentData[];
     className?: string;
-    onCommentAdded?: () => void; // Add callback for parent component
+    onCommentAdded?: () => void;
 }
 
 interface CommentProps {
@@ -24,178 +41,256 @@ interface CommentProps {
 }
 
 const CommentSection: React.FC<CommentSectionProps> = ({
-  post_id,
-  isOpen,
-  comments: initialComments,
-  className,
-  onCommentAdded
+    post_id,
+    isOpen,
+    comments: initialComments,
+    className,
+    onCommentAdded,
 }) => {
-//   const [sortBy, setSortBy] = useState<string>("most-relevant");
-  const [comment, setComment] = useState<string>("");
-  const [comments, setComments] = useState<CommentData[]>(initialComments || []);
-  const { user } = useUser();
+    const [comment, setComment] = useState<string>("");
+    const { user } = useUser();
+    const queryClient = useQueryClient();
+    const { ref, inView } = useInView();
 
-  // Update local comments when prop changes
-  useEffect(() => {
-    setComments(initialComments || []);
-  }, [initialComments]);
-
-  if (!isOpen) return null;
-
-  const handleComment = async () => {
-    if (!comment.trim()) return;
-    
-    try {
-        const response = await fetch(`/api/post/post-action/`, {
-            method: 'PATCH',
+    // Set up the fetch function for comments
+    const fetchComments = async ({
+        pageParam,
+    }: {
+        pageParam: string | null;
+    }) => {
+        const response = await fetch(`/api/post/post-action`, {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({
+                actionType: "comment",
                 postId: post_id,
-                actionType: 'comment',
-                comment: comment
-            })
+                cursor: pageParam,
+                limit: 30,
+            }),
         });
-        
+
         if (!response.ok) {
-            throw new Error('Failed to comment');
+            throw new Error("Failed to fetch comments");
         }
-        
-        // Handle successful comment
-        console.log('commented successfully');
-        
-        // Add the new comment to the local state immediately
-        const newComment: CommentData = {
-          _id: Date.now().toString(), // Temporary ID until refresh
-          user_id: {
-            _id: user?._id || '',
-            username: user?.username || '',
-            profileImage: user?.profileImage?.toString() || ''
-          },
-          comment: comment
-        };
-        
-        setComments(prevComments => [newComment, ...prevComments]);
-        
-        // Notify parent component to refresh comments
-        if (onCommentAdded) {
-          onCommentAdded();
+
+        return response.json() as Promise<CommentsResponse>;
+    };
+
+    // Set up the infinite query
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+        isError,
+        error,
+    } = useInfiniteQuery({
+        queryKey: ["comments", post_id],
+        queryFn: fetchComments,
+        getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
+        initialPageParam: null,
+        enabled: isOpen, // Only fetch when comment section is open
+    });
+
+    // Monitor when the sentinel element comes into view to load more comments
+    useEffect(() => {
+        if (inView && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
         }
-        
-        setComment(""); // Clear the input after successful comment
-    } catch (error) {
-        console.error('Error commenting post:', error);
-    }
-  }
-  return (
-    <div className={cn("border-t border-gray-200 pt-3", className)}>
-      {/* Comment input area */}
-      <div className="flex gap-3 mb-4">
-        <ProfileAvatar src={user?.profileImage || ''} size="xs" />
-        <div className="flex-1 flex items-center relative">
-          <input
-            type="text"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Add a comment"
-            className="w-full p-3 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && comment.trim()) {
-                handleComment();
-              }
-            }}
-          />
-          <SendHorizonal className="ml-2 cursor-pointer " onClick={handleComment}/>
+    }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+    // Flatten all comments from all pages
+    const allComments =
+        data?.pages.flatMap((page) => page.data) || initialComments || [];
+
+    // Handle adding a new comment
+    const handleComment = async () => {
+        if (!comment.trim()) return;
+
+        try {
+            // Optimistically update the UI
+            const newComment: CommentData = {
+                _id: `temp-${Date.now()}`,
+                user_id: {
+                    _id: user?._id || "",
+                    username: user?.username || "",
+                    profileImage: user?.profileImage?.toString() || "",
+                },
+                comment: comment,
+            };
+
+            // Add to cache optimistically
+            queryClient.setQueryData(["comments", post_id], (oldData: any) => {
+                if (!oldData)
+                    return {
+                        pages: [
+                            {
+                                data: [newComment],
+                                pagination: {
+                                    hasMore: false,
+                                    nextCursor: null,
+                                },
+                            },
+                        ],
+                        pageParams: [null],
+                    };
+
+                return {
+                    ...oldData,
+                    pages: [
+                        {
+                            ...oldData.pages[0],
+                            data: [newComment, ...oldData.pages[0].data],
+                        },
+                        ...oldData.pages.slice(1),
+                    ],
+                };
+            });
+
+            // Clear input right away for better user experience
+            setComment("");
+
+            // Send API request
+            const response = await fetch(`/api/post/post-action/`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    postId: post_id,
+                    actionType: "comment",
+                    comment: comment,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to comment");
+            }
+
+            // Invalidate the comments query to refresh data
+            queryClient.invalidateQueries({ queryKey: ["comments", post_id] });
+
+            // Notify parent component about the new comment
+            if (onCommentAdded) {
+                onCommentAdded();
+            }
+        } catch (error) {
+            console.error("Error commenting post:", error);
+            // Remove optimistic update on error
+            queryClient.invalidateQueries({ queryKey: ["comments", post_id] });
+        }
+    };
+
+    // Don't render anything if the comment section is closed
+    if (!isOpen) return null;
+
+    return (
+        <div className={cn("border-t border-gray-200 pt-3", className)}>
+            {/* Comment input area */}
+            <div className="flex gap-3 mb-4">
+                <ProfileAvatar src={user?.profileImage || ""} size="xs" />
+                <div className="flex-1 flex items-center relative">
+                    <input
+                        type="text"
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        placeholder="Add a comment"
+                        className="w-full p-3 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && comment.trim()) {
+                                handleComment();
+                            }
+                        }}
+                    />
+                    <SendHorizonal
+                        className="ml-2 cursor-pointer"
+                        onClick={handleComment}
+                    />
+                </div>
+            </div>
+
+            {/* Comments header */}
+            <div className="flex items-center mt-5">
+                <h1>Comments</h1>
+            </div>
+
+            {/* Comments list with loading states */}
+            {isLoading ? (
+                <div className="flex justify-center p-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-accent" />
+                </div>
+            ) : isError ? (
+                <div className="text-red-500 p-4 text-center">
+                    {error instanceof Error
+                        ? error.message
+                        : "Failed to load comments"}
+                </div>
+            ) : allComments.length > 0 ? (
+                <div className="max-h-[300px] overflow-y-auto">
+                    <div className="space-y-1 pr-4">
+                        {allComments.map((comment) => (
+                            <Comment
+                                key={comment._id}
+                                _id={comment.user_id._id}
+                                userName={comment.user_id.username}
+                                content={comment.comment}
+                                userAvatar={comment.user_id.profileImage}
+                            />
+                        ))}
+                        {/* Invisible element to trigger loading more comments */}
+                        <div
+                            ref={ref}
+                            className="h-4 w-full"
+                            aria-hidden="true"
+                        >
+                            {isFetchingNextPage && (
+                                <div className="flex justify-center py-2">
+                                    <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <p className="text-gray-500 items-center text-sm p-4 text-center">
+                    No comments available. Be the first to comment!
+                </p>
+            )}
         </div>
-          {/* <div className=" flex gap-2 ">
-            <button aria-label="add-image" className="text-gray-500 cursor-pointer hover:text-gray-700">
-              <Image size={18} />
-            </button>
-            <button aria-label="add-reaction" className="text-gray-500 hover:text-gray-700">
-              <Smile size={18} />
-            </button>
-          </div> */}
-      </div>
-
-      {/* Sort options */}
-      <div className="flex items-center mt-5">
-        {/* <button 
-          className="flex cursor-pointer items-center gap-1 text-sm font-medium"
-          onClick={() => setSortBy(sortBy === "most-relevant" ? "newest" : "most-relevant")}
-        >
-          {sortBy === "most-relevant" ? "Most Relevant" : "Newest"}
-          <svg 
-            width="12" 
-            height="12" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-            className="ml-1"
-          >
-            <path d="m6 9 6 6 6-6"/>
-          </svg>
-        </button> */}
-        <h1>Comments</h1>
-      </div>
-
-      {/* Comments list */}
-      <div className="space-y-1">
-        {comments && comments.length > 0 ? (
-          comments.map(comment => (
-            <Comment
-              key={comment._id}
-                _id={comment.user_id._id}
-              userName={comment.user_id.username}
-              content={comment.comment}
-              userAvatar={comment.user_id.profileImage}
-            />
-          ))
-        ) : (
-            <p className="text-gray-500 items-center text-sm">No comments available.</p>
-        )}
-      </div>
-    </div>
-  )
+    );
 };
 
+// Comment component remains unchanged
 const Comment: React.FC<CommentProps> = ({
     _id,
     userName,
     content,
     userAvatar,
-    className
+    className,
 }) => {
-    
     return (
         <div className={cn("flex gap-3 py-4", className)}>
-        <div className="w-fit h-fit">
-            <ProfileAvatar src={userAvatar || ''} size="xs" />
+            <div className="w-fit h-fit">
+                <ProfileAvatar src={userAvatar || ""} size="xs" />
+            </div>
+
+            <div className="flex-1">
+                <div className="flex justify-between items-start">
+                    <Link
+                        href={`/profile/${_id}`}
+                        className="font-bold text-sm"
+                    >
+                        <span>{userName}</span>
+                    </Link>
+                </div>
+
+                <p className="mt-1 text-sm">{content}</p>
+            </div>
         </div>
-      
-      <div className="flex-1">
-        <div className="flex justify-between items-start">
-            <Link href={`/profile/${_id}`} className="font-bold text-sm"><span>{userName}</span></Link>
-        {/* <div className="flex items-center gap-2">
-            <button aria-label="more-optionss" className="text-gray-500 hover:text-gray-700">
-              <MoreVertical size={16} />
-            </button>
-          </div> */}
-        </div>
-        
-        <p className="mt-1 text-sm">{content}</p>
-        
-        {/* <div className="flex gap-4 mt-2">
-          <button className="text-xs text-gray-500 hover:text-gray-700">Like</button>
-          <span className="text-xs text-gray-300">|</span>
-          <button className="text-xs text-gray-500 hover:text-gray-700">Reply</button>
-        </div> */}
-      </div>
-    </div>
-  );
+    );
 };
 
 export default CommentSection;
