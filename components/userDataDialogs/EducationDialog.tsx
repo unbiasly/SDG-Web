@@ -26,11 +26,265 @@ import { useUser } from "@/lib/redux/features/user/hooks";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 
+// Define props for the new FormContent component
+interface EducationFormContentProps {
+    educationData: Education;
+    handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+    startDateCalendarOpen: boolean;
+    setStartDateCalendarOpen: (open: boolean) => void;
+    endDateCalendarOpen: boolean;
+    setEndDateCalendarOpen: (open: boolean) => void;
+    handleDateChange: (field: "startDate" | "endDate", date: Date | undefined) => void;
+    currentlyStudying: boolean;
+    handleCurrentlyStudyingChange: (checked: boolean) => void;
+    dateError: string;
+}
+
+// Define FormContent component outside EducationDialog
+const EducationFormContent: React.FC<EducationFormContentProps> = ({
+    educationData,
+    handleInputChange,
+    handleKeyDown,
+    startDateCalendarOpen,
+    setStartDateCalendarOpen,
+    endDateCalendarOpen,
+    setEndDateCalendarOpen,
+    handleDateChange,
+    currentlyStudying,
+    handleCurrentlyStudyingChange,
+    dateError,
+}) => (
+    <>
+        <div className="py-4 space-y-6">
+            {/* School */}
+            <div className="space-y-2">
+                <label htmlFor="school" className="text-sm font-medium">
+                    School<span className="text-red-500">*</span>
+                </label>
+                <Input
+                    id="school"
+                    name="school"
+                    placeholder="Ex: Delhi University"
+                    value={educationData.school}
+                    onChange={handleInputChange}
+                    required
+                    onKeyDown={handleKeyDown}
+                    className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                />
+            </div>
+
+            {/* Degree */}
+            <div className="space-y-2">
+                <label htmlFor="degree" className="text-sm font-medium">
+                    Degree<span className="text-red-500">*</span>
+                </label>
+                <Input
+                    id="degree"
+                    name="degree"
+                    placeholder="Ex: Bachelor of Science"
+                    value={educationData.degree}
+                    onChange={handleInputChange}
+                    required
+                    onKeyDown={handleKeyDown}
+                    className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                />
+            </div>
+
+            {/* Start Date */}
+            <div className="space-y-2">
+                <label htmlFor="startDate" className="text-sm font-medium">
+                    Start Date<span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className={cn(
+                            "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
+                            !educationData.startDate &&
+                                "text-muted-foreground dark:text-gray-400"
+                        )}
+                        onClick={() =>
+                            setStartDateCalendarOpen(!startDateCalendarOpen)
+                        }
+                    >
+                        {educationData.startDate ? (
+                            format(new Date(educationData.startDate), "PPP")
+                        ) : (
+                            <span>Start Date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4" />
+                    </Button>
+                    {startDateCalendarOpen && (
+                        <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
+                            <Calendar
+                                mode="single"
+                                selected={
+                                    educationData.startDate
+                                        ? new Date(educationData.startDate)
+                                        : undefined
+                                }
+                                onSelect={(date) =>
+                                    handleDateChange("startDate", date)
+                                }
+                                initialFocus
+                            />
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Currently studying checkbox */}
+            <div className="flex items-center space-x-2">
+                <Checkbox
+                    id="currentlyStudying"
+                    checked={currentlyStudying}
+                    onCheckedChange={handleCurrentlyStudyingChange}
+                />
+                <label
+                    htmlFor="currentlyStudying"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                    I am currently studying here
+                </label>
+            </div>
+
+            {/* End Date - conditionally shown when not currently studying */}
+            {!currentlyStudying && (
+                <div className="space-y-2">
+                    <label
+                        htmlFor="endDate"
+                        className="text-sm font-medium"
+                    >
+                        End Date<span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className={cn(
+                                "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
+                                !educationData.endDate &&
+                                    "text-muted-foreground dark:text-gray-400",
+                                dateError && "border-red-500" // Highlight the button when there's an error
+                            )}
+                            onClick={() =>
+                                setEndDateCalendarOpen(!endDateCalendarOpen)
+                            }
+                        >
+                            {educationData.endDate ? (
+                                format(
+                                    new Date(educationData.endDate),
+                                    "PPP"
+                                )
+                            ) : (
+                                <span>End Date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4" />
+                        </Button>
+                        {endDateCalendarOpen && (
+                            <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
+                                <Calendar
+                                    mode="single"
+                                    selected={
+                                        educationData.endDate
+                                            ? new Date(
+                                                  educationData.endDate
+                                              )
+                                            : undefined
+                                    }
+                                    onSelect={(date) =>
+                                        handleDateChange("endDate", date)
+                                    }
+                                    initialFocus
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Move error message outside the conditional section so it's visible regardless */}
+            {dateError && (
+                <p className="text-red-500 text-sm">{dateError}</p>
+            )}
+        </div>
+    </>
+);
+
+// Define props for the new FooterContent component
+interface EducationFooterContentProps {
+    educationId: string | undefined;
+    handleDelete: () => Promise<void>;
+    isSubmitting: boolean;
+    onOpenChange: (open: boolean) => void;
+    handleSave: () => Promise<void>;
+    saveButtonDisabled: boolean;
+}
+
+// Define FooterContent component outside EducationDialog
+const EducationFooterContent: React.FC<EducationFooterContentProps> = ({
+    educationId,
+    handleDelete,
+    isSubmitting,
+    onOpenChange,
+    handleSave,
+    saveButtonDisabled,
+}) => (
+    <>
+        {educationId && (
+            <Button
+                type="button"
+                onClick={handleDelete}
+                variant="outline"
+                className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900 dark:hover:text-red-300 w-full sm:w-auto"
+                disabled={isSubmitting}
+            >
+                {isSubmitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Delete
+            </Button>
+        )}
+        <div
+            className={cn(
+                "flex gap-2 w-full",
+                educationId ? "" : "justify-end"
+            )}
+        >
+            <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+                className="dark:border-gray-600 w-1/2 sm:w-auto dark:hover:bg-gray-700"
+            >
+                Cancel
+            </Button>
+            <Button
+                type="button"
+                onClick={handleSave}
+                className="bg-accent w-1/2 sm:w-auto hover:bg-accent/70 text-white"
+                disabled={saveButtonDisabled}
+            >
+                {isSubmitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    "Save"
+                )}
+            </Button>
+        </div>
+    </>
+);
+
+
 interface EducationDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSave: (education: Education, id?: string, isDeleted?: boolean) => void;
     education?: Education;
+    currentEducations?: Education[]; // Add prop for current educations
 }
 
 export const EducationDialog: React.FC<EducationDialogProps> = ({
@@ -38,6 +292,7 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
     onOpenChange,
     onSave,
     education,
+    currentEducations, // Destructure new prop
 }) => {
     const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -202,7 +457,7 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
             throw new Error("User data not available.");
         }
 
-        let updatedEducations = [...(user.education || [])];
+        let updatedEducations = [...(currentEducations || [])]; // Use currentEducations prop
         const currentEntryId = education?._id;
 
         if (isDeleteOperation) {
@@ -396,221 +651,14 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
         }
     };
 
-    // Form content component to be shared between Dialog and Drawer
-    const FormContent = () => (
-        <>
-            <div className="py-4 space-y-6">
-                {/* School */}
-                <div className="space-y-2">
-                    <label htmlFor="school" className="text-sm font-medium">
-                        School<span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                        id="school"
-                        name="school"
-                        placeholder="Ex: Delhi University"
-                        value={educationData.school}
-                        onChange={handleInputChange}
-                        required
-                        onKeyDown={handleKeyDown}
-                        className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                    />
-                </div>
-
-                {/* Degree */}
-                <div className="space-y-2">
-                    <label htmlFor="degree" className="text-sm font-medium">
-                        Degree<span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                        id="degree"
-                        name="degree"
-                        placeholder="Ex: Bachelor of Science"
-                        value={educationData.degree}
-                        onChange={handleInputChange}
-                        required
-                        onKeyDown={handleKeyDown}
-                        className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                    />
-                </div>
-
-                {/* Start Date */}
-                <div className="space-y-2">
-                    <label htmlFor="startDate" className="text-sm font-medium">
-                        Start Date<span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className={cn(
-                                "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
-                                !educationData.startDate &&
-                                    "text-muted-foreground dark:text-gray-400"
-                            )}
-                            onClick={() =>
-                                setStartDateCalendarOpen(!startDateCalendarOpen)
-                            }
-                        >
-                            {educationData.startDate ? (
-                                format(new Date(educationData.startDate), "PPP")
-                            ) : (
-                                <span>Start Date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4" />
-                        </Button>
-                        {startDateCalendarOpen && (
-                            <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
-                                <Calendar
-                                    mode="single"
-                                    selected={
-                                        educationData.startDate
-                                            ? new Date(educationData.startDate)
-                                            : undefined
-                                    }
-                                    onSelect={(date) =>
-                                        handleDateChange("startDate", date)
-                                    }
-                                    initialFocus
-                                />
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Currently studying checkbox */}
-                <div className="flex items-center space-x-2">
-                    <Checkbox
-                        id="currentlyStudying"
-                        checked={currentlyStudying}
-                        onCheckedChange={handleCurrentlyStudyingChange}
-                    />
-                    <label
-                        htmlFor="currentlyStudying"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                        I am currently studying here
-                    </label>
-                </div>
-
-                {/* End Date - conditionally shown when not currently studying */}
-                {!currentlyStudying && (
-                    <div className="space-y-2">
-                        <label
-                            htmlFor="endDate"
-                            className="text-sm font-medium"
-                        >
-                            End Date<span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className={cn(
-                                    "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
-                                    !educationData.endDate &&
-                                        "text-muted-foreground dark:text-gray-400",
-                                    dateError && "border-red-500" // Highlight the button when there's an error
-                                )}
-                                onClick={() =>
-                                    setEndDateCalendarOpen(!endDateCalendarOpen)
-                                }
-                            >
-                                {educationData.endDate ? (
-                                    format(
-                                        new Date(educationData.endDate),
-                                        "PPP"
-                                    )
-                                ) : (
-                                    <span>End Date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4" />
-                            </Button>
-                            {endDateCalendarOpen && (
-                                <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
-                                    <Calendar
-                                        mode="single"
-                                        selected={
-                                            educationData.endDate
-                                                ? new Date(
-                                                      educationData.endDate
-                                                  )
-                                                : undefined
-                                        }
-                                        onSelect={(date) =>
-                                            handleDateChange("endDate", date)
-                                        }
-                                        initialFocus
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Move error message outside the conditional section so it's visible regardless */}
-                {dateError && (
-                    <p className="text-red-500 text-sm">{dateError}</p>
-                )}
-            </div>
-        </>
-    );
-
-    // Footer content component to be shared between Dialog and Drawer
-    const FooterContent = () => (
-        <>
-            {education?._id && (
-                <Button
-                    type="button"
-                    onClick={handleDelete}
-                    variant="outline"
-                    className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900 dark:hover:text-red-300 w-full sm:w-auto"
-                    disabled={isSubmitting}
-                >
-                    {isSubmitting ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    Delete
-                </Button>
-            )}
-            <div
-                className={cn(
-                    "flex gap-2 w-full",
-                    education?._id ? "" : "justify-end"
-                )}
-            >
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => onOpenChange(false)}
-                    disabled={isSubmitting}
-                    className="dark:border-gray-600 w-1/2 sm:w-auto dark:hover:bg-gray-700"
-                >
-                    Cancel
-                </Button>
-                <Button
-                    type="button"
-                    onClick={handleSave}
-                    className="bg-accent w-1/2 sm:w-auto hover:bg-accent/70 text-white"
-                    disabled={
-                        isSubmitting ||
-                        !educationData.school ||
-                        !educationData.degree ||
-                        !educationData.startDate ||
-                        (!currentlyStudying && !educationData.endDate) ||
-                        !!dateError ||
-                        !hasChanges() // Disable if no changes detected
-                    }
-                >
-                    {isSubmitting ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        "Save"
-                    )}
-                </Button>
-            </div>
-        </>
-    );
+    const saveButtonDisabled =
+    isSubmitting ||
+    !educationData.school ||
+    !educationData.degree ||
+    !educationData.startDate ||
+    (!currentlyStudying && !educationData.endDate) ||
+    !!dateError ||
+    !hasChanges();
 
     // Conditionally render Dialog or Drawer based on screen size
     if (isMobile) {
@@ -628,10 +676,29 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
                         </p>
                     </DrawerHeader>
                     <div className="p-4 overflow-y-auto flex-1">
-                        <FormContent />
+                        <EducationFormContent
+                educationData={educationData}
+                handleInputChange={handleInputChange}
+                handleKeyDown={handleKeyDown}
+                startDateCalendarOpen={startDateCalendarOpen}
+                setStartDateCalendarOpen={setStartDateCalendarOpen}
+                endDateCalendarOpen={endDateCalendarOpen}
+                setEndDateCalendarOpen={setEndDateCalendarOpen}
+                handleDateChange={handleDateChange}
+                currentlyStudying={currentlyStudying}
+                handleCurrentlyStudyingChange={handleCurrentlyStudyingChange}
+                dateError={dateError}
+            />
                     </div>
                     <DrawerFooter className="border-t pt-4 flex flex-col gap-2 dark:border-gray-700">
-                        <FooterContent />
+                        <EducationFooterContent
+                educationId={education?._id}
+                handleDelete={handleDelete}
+                isSubmitting={isSubmitting}
+                onOpenChange={onOpenChange}
+                handleSave={handleSave}
+                saveButtonDisabled={saveButtonDisabled}
+            />
                     </DrawerFooter>
                 </DrawerContent>
             </Drawer>
@@ -654,9 +721,28 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
                         * Indicates required
                     </p>
                 </DialogHeader>
-                <FormContent />
+                <EducationFormContent
+            educationData={educationData}
+            handleInputChange={handleInputChange}
+            handleKeyDown={handleKeyDown}
+            startDateCalendarOpen={startDateCalendarOpen}
+            setStartDateCalendarOpen={setStartDateCalendarOpen}
+            endDateCalendarOpen={endDateCalendarOpen}
+            setEndDateCalendarOpen={setEndDateCalendarOpen}
+            handleDateChange={handleDateChange}
+            currentlyStudying={currentlyStudying}
+            handleCurrentlyStudyingChange={handleCurrentlyStudyingChange}
+            dateError={dateError}
+        />
                 <DialogFooter className="border-t pt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-2 dark:border-gray-700">
-                    <FooterContent />
+                    <EducationFooterContent
+            educationId={education?._id}
+            handleDelete={handleDelete}
+            isSubmitting={isSubmitting}
+            onOpenChange={onOpenChange}
+            handleSave={handleSave}
+            saveButtonDisabled={saveButtonDisabled}
+          />
                 </DialogFooter>
             </DialogContent>
         </Dialog>

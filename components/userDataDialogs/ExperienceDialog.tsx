@@ -21,12 +21,225 @@ import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { isBefore, isEqual } from "date-fns";
 
+// Define props for the new FormContent component
+interface ExperienceFormContentProps {
+  experienceData: Experience;
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  startDateCalendarOpen: boolean;
+  setStartDateCalendarOpen: (open: boolean) => void;
+  endDateCalendarOpen: boolean;
+  setEndDateCalendarOpen: (open: boolean) => void;
+  handleDateChange: (field: "startDate" | "endDate", date: Date | undefined) => void;
+  currentlyWorking: boolean;
+  handleCurrentlyWorkingChange: (checked: boolean) => void;
+  dateError: string;
+}
+
+// Define FormContent component outside ExperienceDialog
+const ExperienceFormContent: React.FC<ExperienceFormContentProps> = ({
+  experienceData,
+  handleInputChange,
+  handleKeyDown,
+  startDateCalendarOpen,
+  setStartDateCalendarOpen,
+  endDateCalendarOpen,
+  setEndDateCalendarOpen,
+  handleDateChange,
+  currentlyWorking,
+  handleCurrentlyWorkingChange,
+  dateError,
+}) => (
+  <>
+    <div className="py-4 space-y-6">
+      {/* Company */}
+      <div className="space-y-2">
+        <label htmlFor="company" className="text-sm font-medium">
+          Company<span className="text-red-500">*</span>
+        </label>
+        <Input
+          id="company"
+          name="company"
+          placeholder="Ex: Unbiasly"
+          value={experienceData.company}
+          onChange={handleInputChange}
+          required
+          onKeyDown={handleKeyDown}
+          className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+        />
+      </div>
+
+      {/* Role */}
+      <div className="space-y-2">
+        <label htmlFor="role" className="text-sm font-medium">
+          Role<span className="text-red-500">*</span>
+        </label>
+        <Input
+          id="role"
+          name="role"
+          placeholder="Ex: Software Engineer"
+          value={experienceData.role}
+          onChange={handleInputChange}
+          required
+          onKeyDown={handleKeyDown}
+          className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+        />
+      </div>
+
+      {/* Start Date */}
+      <div className="space-y-2">
+        <label htmlFor="startDate" className="text-sm font-medium">
+          Start Date<span className="text-red-500">*</span>
+        </label>
+        <div className="relative">
+          <Button
+            type="button"
+            variant="outline"
+            className={cn(
+              "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
+              !experienceData.startDate && "text-muted-foreground dark:text-gray-400"
+            )}
+            onClick={() => setStartDateCalendarOpen(!startDateCalendarOpen)}
+          >
+            {experienceData.startDate ? (
+              format(new Date(experienceData.startDate), "PPP")
+            ) : (
+              <span>Start Date</span>
+            )}
+            <CalendarIcon className="ml-auto h-4 w-4" />
+          </Button>
+          {startDateCalendarOpen && (
+            <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
+              <Calendar
+                mode="single"
+                selected={experienceData.startDate ? new Date(experienceData.startDate) : undefined}
+                onSelect={(date) => handleDateChange("startDate", date)}
+                initialFocus
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Currently working checkbox */}
+      <div className="flex items-center space-x-2">
+        <Checkbox 
+          id="currentlyWorking" 
+          checked={currentlyWorking} 
+          onCheckedChange={handleCurrentlyWorkingChange} 
+        />
+        <label
+          htmlFor="currentlyWorking"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          I am currently working here
+        </label>
+      </div>
+
+      {/* End Date - conditionally shown when not currently working */}
+      {!currentlyWorking && (
+        <div className="space-y-2">
+          <label htmlFor="endDate" className="text-sm font-medium">
+            End Date<span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
+                !experienceData.endDate && "text-muted-foreground dark:text-gray-400"
+              )}
+              onClick={() => setEndDateCalendarOpen(!endDateCalendarOpen)}
+            >
+              {experienceData.endDate ? (
+                format(new Date(experienceData.endDate), "PPP")
+              ) : (
+                <span>End Date</span>
+              )}
+              <CalendarIcon className="ml-auto h-4 w-4" />
+            </Button>
+            {endDateCalendarOpen && (
+              <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
+                <Calendar
+                  mode="single"
+                  selected={experienceData.endDate ? new Date(experienceData.endDate) : undefined}
+                  onSelect={(date) => handleDateChange("endDate", date)}
+                  initialFocus
+                />
+              </div>
+            )}
+          </div>
+          {dateError && (
+            <p className="text-red-500 text-sm mt-1">{dateError}</p>
+          )}
+        </div>
+      )}
+    </div>
+  </>
+);
+
+// Define props for the new FooterContent component
+interface ExperienceFooterContentProps {
+  experienceId: string | undefined;
+  handleDelete: () => Promise<void>;
+  isSubmitting: boolean;
+  onOpenChange: (open: boolean) => void;
+  handleSave: () => Promise<void>;
+  saveButtonDisabled: boolean;
+}
+
+// Define FooterContent component outside ExperienceDialog
+const ExperienceFooterContent: React.FC<ExperienceFooterContentProps> = ({
+  experienceId,
+  handleDelete,
+  isSubmitting,
+  onOpenChange,
+  handleSave,
+  saveButtonDisabled,
+}) => (
+  <>
+    {(experienceId) && (
+      <Button 
+        type="button"
+        onClick={handleDelete}
+        variant="outline"
+        className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900 dark:hover:text-red-300 w-full sm:w-auto"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        Delete
+      </Button>
+    )}
+    <div className={cn("flex gap-2 w-full sm:w-auto", (experienceId) ? "" : "ml-auto")}>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => onOpenChange(false)}
+        disabled={isSubmitting}
+        className="w-1/2 sm:w-auto dark:border-gray-600 dark:hover:bg-gray-700"
+      >
+        Cancel
+      </Button>
+      <Button 
+        type="button"
+        onClick={handleSave} 
+        className="bg-accent hover:bg-accent/80 text-white px-6 sm:px-8 w-1/2 sm:w-auto"
+        disabled={saveButtonDisabled}
+      >
+        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Save"}
+      </Button>
+    </div>
+  </>
+);
+
 // Change interface to match EducationDialog but for Experience
 interface ExperienceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: (experience: Experience, id?: string, isDeleted?: boolean) => void;
   experience?: Experience;
+  currentExperiences?: Experience[]; // Add prop for current experiences
 }
 
 export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
@@ -34,6 +247,7 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
   onOpenChange,
   onSuccess,
   experience,
+  currentExperiences, // Destructure new prop
 }) => {
   // Check for mobile screen
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -174,7 +388,7 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
       throw new Error("User data not available.");
     }
 
-    let updatedExperiences = [...(user.experience || [])];
+    let updatedExperiences = [...(currentExperiences || [])]; // Use currentExperiences prop
     const currentEntryId = experience?._id;
 
     if (isDeleteOperation) {
@@ -322,181 +536,14 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
     }
   };
 
-  // Form content component to be shared between Dialog and Drawer
-  const FormContent = () => (
-    <>
-      <div className="py-4 space-y-6">
-        {/* Company */}
-        <div className="space-y-2">
-          <label htmlFor="company" className="text-sm font-medium">
-            Company<span className="text-red-500">*</span>
-          </label>
-          <Input
-            id="company"
-            name="company"
-            placeholder="Ex: Unbiasly"
-            value={experienceData.company}
-            onChange={handleInputChange}
-            required
-            onKeyDown={handleKeyDown}
-            className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-          />
-        </div>
-
-        {/* Role */}
-        <div className="space-y-2">
-          <label htmlFor="role" className="text-sm font-medium">
-            Role<span className="text-red-500">*</span>
-          </label>
-          <Input
-            id="role"
-            name="role"
-            placeholder="Ex: Software Engineer"
-            value={experienceData.role}
-            onChange={handleInputChange}
-            required
-            onKeyDown={handleKeyDown}
-            className="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-          />
-        </div>
-
-        {/* Start Date */}
-        <div className="space-y-2">
-          <label htmlFor="startDate" className="text-sm font-medium">
-            Start Date<span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <Button
-              type="button"
-              variant="outline"
-              className={cn(
-                "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
-                !experienceData.startDate && "text-muted-foreground dark:text-gray-400"
-              )}
-              onClick={() => setStartDateCalendarOpen(!startDateCalendarOpen)}
-            >
-              {experienceData.startDate ? (
-                format(new Date(experienceData.startDate), "PPP")
-              ) : (
-                <span>Start Date</span>
-              )}
-              <CalendarIcon className="ml-auto h-4 w-4" />
-            </Button>
-            {startDateCalendarOpen && (
-              <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
-                <Calendar
-                  mode="single"
-                  selected={experienceData.startDate ? new Date(experienceData.startDate) : undefined}
-                  onSelect={(date) => handleDateChange("startDate", date)}
-                  initialFocus
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Currently working checkbox */}
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="currentlyWorking" 
-            checked={currentlyWorking} 
-            onCheckedChange={handleCurrentlyWorkingChange} 
-          />
-          <label
-            htmlFor="currentlyWorking"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            I am currently working here
-          </label>
-        </div>
-
-        {/* End Date - conditionally shown when not currently working */}
-        {!currentlyWorking && (
-          <div className="space-y-2">
-            <label htmlFor="endDate" className="text-sm font-medium">
-              End Date<span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <Button
-                type="button"
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
-                  !experienceData.endDate && "text-muted-foreground dark:text-gray-400"
-                )}
-                onClick={() => setEndDateCalendarOpen(!endDateCalendarOpen)}
-              >
-                {experienceData.endDate ? (
-                  format(new Date(experienceData.endDate), "PPP")
-                ) : (
-                  <span>End Date</span>
-                )}
-                <CalendarIcon className="ml-auto h-4 w-4" />
-              </Button>
-              {endDateCalendarOpen && (
-                <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
-                  <Calendar
-                    mode="single"
-                    selected={experienceData.endDate ? new Date(experienceData.endDate) : undefined}
-                    onSelect={(date) => handleDateChange("endDate", date)}
-                    initialFocus
-                  />
-                </div>
-              )}
-            </div>
-            {dateError && (
-              <p className="text-red-500 text-sm mt-1">{dateError}</p>
-            )}
-          </div>
-        )}
-      </div>
-    </>
-  );
-
-  // Footer content component to be shared between Dialog and Drawer
-  const FooterContent = () => (
-    <>
-      {(experience?._id) && (
-        <Button 
-          type="button"
-          onClick={handleDelete}
-          variant="outline"
-          className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900 dark:hover:text-red-300 w-full sm:w-auto"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Delete
-        </Button>
-      )}
-      <div className={cn("flex gap-2 w-full sm:w-auto", (experience?._id) ? "" : "ml-auto")}>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => onOpenChange(false)}
-          disabled={isSubmitting}
-          className="w-1/2 sm:w-auto dark:border-gray-600 dark:hover:bg-gray-700"
-        >
-          Cancel
-        </Button>
-        <Button 
-          type="button"
-          onClick={handleSave} 
-          className="bg-accent hover:bg-accent/80 text-white px-6 sm:px-8 w-1/2 sm:w-auto"
-          disabled={
-            isSubmitting || 
-            !experienceData.company || 
-            !experienceData.role || 
-            !experienceData.startDate || 
-            (!currentlyWorking && !experienceData.endDate) ||
-            !!dateError ||
-            !hasChanges() // Disable if no changes detected
-          }
-        >
-          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Save"}
-        </Button>
-      </div>
-    </>
-  );
+  const saveButtonDisabled = 
+    isSubmitting || 
+    !experienceData.company || 
+    !experienceData.role || 
+    !experienceData.startDate || 
+    (!currentlyWorking && !experienceData.endDate) ||
+    !!dateError ||
+    !hasChanges();
 
   // Conditionally render Dialog or Drawer based on screen size
   if (isMobile) {
@@ -510,10 +557,29 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
             <p className="text-sm text-muted-foreground mt-1 dark:text-gray-400">* Indicates required</p>
           </DrawerHeader>
           <div className="p-4 overflow-y-auto flex-1">
-            <FormContent />
+            <ExperienceFormContent
+              experienceData={experienceData}
+              handleInputChange={handleInputChange}
+              handleKeyDown={handleKeyDown}
+              startDateCalendarOpen={startDateCalendarOpen}
+              setStartDateCalendarOpen={setStartDateCalendarOpen}
+              endDateCalendarOpen={endDateCalendarOpen}
+              setEndDateCalendarOpen={setEndDateCalendarOpen}
+              handleDateChange={handleDateChange}
+              currentlyWorking={currentlyWorking}
+              handleCurrentlyWorkingChange={handleCurrentlyWorkingChange}
+              dateError={dateError}
+            />
           </div>
           <DrawerFooter className="border-t pt-4 flex flex-col gap-2 dark:border-gray-700">
-            <FooterContent />
+            <ExperienceFooterContent
+              experienceId={experience?._id}
+              handleDelete={handleDelete}
+              isSubmitting={isSubmitting}
+              onOpenChange={onOpenChange}
+              handleSave={handleSave}
+              saveButtonDisabled={saveButtonDisabled}
+            />
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -529,9 +595,28 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1 dark:text-gray-400">* Indicates required</p>
         </DialogHeader>
-        <FormContent />
+        <ExperienceFormContent
+          experienceData={experienceData}
+          handleInputChange={handleInputChange}
+          handleKeyDown={handleKeyDown}
+          startDateCalendarOpen={startDateCalendarOpen}
+          setStartDateCalendarOpen={setStartDateCalendarOpen}
+          endDateCalendarOpen={endDateCalendarOpen}
+          setEndDateCalendarOpen={setEndDateCalendarOpen}
+          handleDateChange={handleDateChange}
+          currentlyWorking={currentlyWorking}
+          handleCurrentlyWorkingChange={handleCurrentlyWorkingChange}
+          dateError={dateError}
+        />
         <DialogFooter className="border-t pt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-2 dark:border-gray-700">
-          <FooterContent />
+          <ExperienceFooterContent
+            experienceId={experience?._id}
+            handleDelete={handleDelete}
+            isSubmitting={isSubmitting}
+            onOpenChange={onOpenChange}
+            handleSave={handleSave}
+            saveButtonDisabled={saveButtonDisabled}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

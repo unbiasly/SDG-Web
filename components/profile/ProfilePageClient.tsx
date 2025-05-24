@@ -40,7 +40,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
     const [selectedExperienceIndex, setSelectedExperienceIndex] = useState<number | undefined>(undefined);
     
     const { user } = useUser();
-    const isOwnProfile = user?._id == profileUser?._id;
+    const isOwnProfile = user?._id === profileUser?._id; // Strict equality for ID comparison
 
     // Fetch user data by userId
     const fetchUserById = async (id: string) => {
@@ -140,13 +140,17 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
         }
     };
 
+    // Effect for fetching core user data and tracking profile view
     useEffect(() => {
+        if (user?._id && user._id !== userId) { // Ensure user exists and it's not own profile
+            trackProfileView(userId);
+        }
         // Only run initialization once
         fetchUserById(userId)
         getAnalytics();
         getUserPosts(userId);
         {!isOwnProfile && trackProfileView(userId);}
-    }, []); // Add userId to dependencies to reset state when it changes
+    }, [profileUser?._id]); // Add userId to dependencies to reset state when it changes
 
     useEffect(() => {
         const handleUserUpdate = (event: CustomEvent) => {
@@ -159,20 +163,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
         return () => {
             window.removeEventListener('user-profile-updated', handleUserUpdate as EventListener);
         };
-    }, []);
-
-    useEffect(() => {
-        const handleUserUpdate = (event: CustomEvent) => {
-            // Update local state with the new user data
-            setProfileUser(event.detail);
-        };
-        
-        window.addEventListener('user-profile-updated', handleUserUpdate as EventListener);
-        
-        return () => {
-            window.removeEventListener('user-profile-updated', handleUserUpdate as EventListener);
-        };
-    }, []);
+    }, []); // This listener is for global updates, keep it simple.
 
     // Function to open dialog for adding new education
     const handleAddEducation = () => {
@@ -189,33 +180,11 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
 
     // Function to handle saving education data
     const handleSaveEducation = async (education: Education, id?: string, isDeleted?: boolean) => {
-        try {
-            // Get current user data to work with the complete education array
-            const currentUserData = await fetchUserById(userId);
-            if (!currentUserData) return;
-            
-            let updatedEducation = [...(currentUserData.education || [])];
-            
-            if (isDeleted && id) {
-                // Remove the education entry if it's deleted
-                updatedEducation = updatedEducation.filter(edu => edu._id !== id);
-            } else if (id) {
-                // Update existing education entry
-                const index = updatedEducation.findIndex(edu => edu._id === id);
-                if (index !== -1) {
-                    updatedEducation[index] = education;
-                }
-            } else {
-                // Add new education entry with a temporary ID
-                updatedEducation.push({
-                    ...education,
-                    // _id: crypto.randomUUID()
-                });
-            }
-            
-        } catch (error) {
-            console.error("Failed to save education:", error);
-        }
+        // This function is called AFTER the dialog has successfully updated the backend
+        // AND dispatched 'user-profile-updated' event.
+        // 'profileUser' state is already (or about to be) updated by the event listener.
+        // No need to call fetchUserById or manually update profileUser here.
+        console.log("EducationDialog onSave callback in ProfilePageClient:", { education, id, isDeleted });
     };
 
     // Function to open dialog for adding new experience
@@ -233,39 +202,17 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
 
     // Function to handle saving experience data
     const handleSaveExperience = async (experience: Experience, id?: string, isDeleted?: boolean) => {
-        try {
-            // Get current user data to work with the complete experience array
-            const currentUserData = await fetchUserById(userId);
-            if (!currentUserData) return;
-            
-            let updatedExperience = [...(currentUserData.experience || [])];
-            
-            if (isDeleted && id) {
-                // Remove the experience entry if it's deleted
-                updatedExperience = updatedExperience.filter(exp => exp._id !== id);
-            } else if (id) {
-                // Update existing experience entry
-                const index = updatedExperience.findIndex(exp => exp._id === id);
-                if (index !== -1) {
-                    updatedExperience[index] = experience;
-                }
-            } else {
-                // Add new experience entry with a temporary ID
-                updatedExperience.push({
-                    ...experience,
-                    // _id: crypto.randomUUID()
-                });
-            }
-            
-        } catch (error) {
-            console.error("Failed to save experience:", error);
-        }
+        // This function is called AFTER the dialog has successfully updated the backend
+        // AND dispatched 'user-profile-updated' event.
+        // 'profileUser' state is already (or about to be) updated by the event listener.
+        // No need to call fetchUserById or manually update profileUser here.
+        console.log("ExperienceDialog onSuccess callback in ProfilePageClient:", { experience, id, isDeleted });
     };
 
     // Show loading state while fetching profile data
     if (isLoading) {
         return (
-            <div className="w-full min-h-screen flex flex-1 justify-center items-center">
+            <div className="w-full min-h-screen flex flex-1 justify-center items-center border-gray-300 rounded-2xl border-1 pb-20">
                 <Loader />
             </div>
         );
@@ -500,6 +447,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
               onOpenChange={setEducationDialogOpen}
               onSave={handleSaveEducation}
               education={selectedEducation}
+              currentEducations={profileUser?.education} // Pass current educations
             //   id={selectedEducation?._id}
             />
           )}
@@ -511,6 +459,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
               onOpenChange={setExperienceDialogOpen}
               onSuccess={handleSaveExperience}
               experience={selectedExperience}
+              currentExperiences={profileUser?.experience} // Pass current experiences
             //   index={selectedExperienceIndex}
             />
           )}

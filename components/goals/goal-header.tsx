@@ -27,7 +27,7 @@ export default function GoalHeader({ goal }: GoalProps) {
     const nextSlug = nextGoal ? slugify(nextGoal.title) : null;
 
     const imageDivStyles = `${goal.id === 5 ? "h-1/4" : "h-full"}`;
-    const imageStyles = `${goal.id === 17 ? "p-2 object-center" : "p-0"}`;
+    const imageStyles = `${goal.id === 14 ? 'brightness-85' : 'brightness-100'} ${goal.id === 17 ? "p-2 object-center" : "p-0"}`;
 
     return (
         <div
@@ -59,7 +59,7 @@ export default function GoalHeader({ goal }: GoalProps) {
             </div>
 
             {/* Content section with proper responsive sizing */}
-            <div className="flex-1 flex items-center px-2 sm:px-6 md:px-12 relative z-10 min-h-0">
+            <div className="flex-1 flex items-center px-2 sm:px-6 md:px-12 relative z-30 min-h-0">
                 <div className="flex items-start justify-start space-x-2 sm:space-x-4 md:space-x-6">
                     <div className="text-5xl sm:text-5xl md:text-7xl lg:text-8xl font-bold leading-none text-black/40">
                         {goal.id}
@@ -69,7 +69,7 @@ export default function GoalHeader({ goal }: GoalProps) {
                             {goal.title}
                         </h1>
 
-                        <p className="text-base  md:text-xl font-bold">
+                        <p className="text-base md:text-xl font-bold">
                             {goal.subtitle}
                         </p>
                         <div
@@ -110,16 +110,16 @@ export default function GoalHeader({ goal }: GoalProps) {
 
             {/* Image as absolute positioned overlay with responsive height */}
             <div
-                className={`absolute rounded-b-2xl bottom-0 left-0 w-full ${imageDivStyles
-                } z-0 overflow-hidden goal-image-section`}
+                className={`absolute rounded-b-2xl bottom-0 left-0 w-full ${imageDivStyles} z-0 overflow-hidden goal-image-section`}
             >
                 <Image
                     src={goal.goal_header}
                     alt={`${goal.title} header graphic`}
                     fill
                     objectFit="contain"
-                    className={`object-contain object-bottom  ${imageStyles}`}
+                    className={`object-contain object-bottom ${imageStyles}`}
                     priority
+                    // style={{ filter: 'brightness(0.8)' }}
                 />
             </div>
         </div>
