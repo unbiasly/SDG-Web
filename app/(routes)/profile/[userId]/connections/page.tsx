@@ -1,296 +1,323 @@
-'use client'
+"use client";
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { 
-  useInfiniteQuery, 
-  useMutation, 
-  useQueryClient 
+import {
+    useInfiniteQuery,
+    useMutation,
+    useQueryClient,
 } from "@tanstack/react-query";
 import { AnalyticsResponseData } from "@/service/api.interface";
+import { useUser } from "@/lib/redux/features/user/hooks";
 
 type UserType = {
-  _id: string;
-  name?: string;
-  username: string;
-  occupation?: string;
-  email: string;
-  following?: boolean;
-  profileImage?: string;
+    _id: string;
+    name?: string;
+    username: string;
+    occupation?: string;
+    email: string;
+    following?: boolean;
+    profileImage?: string;
 };
 
 interface ConnectionsPageProps {
-  params: Promise<{
-    userId: string;
-  }>
+    params: Promise<{
+        userId: string;
+    }>;
 }
 
 export default function Page({ params }: ConnectionsPageProps) {
-  const resolvedParams = use(params);
-  const userId = resolvedParams.userId;
-  const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"followers" | "following">("followers");
-  const [profileData, setProfileData] = useState<{name?: string, username?: string}>({});
-  const [analytics, setAnalytics] = useState<AnalyticsResponseData | null>(null);
-  // Function to fetch followers with cursor-based pagination
-  const fetchFollowers = async ({ pageParam = null }) => {
-    const response = await fetch(`/api/follow`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        userId, 
-        action: 'followers',
-        limit: 10,
-        cursor: pageParam || ''
-      }),
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch followers');
-    }
-    
-    return await response.json();
-  };
+    const resolvedParams = use(params);
+    const userId = resolvedParams.userId;
+    const { user } = useUser(); 
+    // const queryClient = useQueryClient();
+    const [activeTab, setActiveTab] = useState<"followers" | "following">("followers");
 
-  // Function to fetch following with cursor-based pagination
-  const fetchFollowing = async ({ pageParam = null }) => {
-    const response = await fetch(`/api/follow`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        userId, 
-        action: 'following',
-        limit: 10,
-        cursor: pageParam || ''
-      }),
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch following');
-    }
-    
-    return await response.json();
-  };
-
-  // Function to fetch profile data
-  const fetchUserProfile = async () => {
-    try {
-      const response = await fetch(`/api/user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('User not found');
-      }
-      
-      const userData = await response.json();
-      if (userData?.data) {
-        setProfileData({
-          name: userData.data.name  ,
-          username: userData.data.username
-        });
-      }
-    } catch (error) {
-      console.error("Failed to fetch user profile:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserProfile();
-    getAnalytics();
-  }, [userId]);
-
-  // Set up infinite queries for followers and following
-  // The key change: enabled is always true to prefetch both
-  const {
-    data: followersData,
-    fetchNextPage: fetchNextFollowers,
-    hasNextPage: hasMoreFollowers,
-    isFetching: isLoadingFollowers,
-    isError: followersError
-  } = useInfiniteQuery({
-    queryKey: ['followers', userId],
-    queryFn: fetchFollowers,
-    getNextPageParam: (lastPage) => 
-      lastPage.pagination?.hasMore ? lastPage.pagination.nextCursor : undefined,
-    initialPageParam: null,
-    enabled: true, // Always fetch regardless of active tab
-    staleTime: 5 * 60 * 1000, // 5 minutes before refetch
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
-  });
-
-  const {
-    data: followingData,
-    fetchNextPage: fetchNextFollowing,
-    hasNextPage: hasMoreFollowing,
-    isFetching: isLoadingFollowing,
-    isError: followingError
-  } = useInfiniteQuery({
-    queryKey: ['following', userId],
-    queryFn: fetchFollowing,
-    getNextPageParam: (lastPage) => 
-      lastPage.pagination?.hasMore ? lastPage.pagination.nextCursor : undefined,
-    initialPageParam: null,
-    enabled: true, // Always fetch regardless of active tab
-    staleTime: 5 * 60 * 1000, // 5 minutes before refetch
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
-  });
-
-  // Mutation for follow/unfollow
-  const followMutation = useMutation({
-    mutationFn: async ({ targetUserId, action }: { targetUserId: string, action: 'follow' | 'unfollow' }) => {
-      const response = await fetch(`/api/follow`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          userId, 
-          followingId: targetUserId,
-          action
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to ${action} user`);
-      }
-      
-      return await response.json();
-    },
-    onSuccess: () => {
-      // Invalidate relevant queries to trigger a refetch
-      queryClient.invalidateQueries({ queryKey: ['followers', userId] });
-      queryClient.invalidateQueries({ queryKey: ['following', userId] });
-    },
-  });
-  const getAnalytics = async () => {
-    try {
-        const response = await fetch(`/api/analytics`, {
-            method: 'POST',
+    const [analytics, setAnalytics] = useState<AnalyticsResponseData | null>(
+        null
+    );
+    const [loading, setLoading] = useState<boolean>(true);
+    // Function to fetch followers with cursor-based pagination
+    const fetchFollowers = async ({ pageParam = null }) => {
+        const response = await fetch(`/api/follow`, {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                action: 'get',
-                userId: userId,
-                startDate: "2025-03-15",
-                endDate: "2025-04-15"
+                userId,
+                action: "followers",
+                limit: 10,
+                cursor: pageParam || "",
             }),
         });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch followers");
+        }
+
+        return await response.json();
+    };
+
+    // Function to fetch following with cursor-based pagination
+    const fetchFollowing = async ({ pageParam = null }) => {
+        const response = await fetch(`/api/follow`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                userId,
+                action: "following",
+                limit: 10,
+                cursor: pageParam || "",
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch following");
+        }
+
+        return await response.json();
+    };
+
+
+    useEffect(() => {
+        getAnalytics();
+    }, [userId]);
+
+    // Set up infinite queries for followers and following
+    // The key change: enabled is always true to prefetch both
+    const {
+        data: followersData,
+        fetchNextPage: fetchNextFollowers,
+        hasNextPage: hasMoreFollowers,
+        isFetching: isLoadingFollowers,
+        isError: followersError,
+    } = useInfiniteQuery({
+        queryKey: ["followers", userId],
+        queryFn: fetchFollowers,
+        getNextPageParam: (lastPage) =>
+            lastPage.pagination?.hasMore
+                ? lastPage.pagination.nextCursor
+                : undefined,
+        initialPageParam: null,
+        enabled: true, // Always fetch regardless of active tab
+        staleTime: 5 * 60 * 1000, // 5 minutes before refetch
+        gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    });
+
+    const {
+        data: followingData,
+        fetchNextPage: fetchNextFollowing,
+        hasNextPage: hasMoreFollowing,
+        isFetching: isLoadingFollowing,
+        isError: followingError,
+    } = useInfiniteQuery({
+        queryKey: ["following", userId],
+        queryFn: fetchFollowing,
+        getNextPageParam: (lastPage) =>
+            lastPage.pagination?.hasMore
+                ? lastPage.pagination.nextCursor
+                : undefined,
+        initialPageParam: null,
+        enabled: true, // Always fetch regardless of active tab
+        staleTime: 5 * 60 * 1000, // 5 minutes before refetch
+        gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    });
+
+    // Mutation for follow/unfollow
+    // const followMutation = useMutation({
+    //     mutationFn: async ({
+    //         targetUserId,
+    //         action,
+    //     }: {
+    //         targetUserId: string;
+    //         action: "follow" | "unfollow";
+    //     }) => {
+    //         const response = await fetch(`/api/follow`, {
+    //             method: "POST",
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({
+    //                 userId,
+    //                 followingId: targetUserId,
+    //                 action,
+    //             }),
+    //         });
+
+    //         if (!response.ok) {
+    //             throw new Error(`Failed to ${action} user`);
+    //         }
+
+    //         return await response.json();
+    //     },
+    //     onSuccess: () => {
+    //         // Invalidate relevant queries to trigger a refetch
+    //         queryClient.invalidateQueries({ queryKey: ["followers", userId] });
+    //         queryClient.invalidateQueries({ queryKey: ["following", userId] });
+    //     },
+    // });
+    const getAnalytics = async () => {
+        try {
+            const response = await fetch(`/api/analytics`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    action: "get",
+                    userId: userId,
+                }),
+            });
             const analyticsData = await response.json();
             setAnalytics(analyticsData);
+            setLoading(false);
             console.log("Analytics Data \n", analytics);
-        return analyticsData;
-    } catch(error) {
-        console.error("Analytics Fetch Error \n", error);
-        return null;
-    }
-}
+            return analyticsData;
+        } catch (error) {
+            console.error("Analytics Fetch Error \n", error);
+            return null;
+        }
+    };
 
-//   const handleFollowToggle = useCallback((user: UserType) => {
-//     const action = user.following ? 'unfollow' : 'follow';
-//     followMutation.mutate({ 
-//       targetUserId: user._id, 
-//       action 
-//     });
-//   }, [followMutation]);
+    //   const handleFollowToggle = useCallback((user: UserType) => {
+    //     const action = user.following ? 'unfollow' : 'follow';
+    //     followMutation.mutate({
+    //       targetUserId: user._id,
+    //       action
+    //     });
+    //   }, [followMutation]);
 
-  // Flatten pages data for rendering - memoized to prevent recalculations
-  const followers = followersData?.pages.flatMap(page => 
-    page.data?.map((user: UserType) => ({
-      ...user,
-      following: true // Followers of this profile are users we follow
-    })) || []
-  ) || [];
+    // Flatten pages data for rendering - memoized to prevent recalculations
+    const followers =
+        followersData?.pages.flatMap(
+            (page) =>
+                page.data?.map((user: UserType) => ({
+                    ...user,
+                    following: true, // Followers of this profile are users we follow
+                })) || []
+        ) || [];
 
-  const following = followingData?.pages.flatMap(page => 
-    page.data?.map((user: UserType) => ({
-      ...user,
-      following: true // These are users we're following
-    })) || []
-  ) || [];
+    const following =
+        followingData?.pages.flatMap(
+            (page) =>
+                page.data?.map((user: UserType) => ({
+                    ...user,
+                    following: true, // These are users we're following
+                })) || []
+        ) || [];
 
-  // Get total counts
-  const followersCount = analytics?.data?.followCounts?.followerCount;
-  const followingCount = analytics?.data?.followCounts?.followingCount;
+    // Get total counts
+    const followersCount = analytics?.data?.followCounts?.followerCount;
+    const followingCount = analytics?.data?.followCounts?.followingCount;
 
-  // Function to load more data based on active tab
-  const loadMore = useCallback(() => {
-    if (activeTab === "followers" && hasMoreFollowers) {
-      fetchNextFollowers();
-    } else if (activeTab === "following" && hasMoreFollowing) {
-      fetchNextFollowing();
-    }
-  }, [activeTab, hasMoreFollowers, hasMoreFollowing, fetchNextFollowers, fetchNextFollowing]);
+    // Function to load more data based on active tab
+    const loadMore = useCallback(() => {
+        if (activeTab === "followers" && hasMoreFollowers) {
+            fetchNextFollowers();
+        } else if (activeTab === "following" && hasMoreFollowing) {
+            fetchNextFollowing();
+        }
+    }, [
+        activeTab,
+        hasMoreFollowers,
+        hasMoreFollowing,
+        fetchNextFollowers,
+        fetchNextFollowing,
+    ]);
 
-  // Determine loading states only for visible content
-  const isActiveTabLoading = 
-    (activeTab === "followers" && isLoadingFollowers && followers.length === 0) || 
-    (activeTab === "following" && isLoadingFollowing && following.length === 0);
-  
-  const isLoadingMore = 
-    (activeTab === "followers" && isLoadingFollowers && followers.length > 0) || 
-    (activeTab === "following" && isLoadingFollowing && following.length > 0);
-  
-  const hasError = 
-    (activeTab === "followers" && followersError) || 
-    (activeTab === "following" && followingError);
+    // Determine loading states only for visible content
+    const isActiveTabLoading =
+        (activeTab === "followers" &&
+            isLoadingFollowers &&
+            followers.length === 0) ||
+        (activeTab === "following" &&
+            isLoadingFollowing &&
+            following.length === 0);
 
-  // Handle tab change
-  const handleTabChange = useCallback((tab: "followers" | "following") => {
-    setActiveTab(tab);
-  }, []);
+    const isLoadingMore =
+        (activeTab === "followers" &&
+            isLoadingFollowers &&
+            followers.length > 0) ||
+        (activeTab === "following" &&
+            isLoadingFollowing &&
+            following.length > 0);
 
-  return (
-    <div className="flex flex-1 flex-col overflow-hidden">
-      {/* Header */}
-      <header className="border-b border-gray-200 p-4">
-        <div className="flex items-center">
-          <Link href={`/profile/${userId}`} className="mr-4">
-            <ArrowLeft size={24} className="text-black" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold">{profileData.name || 'User'}</h1>
-            <p className="text-gray-500">@{profileData.username || 'username'}</p>
-          </div>
-        </div>
-      </header>
+    const hasError =
+        (activeTab === "followers" && followersError) ||
+        (activeTab === "following" && followingError);
 
-      {/* Tabs */}
-      <div className="flex border-b border-gray-200">
-        <button
-          className={`flex-1 py-4 text-center font-medium text-lg ${
-            activeTab === "followers"
-              ? "text-blue-900 border-b-2 border-blue-900"
-              : "text-gray-500"
-          }`}
-          onClick={() => handleTabChange("followers")}
-        >
-          {followersCount} Followers
-        </button>
-        <div className="border-r border-gray-200"></div>
-        <button
-          className={`flex-1 py-4 text-center font-medium text-lg ${
-            activeTab === "following"
-              ? "text-blue-900 border-b-2 border-blue-900"
-              : "text-gray-500"
-          }`}
-          onClick={() => handleTabChange("following")}
-        >
-          {followingCount} Following
-        </button>
-      </div>
+    // Handle tab change
+    const handleTabChange = useCallback((tab: "followers" | "following") => {
+        setActiveTab(tab);
+    }, []);
 
-      {/* Filter bar */}
-      {/* <div className="flex justify-between items-center px-4 py-3">
+    
+
+    return (
+        <div className="flex flex-1 flex-col overflow-hidden">
+            {loading ? (
+                    <header className="border-b border-gray-200 p-4">
+                        <div className="flex items-center">
+                            <Link href={`/profile/${userId}`} className="mr-4">
+                                <ArrowLeft size={24} className="text-black" />
+                            </Link>
+                            <div>
+                                <div className="h-7 w-40 bg-gray-200 rounded-md animate-pulse mb-2"></div>
+                                <div className="h-5 w-32 bg-gray-100 rounded-md animate-pulse"></div>
+                            </div>
+                        </div>
+                    </header>
+            ) : (
+                <>
+                    {/* Header */}
+                    <header className="border-b border-gray-200 p-4">
+                        <div className="flex items-center">
+                            <Link href={`/profile/${userId}`} className="mr-4">
+                                <ArrowLeft size={24} className="text-black" />
+                            </Link>
+                            <div>
+                                <h1 className="text-2xl font-bold">
+                                    {user?.name}
+                                </h1>
+                                <p className="text-gray-500">
+                                    @{user?.username}
+                                </p>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Tabs */}
+                    <div className="flex border-b border-gray-200">
+                        <button
+                            className={`flex-1 py-4 text-center font-medium text-lg ${
+                                activeTab === "followers"
+                                    ? "text-blue-900 border-b-2 border-blue-900"
+                                    : "text-gray-500"
+                            }`}
+                            onClick={() => handleTabChange("followers")}
+                        >
+                            {followersCount} Followers
+                        </button>
+                        <div className="border-r border-gray-200"></div>
+                        <button
+                            className={`flex-1 py-4 text-center font-medium text-lg ${
+                                activeTab === "following"
+                                    ? "text-blue-900 border-b-2 border-blue-900"
+                                    : "text-gray-500"
+                            }`}
+                            onClick={() => handleTabChange("following")}
+                        >
+                            {followingCount} Following
+                        </button>
+                    </div>
+                </>
+            )}
+
+            {/* Filter bar */}
+            {/* <div className="flex justify-between items-center px-4 py-3">
         <div className="flex items-center">
           <span className="text-gray-600 mr-2">Sort by:</span>
           <button className="flex items-center font-medium">
@@ -312,38 +339,45 @@ export default function Page({ params }: ConnectionsPageProps) {
         </div>
       </div> */}
 
-      {/* User List */}
-      <div className="flex-1 overflow-y-auto">
-        {hasError && (
-          <div className="p-4 text-red-500 text-center">
-            Error loading data. Please try again.
-          </div>
-        )}
-        
-        {isActiveTabLoading ? (
-          <div className="p-4 text-center">Loading...</div>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {(activeTab === "followers" ? followers : following).map((user) => (
-              <div
-                key={user._id}
-                className="flex items-center justify-between p-4"
-              >
-                <Link 
-                  href={`/profile/${user._id}`} 
-                  className="flex items-center flex-1"
-                >
-                  <img
-                    src={user.profileImage}
-                    alt={user.name || user.username}
-                    className="w-12 h-12 rounded-full mr-3 object-cover"
-                  />
-                  <div>
-                    <h3 className="font-bold">{user.name || user.username}</h3>
-                    <p className="text-gray-600">{user.occupation || user.email}</p>
-                  </div>
-                </Link>
-                {/* <button
+            {/* User List */}
+            <div className="flex-1 overflow-y-auto">
+                {hasError && (
+                    <div className="p-4 text-red-500 text-center">
+                        Error loading data. Please try again.
+                    </div>
+                )}
+
+                {isActiveTabLoading ? (
+                    <div className="p-4 text-center">Loading...</div>
+                ) : (
+                    <div className="divide-y divide-gray-100">
+                        {(activeTab === "followers"
+                            ? followers
+                            : following
+                        ).map((user) => (
+                            <div
+                                key={user._id}
+                                className="flex items-center justify-between p-4"
+                            >
+                                <Link
+                                    href={`/profile/${user._id}`}
+                                    className="flex items-center flex-1"
+                                >
+                                    <img
+                                        src={user.profileImage}
+                                        alt={user.name || user.username}
+                                        className="w-12 h-12 rounded-full mr-3 object-cover"
+                                    />
+                                    <div>
+                                        <h3 className="font-bold">
+                                            {user.name || user.username}
+                                        </h3>
+                                        <p className="text-gray-600">
+                                            {user.occupation || user.email}
+                                        </p>
+                                    </div>
+                                </Link>
+                                {/* <button
                   onClick={() => handleFollowToggle(user)}
                   className={`font-medium py-2 px-6 rounded-full transition-colors ${
                     user.following 
@@ -356,26 +390,26 @@ export default function Page({ params }: ConnectionsPageProps) {
                     ? 'Unfollow...'
                     : user.following ? 'Following' : 'Follow'}
                 </button> */}
-              </div>
-            ))}
-            
-            {/* Load more button */}
-            {((activeTab === "followers" && hasMoreFollowers) || 
-              (activeTab === "following" && hasMoreFollowing)) && (
-              <div className="p-4">
-                <button
-                  onClick={loadMore}
-                  disabled={isLoadingMore}
-                  className="w-full py-3 border border-gray-300 rounded-lg text-blue-600 font-medium hover:bg-gray-50 transition-colors"
-                >
-                  {isLoadingMore ? 'Loading...' : 'Load More'}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+                            </div>
+                        ))}
 
+                        {/* Load more button */}
+                        {((activeTab === "followers" && hasMoreFollowers) ||
+                            (activeTab === "following" &&
+                                hasMoreFollowing)) && (
+                            <div className="p-4">
+                                <button
+                                    onClick={loadMore}
+                                    disabled={isLoadingMore}
+                                    className="w-full py-3 border border-gray-300 rounded-lg text-blue-600 font-medium hover:bg-gray-50 transition-colors"
+                                >
+                                    {isLoadingMore ? "Loading..." : "Load More"}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}

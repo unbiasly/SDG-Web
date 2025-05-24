@@ -63,7 +63,7 @@ export async function POST() {
             name: 'jwtToken',
             value: tokenData.jwtToken,
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
+            secure: process.env.NODE_ENV === 'production', // CHANGED
             sameSite: 'lax',
             maxAge: 4 * 60 * 60, // 1 hoour in seconds
             path: '/'
@@ -73,7 +73,7 @@ export async function POST() {
             name: 'refreshToken',
             value: tokenData.refreshToken,
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
+            secure: process.env.NODE_ENV === 'production', // CHANGED
             sameSite: 'lax',
             maxAge: 4 * 60 * 60, // 1 hour in seconds
             path: '/'

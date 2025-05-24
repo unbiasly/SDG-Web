@@ -3,7 +3,6 @@ import { ContentFeed } from "@/components/feed/ContentFeed";
 import CreatePost from "@/components/feed/CreatePost";
 import SDGNews from "@/components/feed/SDGNews";
 import { FEED_TABS, MOBILE_FEED_TABS } from "@/lib/constants/index-constants";
-import { formatDate } from "@/lib/utilities/formatDate";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
