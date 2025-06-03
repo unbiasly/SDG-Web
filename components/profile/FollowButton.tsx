@@ -1,18 +1,20 @@
 'use client'
 import React, { useState } from 'react'
 import { Button } from '../ui/button'
+import { useQueryClient } from '@tanstack/react-query';
 
 interface FollowButtonProps {
     targetId?: string;
     userId: string;
     followed?: boolean| null;
+    onFollowChange?: (isFollowing: boolean) => void;
 
 }
 
-const FollowButton = ({ targetId, userId, followed }: FollowButtonProps) => {
+const FollowButton = ({ targetId, userId, followed, onFollowChange }: FollowButtonProps) => {
 
     const [isFollowing, setIsFollowing] = useState(followed);
-
+    const queryClient = useQueryClient();
     const handleFollow = async () => {
         
         const response = await fetch(`/api/follow`, {
@@ -22,6 +24,10 @@ const FollowButton = ({ targetId, userId, followed }: FollowButtonProps) => {
         const data = await response.json();
         if (data.success) {
             setIsFollowing(true);
+            if (onFollowChange) {
+                onFollowChange(true);
+            }
+            queryClient.invalidateQueries({ queryKey: ["following", userId] });
         }
     }
 
@@ -34,6 +40,10 @@ const FollowButton = ({ targetId, userId, followed }: FollowButtonProps) => {
         const data = await response.json();
         if (data.success) {
             setIsFollowing(false);
+            if (onFollowChange) {
+                onFollowChange(false);
+            }
+            queryClient.invalidateQueries({ queryKey: ["following", userId] });
         }
     }
 

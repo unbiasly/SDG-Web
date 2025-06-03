@@ -52,22 +52,27 @@ export async function POST() {
             JSON.stringify({ success: true, message: "Cookies cleared. " + backendResponseMessage }),
             {
                 status: 200,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
             }
         );
 
         const cookieOptions = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // CRITICAL: Match cookie setting
-            sameSite: 'lax' as 'lax', // Explicitly type sameSite
-            maxAge: 0, // Expire immediately
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax' as 'lax',
+            maxAge: 0,
             path: '/'
         };
 
         response.cookies.set('jwtToken', '', cookieOptions);
         response.cookies.set('refreshToken', '', cookieOptions);
         response.cookies.set('sessionId', '', cookieOptions);
-        response.cookies.set('userId', '', cookieOptions); // Assuming userId cookie also needs clearing
+        response.cookies.set('userId', '', cookieOptions);
 
         console.log("Cookies cleared, returning 200 from /api/logout");
         return response;

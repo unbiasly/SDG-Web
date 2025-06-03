@@ -22,10 +22,11 @@ import EditPost from "../post/EditPost";
 import { useUser } from "@/lib/redux/features/user/hooks";
 import { BentoImageGrid } from "../post/BentoGrid";
 import Link from "next/link";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import ConfirmationDialog from "../ConfirmationDialog";
 import ShareContent from "../post/ShareContent";
 import { is } from "date-fns/locale";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface PostCardProps {
     _id: string;
@@ -44,6 +45,7 @@ interface PostCardProps {
     commentsCount: number;
     repostsCount: number;
     isFollowed?: boolean;
+    isCommentOpen?: boolean;
     onPostUpdate?: () => void; // Add callback for post updates
 }
 
@@ -59,13 +61,14 @@ export const PostCard: React.FC<PostCardProps> = ({
     isBookmarked,
     userId,
     likesCount,
+    isCommentOpen = false,
     commentsCount,
     avatar,
     repostsCount,
     isFollowed,
     onPostUpdate,
 }) => {
-    const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+    const [isCommentsOpen, setIsCommentsOpen] = useState(isCommentOpen);
     const [comments, setComments] = useState<CommentData[]>([]);
     // Add state for local comment count
     const [localCommentsCount, setLocalCommentsCount] = useState(commentsCount);
@@ -91,6 +94,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
     const { user } = useUser();
     const currentUserId = user?._id;
+    const queryClient = useQueryClient();
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
     const closeMenu = () => setIsMenuOpen(false);
@@ -202,8 +206,12 @@ export const PostCard: React.FC<PostCardProps> = ({
             });
 
             if (!response.ok) {
-                throw new Error("Failed to repost");
-            }
+                toast.error("Failed to repost");
+                return;
+            } 
+
+            toast.success(isReposted ? "Repost Deleted" : "Post reposted successfully");
+
 
             // Get updated data from API response
             const data = await response.json();
@@ -255,6 +263,7 @@ export const PostCard: React.FC<PostCardProps> = ({
             if (onPostUpdate) {
                 onPostUpdate();
             }
+            queryClient.invalidateQueries({ queryKey: ["bookmarkedPosts"] });
 
             // Get updated data from API response
             const data = await response.json();
@@ -288,6 +297,7 @@ export const PostCard: React.FC<PostCardProps> = ({
             
             // Handle successful deletion
             toast.success('Post deleted successfully');
+            
             
             // Refresh posts data after successful deletion
             if (onPostUpdate) {
@@ -329,6 +339,8 @@ export const PostCard: React.FC<PostCardProps> = ({
                 setIsFollowedActive(!newFollowState);
                 throw new Error("Failed to update follow status");
             }
+            queryClient.invalidateQueries({ queryKey: ["bookmarkedPosts"] });
+            queryClient.invalidateQueries({ queryKey: ["posts"] });
 
             const data = await response.json();
             console.log("Follow status updated successfully", data);
@@ -519,13 +531,12 @@ export const PostCard: React.FC<PostCardProps> = ({
                             src={avatar}
                             alt={name}
                             size="xs"
-                            className=""
                         />
                     </Link>
                     <div className="ml-2">
                         <div className="flex items-center">
                             <Link href={`/profile/${userId}`}>
-                                <h4 className="font-semibold text-sm">
+                                <h4 className="font-semibold text-sm hover:underline">
                                     {name}
                                 </h4>
                             </Link>
@@ -537,7 +548,7 @@ export const PostCard: React.FC<PostCardProps> = ({
                         </div>
                         <div className="flex items-center text-xs text-gray-500">
                             <Link href={`/profile/${userId}`}>
-                                <span>{handle}</span>
+                                <span className="hover:underline">{handle}</span>
                             </Link>
                             <div className="hidden md:block">
                                 <span className="mx-1.5">•</span>
@@ -667,7 +678,6 @@ export const PostCard: React.FC<PostCardProps> = ({
                 onPostUpdate={onPostUpdate}
                 images={Array.isArray(imageUrl) ? imageUrl : [imageUrl]}
             />
-            {/* Replace DeletePostModal with ConfirmationDialog */}
             <ConfirmationDialog
                 open={deleteConfirmOpen}
                 onOpenChange={setDeleteConfirmOpen}
@@ -704,8 +714,8 @@ export const PostCard: React.FC<PostCardProps> = ({
                 open={repostConfirmOpen}
                 onOpenChange={setRepostConfirmOpen}
                 clickFunc={performRepost}
-                subject="Repost"
-                object="post"
+                subject={isReposted ? "Delete" :"Repost"}
+                object={isReposted ? "Repost":"post"}
             />
             <ShareContent
                 open={shareContentOpen}

@@ -298,6 +298,28 @@ export interface SDGVideoData {
     isLiked?: boolean;
 }
 
+export interface SDGVideoDetails{
+    _id: string;
+    title: string;
+    thumbnail_url: string;
+    video_id: string;
+    link: string;
+    published_date: string;
+    channel_name: string;
+    status: string;
+    type: string;
+    goal_id: string[];
+    createdAt: string;
+    updatedAt: string;
+    description: string;
+    comments: CommentData[];
+    likes: number;
+    views: number;
+    isBookmarked: boolean;
+    isLiked: boolean;
+}
+
+
 export interface SDGVideoResponse {
     success: boolean;
     data: SDGVideoData[];
@@ -309,6 +331,7 @@ export interface SDGVideoResponse {
         totalItems?: number;
     };
 }
+
 
 export interface AnalyticsResponseData {
   success: boolean;

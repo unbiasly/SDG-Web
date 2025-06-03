@@ -16,11 +16,11 @@ export async function PATCH(req: NextRequest) {
         
         if (actionType === 'comment') {
             bodyToSend = { 
-                comment: requestBody.comment 
+                comment: comment 
             };
         } else if (actionType === 'share') {
             bodyToSend = { 
-                shareDestination: requestBody.shareData 
+                shareDestination: shareData 
             };
         }
         

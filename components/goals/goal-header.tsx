@@ -27,7 +27,7 @@ export default function GoalHeader({ goal }: GoalProps) {
     const nextSlug = nextGoal ? slugify(nextGoal.title) : null;
 
     const imageDivStyles = `${goal.id === 5 ? "h-1/4" : "h-full"}`;
-    const imageStyles = `${goal.id === 14 ? 'brightness-85' : 'brightness-100'} ${goal.id === 17 ? "p-2 object-center" : "p-0"}`;
+    const imageStyles = `${goal.id === 14 ? 'brightness-85' : 'brightness-95'} ${goal.id === 17 ? "p-2 object-center" : "p-0"}`;
 
     return (
         <div
@@ -61,7 +61,7 @@ export default function GoalHeader({ goal }: GoalProps) {
             {/* Content section with proper responsive sizing */}
             <div className="flex-1 flex items-center px-2 sm:px-6 md:px-12 relative z-30 min-h-0">
                 <div className="flex items-start justify-start space-x-2 sm:space-x-4 md:space-x-6">
-                    <div className="text-5xl sm:text-5xl md:text-7xl lg:text-8xl font-bold leading-none text-black/40">
+                    <div className="text-5xl sm:text-5xl md:text-7xl lg:text-8xl font-bold leading-none text-black/50">
                         {goal.id}
                     </div>
                     <div className="flex flex-col space-y-1 sm:space-y-2 md:space-y-4">

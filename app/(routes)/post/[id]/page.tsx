@@ -103,6 +103,7 @@ const Page = () => {
                     commentsCount={post.poststat_id?.comments || 0}
                     repostsCount={post.poststat_id?.reposts || 0}
                     isBookmarked={post.isBookmarked || false}
+                    isCommentOpen={true}
                     // isVerified={post.user_id.isFollowing || false}
                 />
         </div>

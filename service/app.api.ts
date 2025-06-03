@@ -35,4 +35,29 @@ const BackAPI = {
 
 };
 
+export const getCookie = async (tokenName: string): Promise<string | null> => {
+    try {
+        const response = await fetch("/api/getCookie", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ cookieName: tokenName }),
+            credentials: "include", // Important for cookies to be sent/received
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.value || null;
+        } else {
+            console.error("Failed to fetch cookie:", response.statusText);
+            return null;
+        }
+    } catch (error) {
+        console.error("Error fetching cookie:", error);
+        return null;
+    }
+};
+
+
 export default BackAPI;

@@ -5,8 +5,8 @@ import React from 'react'
 const Page = () => {
 
     return (
-        <div className="flex rounded-sm h-fit border  overflow-hidden">
-          <Settings  />
+        <div className="flex flex-1 rounded-sm h-fit border  overflow-hidden">
+            <Settings  />
         </div>
     );
 }

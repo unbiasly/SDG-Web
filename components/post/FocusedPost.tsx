@@ -19,11 +19,12 @@ import {
     Pencil,
     Trash,
     UserPlus,
+    Repeat,
+    Send,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import PostMenu from "./PostMenu";
-import DeletePostModal from "./DeletePostModal";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import CommentSection from "./CommentSection";
@@ -34,7 +35,8 @@ import EditPost from "./EditPost";
 import ReportPopover from "./ReportPopover";
 import ImageCarousel from "./ImageCarousel";
 import ConfirmationDialog from "../ConfirmationDialog";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
+import ShareContent from "./ShareContent";
 
 interface SocialPostDialogProps {
     open: boolean;
@@ -88,8 +90,8 @@ export function SocialPostDialog({
     const [isRepostActive, setIsRepostActive] = useState(false);
     const [localRepostsCount, setLocalRepostsCount] = useState(repostsCount);
     const [repostConfirmOpen, setRepostConfirmOpen] = useState(false);
-    const [localComments, setLocalComments] = useState<CommentData[]>(comments);
     const [isFollowedActive, setIsFollowedActive] = useState(false);
+    const [shareContentOpen, setShareContentOpen] = useState(false);
 
     const { user } = useUser();
     const currentUserId = user?._id;
@@ -134,6 +136,10 @@ export function SocialPostDialog({
         } catch (error) {
             console.error("Error liking post:", error);
         }
+    };
+
+    const handleShare = () => {
+        setShareContentOpen(true);
     };
 
     const handleRepost = () => {
@@ -301,9 +307,6 @@ export function SocialPostDialog({
             if (!response.ok) {
                 throw new Error("Failed to fetch comments");
             }
-
-            const { data, commentsCount: updatedCommentsCount } = await response.json();
-            setLocalComments(data);
             
             // Notify parent about the comment update
             if (onPostUpdate) {
@@ -356,7 +359,6 @@ export function SocialPostDialog({
         setLocalLikesCount(likesCount);
         setIsBookmarkActive(isBookmarked);
         setLocalRepostsCount(repostsCount);
-        setLocalComments(comments);
     }, [isLiked, likesCount, repostsCount, isBookmarked, comments]);
 
     const menuOptions = [
@@ -375,44 +377,88 @@ export function SocialPostDialog({
         },
         ...(userId !== currentUserId
             ? [
-                  {
-                      icon: (
-                          <UserPlus
-                              className={`h-5 w-5 ${
-                                  isFollowedActive
-                                      ? "fill-current text-accent"
-                                      : "text-gray-500"
-                              }`}
-                          />
-                      ),
-                      label: isFollowedActive ? "Unfollow" : "Follow",
-                      onClick: handleFollow,
-                  },
-                  {
-                      icon: <Flag className="h-5 w-5 text-gray-500" />,
-                      label: "Report post",
-                      onClick: handleReportClick,
-                  },
-              ]
-            : []),
-        ...(userId === currentUserId
-            ? [
-                  {
-                      icon: <Pencil className="h-5 w-5 text-gray-500" />,
-                      label: "Edit post",
-                      onClick: handleEditPost,
-                  },
-                  {
-                      icon: <Trash className="h-5 w-5 text-gray-500" />,
-                      label: "Delete post",
-                      onClick: handleDeletePost,
-                  },
-              ]
+                    {
+                        icon: (
+                            <UserPlus
+                                className={`h-5 w-5 ${
+                                    isFollowedActive
+                                        ? "fill-current text-accent"
+                                        : "text-gray-500"
+                                }`}
+                            />
+                        ),
+                        label: isFollowedActive ? "Unfollow" : "Follow",
+                        onClick: handleFollow,
+                    },
+                    {
+                        icon: <Flag className="h-5 w-5 text-gray-500" />,
+                        label: "Report post",
+                        onClick: handleReportClick,
+                    },
+                ]
+                : []),
+            ...(userId === currentUserId
+                ? [
+                    {
+                        icon: <Pencil className="h-5 w-5 text-gray-500" />,
+                        label: "Edit post",
+                        onClick: handleEditPost,
+                    },
+                    {
+                        icon: <Trash className="h-5 w-5 text-gray-500" />,
+                        label: "Delete post",
+                        onClick: handleDeletePost,
+                    },
+                ]
             : []),
     ];
+
+    const postOptions = [
+        {
+            icon: (
+                <ThumbsUp
+                    size={18}
+                    className={
+                        isActive
+                            ? "fill-current font-bold"
+                            : "text-gray-500"
+                    }
+                />
+            ),
+            label: isActive ? "Liked" : "Like",
+            onClick: handleLike,
+            isActive: isActive,
+        },
+        ...(userId !== currentUserId
+            ? [
+                {
+                    icon: (
+                        <Repeat
+                            size={18}
+                            className={
+                                isRepostActive
+                                    ? "fill-current"
+                                    : "text-gray-500"
+                            }
+                        />
+                    ),
+                    label: isRepostActive ? "Reposted" : "Repost",
+                    onClick: handleRepost,
+                },
+            ]
+            : []),
+        {
+            icon: <Send size={18} className="text-gray-500" />,
+            label: "Share",
+            onClick: handleShare,
+            isActive: false,
+        },
+    ];
+
+    
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="lg:min-w-6xl rounded-lg h-[80vh] flex flex-col lg:flex-row p-0">
+            <DialogContent showDialogClose={false} className="lg:min-w-6xl rounded-lg h-[80vh] flex flex-col lg:flex-row p-0">
                 <DialogTitle className="sr-only">Social Media Post</DialogTitle>
                 <DialogDescription className="sr-only">
                     {content}
@@ -439,7 +485,6 @@ export function SocialPostDialog({
                                 src={avatar}
                                 alt={name}
                                 size="sm"
-                                className=""
                             />
                             <div className="ml-2">
                                 <div className="flex items-center">
@@ -448,10 +493,12 @@ export function SocialPostDialog({
                                     </h4>
                                     {/* <span className="text-xs text-gray-500 ml-1.5">• Following</span> */}
                                 </div>
-                                <div className="flex  justify-center text-xs text-gray-500">
+                                <div className="flex flex-col justify-center text-xs text-gray-500">
                                     <span>{handle}</span>
-                                    <span className="mx-1.5">•</span>
-                                    <span>{time}</span>
+                                    {/* <span className="mx-1.5">•</span> */}
+                                    <span className="flex">
+                                        {time}{isFollowedActive && '• Following'}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -531,38 +578,7 @@ export function SocialPostDialog({
                             </div>
                             {/* Action buttons */}
                             <div className="flex justify-between my-3">
-                                {[
-                                    {
-                                        icon: (
-                                            <ThumbsUp
-                                                size={16}
-                                                className={
-                                                    isActive
-                                                        ? "fill-current text-accent"
-                                                        : ""
-                                                }
-                                            />
-                                        ),
-                                        label: "Like",
-                                        onClick: handleLike,
-                                        isActive: isActive,
-                                    },
-                                    {
-                                        icon: (
-                                            <Repeat2
-                                                size={16}
-                                                className={
-                                                    isRepostActive
-                                                        ? "fill-current text-accent"
-                                                        : ""
-                                                }
-                                            />
-                                        ),
-                                        label: "Repost",
-                                        onClick: handleRepost,
-                                        isActive: isRepostActive,
-                                    },
-                                ].map((action, index) => (
+                                {postOptions.map((action, index) => (
                                     <button
                                         key={index}
                                         onClick={action.onClick}
@@ -607,7 +623,6 @@ export function SocialPostDialog({
                     images={Array.isArray(imageUrl) ? imageUrl : [imageUrl]}
                     onPostUpdate={onPostUpdate}
                 />
-                {/* Replace DeletePostModal with ConfirmationDialog */}
                 <ConfirmationDialog
                     open={deletePostOpen}
                     onOpenChange={setDeletePostOpen}
@@ -623,6 +638,12 @@ export function SocialPostDialog({
                     object="post"
                 />
             </DialogContent>
+            <ShareContent
+                open={shareContentOpen}
+                onOpenChange={setShareContentOpen}
+                contentUrl={`/post/${_id}`}
+                itemId={_id}
+            />
         </Dialog>
     );
 }

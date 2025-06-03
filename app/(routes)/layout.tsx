@@ -16,6 +16,7 @@ import { getRandomColor } from "@/lib/utilities/generateColor";
 import SearchBar from "@/components/feed/SearchBar";
 import { setupAPIInterceptor } from "@/lib/utilities/interceptor";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getCookie } from "@/service/app.api";
 
 
 export default function RootLayout({
@@ -28,8 +29,15 @@ export default function RootLayout({
     const fetchUser = useCallback(async () => {
         dispatch(fetchUserStart());
         try {
-            const response = await fetch("/api", {
+            // Add cache busting parameter and no-cache headers
+            const response = await fetch(`/api?t=${Date.now()}`, {
                 credentials: "include",
+                cache: 'no-store', // Prevent caching
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
             });
 
             const data = await response.json();
@@ -38,10 +46,8 @@ export default function RootLayout({
                 // Handle HTTP errors based on response status
                 const errorMessage = data.message || `Failed to fetch user: ${response.status}`;
                 dispatch(fetchUserFailure(errorMessage));
-                // No hard redirect here; interceptor should handle auth errors (401/403)
-                // For other errors, the UI can show a message based on Redux state
                 console.error("Fetch user error:", errorMessage);
-                return; // Exit if response is not ok
+                return;
             }
 
             if (data.data && data.data._id) {
@@ -50,7 +56,6 @@ export default function RootLayout({
                 dispatch(setFallbackColor(fallbackColor));
             }
             dispatch(fetchUserSuccess(data));
-            // return data; // Return data if needed by other parts, though not used in this snippet
         } catch (error) {
             const errorMessage =
                 error instanceof Error
@@ -58,21 +63,139 @@ export default function RootLayout({
                     : "An unknown error occurred";
             dispatch(fetchUserFailure(errorMessage));
             console.error("Fetch user exception:", errorMessage);
-            // throw error; // Re-throwing might be useful if something upstream needs to catch it
-                         // but avoid if it causes unhandled promise rejections without specific need.
-                         // The interceptor should handle auth-related redirects.
         }
-    }, [dispatch]); // dispatch is a stable dependency
+    }, [dispatch]);
 
     useEffect(() => {
         setupAPIInterceptor();
         fetchUser();
-    }, [fetchUser]); // Added fetchUser to dependency array
+    }, [fetchUser]);
 
+    useEffect(() => {
+        const checkSessionAndRedirect = async () => {
+            const sessionId = await getCookie("sessionId");
+            const jwtToken = await getCookie("jwtToken");
+            
+            // More strict session validation
+            if (!sessionId || !jwtToken) {
+                console.log("Invalid or missing session, redirecting to login");
+                
+                // Clear any remaining cookies and cache
+                try {
+                    await fetch('/api/logout', { 
+                        method: 'POST',
+                        cache: 'no-store',
+                        headers: {
+                            'Cache-Control': 'no-cache',
+                            'Pragma': 'no-cache'
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error during cleanup logout:', error);
+                }
+                
+                // Force hard reload to clear cache with timestamp
+                window.location.href = `/login?t=${Date.now()}`;
+            }
+        };
+        
+        checkSessionAndRedirect();
+    }, []);
+
+    // Add effect to prevent caching on protected routes
+    useEffect(() => {
+        // Set meta tags to prevent caching
+        const addMetaTag = (name: string, content: string) => {
+            const existing = document.querySelector(`meta[http-equiv="${name}"]`);
+            if (existing) existing.remove();
+            
+            const meta = document.createElement('meta');
+            meta.httpEquiv = name;
+            meta.content = content;
+            document.getElementsByTagName('head')[0].appendChild(meta);
+            return meta;
+        };
+
+        const metaNoCache = addMetaTag('Cache-Control', 'no-cache, no-store, must-revalidate');
+        const metaPragma = addMetaTag('Pragma', 'no-cache');
+        const metaExpires = addMetaTag('Expires', '0');
+
+        // Force revalidation by adding timestamp to current URL if not already present
+        const currentUrl = new URL(window.location.href);
+        if (!currentUrl.searchParams.has('t')) {
+            const newUrl = `${window.location.pathname}${window.location.search}${window.location.search ? '&' : '?'}t=${Date.now()}`;
+            window.history.replaceState({}, '', newUrl);
+        }
+
+        // Add visibility change listener to revalidate when tab becomes visible
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                // Tab became visible, check session again
+                checkSessionAndRedirect();
+            }
+        };
+
+        const checkSessionAndRedirect = async () => {
+            const sessionId = await getCookie("sessionId");
+            const jwtToken = await getCookie("jwtToken");
+            
+            if (!sessionId || !jwtToken) {
+                console.log("Session expired, redirecting to login");
+                window.location.href = `/login?t=${Date.now()}`;
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        // Cleanup function
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            try {
+                metaNoCache?.remove();
+                metaPragma?.remove();
+                metaExpires?.remove();
+            } catch (e) {
+                // Ignore cleanup errors
+            }
+        };
+    }, []);
+
+    // Add storage event listener to detect logout from other tabs
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'user_logout' && e.newValue === 'true') {
+                // User logged out from another tab
+                localStorage.removeItem('user_logout');
+                window.location.href = `/login?t=${Date.now()}`;
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, []);
+
+    // Add periodic session check
+    useEffect(() => {
+        const sessionCheckInterval = setInterval(async () => {
+            const sessionId = await getCookie("sessionId");
+            const jwtToken = await getCookie("jwtToken");
+            
+            if (!sessionId || !jwtToken) {
+                console.log("Periodic session check failed, redirecting to login");
+                clearInterval(sessionCheckInterval);
+                window.location.href = `/login?t=${Date.now()}`;
+            }
+        }, 30000); // Check every 30 seconds
+
+        return () => clearInterval(sessionCheckInterval);
+    }, []);
 
     return (
         <main className="max-h-screen flex  md:gap-3  max-container">
-            <aside className="max-w-[250px] p-2 space-y-3 max-h-screen self-start overflow-y-auto hidden md:block ">
+            <aside className="max-w-[250px] p-2 space-y-3 max-h-screen self-start  hidden md:block ">
                 <Link
                     href="/"
                     className="justify-center items-center gap-2 px-2 hidden lg:flex"
@@ -85,7 +208,7 @@ export default function RootLayout({
                     />
                     <h1 className="text-xl font-bold">The SDG Story</h1>
                 </Link>
-                <div className="hidden md:block">
+                <div className="hidden md:block flex-1">
                     <UserSidebar />
                 </div>
             </aside>
@@ -104,7 +227,7 @@ export default function RootLayout({
                 </ScrollArea>
             </div>
 
-            <aside className="max-w-[250px] p-2 space-y-3 max-h-screen self-start overflow-y-auto hidden-scrollbar hidden lg:block">
+            <aside className="max-w-[250px] p-2 space-y-3 max-h-screen self-start hidden-scrollbar hidden lg:block">
                 <SearchBar />
                 <TrendingSection />
             </aside>

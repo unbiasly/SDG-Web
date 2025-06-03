@@ -4,7 +4,7 @@ import CreatePost from "@/components/feed/CreatePost";
 import SDGNews from "@/components/feed/SDGNews";
 import { FEED_TABS, MOBILE_FEED_TABS } from "@/lib/constants/index-constants";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import Loading from "@/components/Loader";
 import { PostsFetchResponse } from "@/service/api.interface";
@@ -18,8 +18,9 @@ export default function Home() {
     };
 
     const feedTabs = getFeedTabs(isMobile);
-    const [activeTab, setActiveTab] = React.useState(feedTabs[0]);
+    const [activeTab, setActiveTab] = useState(feedTabs[0]);
     const { ref, inView } = useInView();
+
 
     async function fetchPosts(cursor?: string): Promise<PostsFetchResponse> {
         const url = cursor ? `/api/post?cursor=${cursor}` : "/api/post";
@@ -48,7 +49,12 @@ export default function Home() {
                 // Extract the cursor from the pagination data
                 return lastPage.pagination?.nextCursor || undefined;
             },
-            staleTime: 60 * 1000, // 1 minute
+            gcTime: 0,
+            staleTime: 0, // Ensures data is considered stale immediately
+            enabled: true, // Enable the query
+            refetchOnWindowFocus: false, // Disable refetch on window focus
+            refetchOnReconnect: false, // Disable refetch on reconnect
+            
         });
 
     const queryClient = useQueryClient();
@@ -68,14 +74,6 @@ export default function Home() {
         }
     }, [inView, fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-    // Show loading state
-    if (status === "pending") {
-        return (
-            <div className="flex-1 bg-white bg-opacity-75 z-50 flex items-center justify-center">
-                <Loading />
-            </div>
-        );
-    }
 
     // Show error state
     if (status === "error") {
@@ -93,46 +91,58 @@ export default function Home() {
                 setActiveTab={setActiveTab}
                 tabs={feedTabs}
             >
-                {feedTabs && (
+                {status === "pending" ? (
+                    <Loading />
+                ) : (
                     <>
-                        {activeTab === "For You" && (
+                        {feedTabs && (
                             <>
-                                <CreatePost />
-                                <div className="px-4 space-y-4">
-                                    {posts
-                                        .filter((post) => post !== undefined)
-                                        .map((post) => (
-                                            <PostWithImpressionTracking
-                                                key={post._id}
-                                                post={post}
-                                                onPostUpdate={handlePostUpdate}
-                                            />
-                                        ))}
+                                {activeTab === "For You" && (
+                                    <>
+                                        <CreatePost />
+                                        <div className="px-4 space-y-4">
+                                            {posts
+                                                .filter(
+                                                    (post) => post !== undefined
+                                                )
+                                                .map((post) => (
+                                                    <PostWithImpressionTracking
+                                                        key={post._id}
+                                                        post={post}
+                                                        onPostUpdate={
+                                                            handlePostUpdate
+                                                        }
+                                                    />
+                                                ))}
 
-                                    {/* Loading indicator and ref for intersection observer */}
-                                    {(hasNextPage || isFetchingNextPage) && (
-                                        <div
-                                            className="flex justify-center py-4"
-                                            ref={ref}
-                                        >
-                                            {isFetchingNextPage ? (
-                                                <div className="w-6 h-6 border-2 border-accent rounded-full border-t-transparent animate-spin"></div>
-                                            ) : (
-                                                <div className="h-16"></div>
+                                            {/* Loading indicator and ref for intersection observer */}
+                                            {(hasNextPage ||
+                                                isFetchingNextPage) && (
+                                                <div
+                                                    className="flex justify-center py-4"
+                                                    ref={ref}
+                                                >
+                                                    {isFetchingNextPage ? (
+                                                        <div className="w-6 h-6 border-2 border-accent rounded-full border-t-transparent animate-spin"></div>
+                                                    ) : (
+                                                        <div className="h-16"></div>
+                                                    )}
+                                                </div>
                                             )}
-                                        </div>
-                                    )}
 
-                                    {/* End of content message */}
-                                    {!hasNextPage && posts.length > 0 && (
-                                        <div className="text-center py-4 text-gray-500">
-                                            ......
+                                            {/* End of content message */}
+                                            {!hasNextPage &&
+                                                posts.length > 0 && (
+                                                    <div className="text-center py-4 text-gray-500">
+                                                        ......
+                                                    </div>
+                                                )}
                                         </div>
-                                    )}
-                                </div>
+                                    </>
+                                )}
+                                {activeTab === "The SDG News" && <SDGNews />}
                             </>
                         )}
-                        {activeTab === "The SDG News" && <SDGNews />}
                     </>
                 )}
             </ContentFeed>

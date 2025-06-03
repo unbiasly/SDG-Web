@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { UserDetailsRequest } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 
 // Helper function for URL validation
 const isValidURL = (urlString: string): boolean => {

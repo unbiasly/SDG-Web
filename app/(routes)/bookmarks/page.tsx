@@ -9,13 +9,14 @@ import Link from 'next/link'
 import { PostCard } from '@/components/feed/PostCard'
 import VideoCard from '@/components/video/VideoCard'
 import Loader from '@/components/Loader'
-import { toast } from 'sonner'
+import { toast } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import { 
   useInfiniteQuery, 
   useQueryClient
 } from '@tanstack/react-query'
 import { useNewsBookmarkSync } from '@/hooks/useNewsBookmarkSync'
+import { formatDate } from '@/lib/utilities/formatDate'
 
 // Define pagination interface
 interface Pagination {
@@ -144,7 +145,7 @@ const BookmarksContent = () => {
       return () => {
         // Just invalidate the query, let PostCard handle the API call
         queryClient.invalidateQueries({queryKey: ['bookmarkedPosts']});
-        toast.success("Post removed from bookmarks");
+        // toast.success("Post removed from bookmarks");
       };
     }, [queryClient]);
     
@@ -253,7 +254,7 @@ const BookmarksContent = () => {
                                                 _id={bookmark._id}
                                                 name={bookmark.user_id.name || bookmark.user_id.username}
                                                 handle={bookmark.user_id.username}
-                                                time={bookmark.createdAt}
+                                                time={formatDate(bookmark.updatedAt)}
                                                 content={bookmark.content}
                                                 isLiked={bookmark.isLiked}
                                                 isBookmarked={bookmark.isBookmarked}
@@ -262,6 +263,7 @@ const BookmarksContent = () => {
                                                 likesCount={bookmark.poststat_id.likes}
                                                 commentsCount={bookmark.poststat_id.comments}
                                                 repostsCount={bookmark.poststat_id.reposts}
+                                                isFollowed={bookmark?.user_id.isFollowing ?? undefined}
                                                 userId={bookmark.user_id._id}
                                                 onPostUpdate={createPostInvalidationCallback(bookmark._id)}
                                             />
@@ -378,6 +380,7 @@ const BookmarksContent = () => {
                                         commentsCount={bookmark.poststat_id.comments}
                                         repostsCount={bookmark.poststat_id.reposts}
                                         userId={bookmark.user_id._id}
+                                        // isFollowed={}
                                         onPostUpdate={createPostInvalidationCallback(bookmark._id)}
                                     />
                                 </div>

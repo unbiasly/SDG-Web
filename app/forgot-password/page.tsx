@@ -7,8 +7,8 @@ import Logo from '@/public/Logo.png'
 const Page = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white p-2 sm:p-4">
-        <div className="w-full max-w-md sm:max-w-2xl m-auto h-full relative">
-            <div className="bg-white/60 h-full flex flex-col items-center justify-center rounded-lg border border-gray-500 overflow-hidden">
+        <div className="w-full  max-w-md sm:max-w-2xl m-auto h-full relative">
+            <div className="bg-white/60 mx-5 h-full flex flex-col items-center justify-center rounded-lg border border-gray-500 overflow-hidden">
                 {/* Logo div positioned to sit halfway outside the card */}
                 <div className="bg-white/40 mt-6 sm:mt-10 rounded-full border-2 border-white/40">
                     <Image src={Logo} alt="SDG Logo" width={90} height={90} className="sm:w-[130px] sm:h-[130px]" />

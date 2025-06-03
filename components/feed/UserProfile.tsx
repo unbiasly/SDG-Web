@@ -109,9 +109,9 @@ export const UserSidebar = () => {
 
     // User profile section for both desktop and mobile
     const renderUserProfile = () => (
-        <div className="flex-col items-center md:items-start border-b py-2 border-gray-600 flex">
+        <div className="flex-col w-full items-center md:items-start border-b py-2 border-gray-600 flex">
             <div className="relative mb-2 w-20">
-                <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center overflow-hidden">
+                <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden">
                     {isDataLoaded ? (
                         <ProfileAvatar
                             src={user?.profileImage || ""}
@@ -132,20 +132,18 @@ export const UserSidebar = () => {
             </div>
 
             {isDataLoaded ? (
-                <>
-                    {user?.fName && user?.lName && (
-                        <h3 className="font-semibold text-lg">
-                            {user.fName} {user.lName}
-                        </h3>
-                    )}
-                    <p className="text-sm text-gray-500 mb-1">
+                <div >
+                    <h3 className="font-semibold text-lg ">
+                        {user?.name}
+                    </h3>
+                    <Link href={`/profile/${user?._id}`} className="text-sm text-gray-500 hover:underline">
                         @{user?.username}
-                    </p>
-                </>
+                    </Link>
+                </div>
             ) : (
                 <>
-                    <div className="h-6 w-32 bg-gray-200 animate-pulse rounded-md mb-2"></div>
-                    <div className="h-4 w-24 bg-gray-200 animate-pulse rounded-md mb-1"></div>
+                    <div className="h-6 w-full bg-gray-200 animate-pulse rounded-md mb-2"></div>
+                    <div className="h-4 w-full bg-gray-200 animate-pulse rounded-md mb-1"></div>
                 </>
             )}
         </div>

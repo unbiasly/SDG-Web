@@ -36,7 +36,7 @@ interface CommentProps {
     _id: string;
     userName: string;
     content: string;
-    userAvatar?: string;
+    userAvatar: string;
     className?: string;
 }
 
@@ -111,45 +111,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         if (!comment.trim()) return;
 
         try {
-            // Optimistically update the UI
-            const newComment: CommentData = {
-                _id: `temp-${Date.now()}`,
-                user_id: {
-                    _id: user?._id || "",
-                    username: user?.username || "",
-                    profileImage: user?.profileImage?.toString() || "",
-                },
-                comment: comment,
-            };
-
-            // Add to cache optimistically
-            queryClient.setQueryData(["comments", post_id], (oldData: any) => {
-                if (!oldData)
-                    return {
-                        pages: [
-                            {
-                                data: [newComment],
-                                pagination: {
-                                    hasMore: false,
-                                    nextCursor: null,
-                                },
-                            },
-                        ],
-                        pageParams: [null],
-                    };
-
-                return {
-                    ...oldData,
-                    pages: [
-                        {
-                            ...oldData.pages[0],
-                            data: [newComment, ...oldData.pages[0].data],
-                        },
-                        ...oldData.pages.slice(1),
-                    ],
-                };
-            });
-
             // Clear input right away for better user experience
             setComment("");
 
@@ -237,7 +198,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                                 _id={comment.user_id._id}
                                 userName={comment.user_id.username}
                                 content={comment.comment}
-                                userAvatar={comment.user_id.profileImage}
+                                userAvatar={comment.user_id.profileImage || ""}
                             />
                         ))}
                         {/* Invisible element to trigger loading more comments */}
@@ -273,9 +234,8 @@ const Comment: React.FC<CommentProps> = ({
 }) => {
     return (
         <div className={cn("flex gap-3 py-4", className)}>
-            <div className="w-fit h-fit">
-                <ProfileAvatar src={userAvatar || ""} size="xs" />
-            </div>
+            
+            <ProfileAvatar src={userAvatar} size="xs" />
 
             <div className="flex-1">
                 <div className="flex justify-between items-start">
@@ -283,7 +243,7 @@ const Comment: React.FC<CommentProps> = ({
                         href={`/profile/${_id}`}
                         className="font-bold text-sm"
                     >
-                        <span>{userName}</span>
+                        <span className="hover:underline">{userName}</span>
                     </Link>
                 </div>
 

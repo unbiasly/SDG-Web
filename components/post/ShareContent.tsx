@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Check, Copy, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 

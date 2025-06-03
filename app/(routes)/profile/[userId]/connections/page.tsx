@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { AnalyticsResponseData } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
+import ProfileAvatar from "@/components/profile/ProfileAvatar";
 
 type UserType = {
     _id: string;
@@ -363,17 +364,18 @@ export default function Page({ params }: ConnectionsPageProps) {
                                     href={`/profile/${user._id}`}
                                     className="flex items-center flex-1"
                                 >
-                                    <img
+                                    <ProfileAvatar
                                         src={user.profileImage}
                                         alt={user.name || user.username}
-                                        className="w-12 h-12 rounded-full mr-3 object-cover"
+                                        size="sm"
+                                        className="rounded-full mr-3 object-cover"
                                     />
                                     <div>
-                                        <h3 className="font-bold">
-                                            {user.name || user.username}
+                                        <h3 className="font-bold hover:underline">
+                                            {user.name || user.email}
                                         </h3>
-                                        <p className="text-gray-600">
-                                            {user.occupation || user.email}
+                                        <p className="text-gray-600 hover:underline">
+                                            @{user.username}
                                         </p>
                                     </div>
                                 </Link>

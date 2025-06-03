@@ -84,7 +84,7 @@ const Alerts = ({ _id, post, category, type, message, isRead, userProfile }: Not
             onClick={handleClick}
         >
             <div className="flex-shrink-0">
-                <div className={`w-12 h-12 rounded-md flex items-center justify-center ${iconStyle} shadow-xs p-5`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${iconStyle} shadow-xs p-5`}>
                     <ProfileAvatar src={userProfile || ''} size='xs' />
                 </div>
             </div>

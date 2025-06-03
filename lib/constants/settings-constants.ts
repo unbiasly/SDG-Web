@@ -102,22 +102,22 @@ export const SETTINGS_OPTIONS: SettingOption[] = [
     //     subOptions: NOTIFICATIONS_OPTIONS,
     //     // icon: <div />
     // },
-    {
-        id: 'terms-and-conditions',
-        label: 'Terms and Conditions',
-        description: "",
-        // link: '/terms-and-conditions',
-    },
-    {
-        id: 'privacy-policy',
-        label: 'Privacy Policy',
-        description: ""
-    },
-    {
-        id: 'about-us',
-        label: 'About Us',
-        description: ""
-    },
+    // {
+    //     id: 'terms-and-conditions',
+    //     label: 'Terms and Conditions',
+    //     description: "",
+    //     // link: '/terms-and-conditions',
+    // },
+    // {
+    //     id: 'privacy-policy',
+    //     label: 'Privacy Policy',
+    //     description: ""
+    // },
+    // {
+    //     id: 'about-us',
+    //     label: 'About Us',
+    //     description: ""
+    // },
 ]
 
 export const DEACTIVATE_CONTENT = {

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import { Mail } from "lucide-react";
 
 const ForgotPassword = () => {
@@ -104,12 +104,12 @@ const ForgotPassword = () => {
 
       <Button
         type="submit"
-        className="w-full rounded-full bg-accent hover:bg-[#1A2530] text-white transition-all shadow-sm py-2 sm:py-6 text-sm sm:text-base h-auto"
+        className="w-full rounded-full bg-accent hover:bg-[#1A2530] text-white transition-all shadow-sm py-2 text-sm sm:text-base md:text-xl h-auto"
         disabled={isLoading}
       >
         {isLoading ? (
           <div className="flex items-center justify-center">
-            <div className="animate-spin h-4 w-4 sm:h-5 sm:w-5 mr-2 border-2 border-white border-t-transparent rounded-full"></div>
+            <div className="animate-spin h-4 w-4 sm:h-5 sm:w-5 mr-2 border-2 border-white border-t-transparent rounded-full"/>
             Sending Link...
           </div>
         ) : (

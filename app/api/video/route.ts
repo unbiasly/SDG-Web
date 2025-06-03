@@ -66,7 +66,7 @@ export async function PATCH(req: NextRequest) {
 
         // Extract video_id and type from URL path
         const url = new URL(req.url);
-        const {videoId, actionType} = await req.json();
+        const { videoId, actionType, comment } = await req.json();
         
         if (!videoId || !actionType) {
             return NextResponse.json(
@@ -76,7 +76,7 @@ export async function PATCH(req: NextRequest) {
         }
 
         // Validate action type
-        const validActionTypes = ["like", "dislike", "bookmark" ];
+        const validActionTypes = ["like", "dislike", "bookmark", "comment" ];
         if (!validActionTypes.includes(actionType)) {
             return NextResponse.json(
                 { success: false, message: "Action type not allowed" },
@@ -90,7 +90,9 @@ export async function PATCH(req: NextRequest) {
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${jwtToken}`
-            }
+            },
+            body: JSON.stringify({ comment })
+
         });
 
         const data = await response.json();

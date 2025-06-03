@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Experience } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { isBefore, isEqual } from "date-fns";
 

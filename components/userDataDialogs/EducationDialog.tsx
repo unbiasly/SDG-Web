@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Education } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 
 // Define props for the new FormContent component

@@ -22,7 +22,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useUser } from '@/lib/redux/features/user/hooks';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 
 interface EditPostProps {
   open: boolean;

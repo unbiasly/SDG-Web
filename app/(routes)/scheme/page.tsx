@@ -1,5 +1,6 @@
 "use client"
 import { ContentFeed } from '@/components/feed/ContentFeed'
+import Loader from '@/components/Loader';
 import SchemeCard from '@/components/scheme/SchemeCard';
 import { SCHEME_TABS } from '@/lib/constants/index-constants';
 import { SchemeAnalyticsResponse } from '@/service/api.interface';
@@ -26,10 +27,12 @@ interface TabConfig {
 const Page = () => {
     const [activeTab, setActiveTab] = useState<string>("Categories");
     const [tabs, setTabs] = useState<SchemeAnalyticsResponse | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true); // Add loading state
 
     // Helper function to find icon for a scheme by label/id
     
     const getTabs = async () => {
+        setIsLoading(true); // Set loading to true when fetching starts
         try {
             const response = await fetch('/api/scheme', {
                 method: 'GET',
@@ -41,6 +44,8 @@ const Page = () => {
             setTabs(data);
         } catch (error) {
             console.error("Error fetching scheme data:", error);
+        } finally {
+            setIsLoading(false); // Set loading to false when fetching ends
         }
     }
 
@@ -74,31 +79,38 @@ const Page = () => {
     // Check if we have actual data to display
     const hasData = tabs?.data && Object.keys(tabs.data).length > 0;
 
+
     return (
         <div className='flex flex-1 overflow-hidden'>
             <ContentFeed activeTab={activeTab} setActiveTab={setActiveTab} tabs={SCHEME_TABS}>
-                {SCHEME_TABS && activeTab && tabConfig[activeTab] && hasData ? (
-                    <div className="w-full animate-fade-in">
-                        <h1 className="text-xl md:text-2xl font-bold p-2 md:p-4 text-center">
-                            {tabConfig[activeTab].title}
-                        </h1>
-                        <div className="flex flex-wrap justify-center gap-3 p-2">
-                            {tabConfig[activeTab].data.map((scheme, index) => (
-                                <div key={index} className=" mb-3">
-                                    <SchemeCard
-                                        icon={scheme.icon}
-                                        count={scheme.count}
-                                        label={scheme.label}
-                                        type={tabConfig[activeTab].type}
-                                    />
-                                </div>
-                            ))}
-                        </div>
+                {isLoading ? (
+                    <div className="w-full flex justify-center items-center p-8">
+                        <Loader />
                     </div>
                 ) : (
-                    <div className="w-full flex justify-center items-center p-8">
-                        <p className="text-gray-500">Loading scheme data...</p>
-                    </div>
+                    SCHEME_TABS && activeTab && tabConfig[activeTab] && hasData ? (
+                        <div className="w-full animate-fade-in">
+                            <h1 className="text-xl md:text-2xl font-bold p-2 md:p-4 text-center">
+                                {tabConfig[activeTab].title}
+                            </h1>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-5"> {/* Changed from flex to grid */}
+                                {tabConfig[activeTab].data.map((scheme, index) => (
+                                    <div key={index} className="flex justify-center  mb-3">
+                                        <SchemeCard
+                                            icon={scheme.icon}
+                                            count={scheme.count}
+                                            label={scheme.label}
+                                            type={tabConfig[activeTab].type}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="w-full flex justify-center items-center p-8">
+                            <p className="text-gray-500">No scheme data available.</p>
+                        </div>
+                    )
                 )}
             </ContentFeed>
         </div>

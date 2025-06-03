@@ -7,6 +7,8 @@ import ChangePassword from "./ChangePassword";
 import Deactivate from "./Deactivate";
 import Sessions from "./Sessions";
 import { Switch } from "../ui/switch";
+import { UserSidebar } from "../feed/UserProfile";
+import SearchBar from "../feed/SearchBar";
 
 interface SettingsProps {
     className?: string;
@@ -33,7 +35,7 @@ const Settings: React.FC<SettingsProps> = ({ className }) => {
         <div className="flex flex-col md:flex-row w-full h-full">
             <div
                 className={cn(
-                    "h-full border-r bg-white transition-all duration-300 ease-in-out",
+                    "h-full border-r z-5 bg-white transition-all duration-300 ease-in-out",
                     activeSection ? "md:w-1/2 w-full" : "w-full",
                     activeSection && "hidden md:block", // Hide on mobile when activeSection exists
                     className
@@ -45,11 +47,9 @@ const Settings: React.FC<SettingsProps> = ({ className }) => {
                 }}
             >
                 <div className="p-2 border-b flex items-center space-x-2 mb-2">
-                    <ArrowLeft
-                        size={25}
-                        className="cursor-pointer block lg:hidden"
-                        onClick={() => window.location.href = "/"}
-                    />
+                    <div className="flex items-center justify-center md:hidden">
+                        <UserSidebar />
+                    </div>
                     <h1 className="text-xl font-semibold ">
                         Settings & Help Center
                     </h1>
@@ -113,9 +113,10 @@ const Settings: React.FC<SettingsProps> = ({ className }) => {
                                 onClick={
                                     subOption?.sessionTab
                                         ? () =>
-                                              handleSelectSetting(
-                                                  subOption?.sessionTab || ""
-                                              )
+                                                handleSelectSetting(
+                                                    subOption?.sessionTab ||
+                                                        ""
+                                                )
                                         : undefined
                                 }
                             >

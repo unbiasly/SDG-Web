@@ -8,7 +8,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Bookmark, Flag, MoreVertical, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useUser } from '@/lib/redux/features/user/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'; // Add this import
-import { toast } from 'sonner'; // Add toast for feedback
+import { toast } from 'react-hot-toast'; // Add toast for feedback
 import { useNewsBookmarkSync } from '@/hooks/useNewsBookmarkSync';
 
 interface TrendingItemProps {

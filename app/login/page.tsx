@@ -1,4 +1,4 @@
-'use client'
+
 import ImageSlider from '@/components/login/ImageSlider';
 import SignInForm from '@/components/login/SignInForm';
 import React from 'react';
