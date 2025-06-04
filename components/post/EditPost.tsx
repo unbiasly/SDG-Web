@@ -30,7 +30,7 @@ interface EditPostProps {
   postId: string;
   initialContent?: string;
   images?: string[];
-  onPostUpdate?: () => void; // Add this prop
+  onPostUpdate?: () => void;
 }
 
 const EditPost = ({ open, onOpenChange, postId, initialContent = '', images = [], onPostUpdate }: EditPostProps) => {

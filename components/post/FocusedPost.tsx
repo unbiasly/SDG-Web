@@ -37,6 +37,7 @@ import ImageCarousel from "./ImageCarousel";
 import ConfirmationDialog from "../ConfirmationDialog";
 import { toast } from "react-hot-toast";
 import ShareContent from "./ShareContent";
+import Link from "next/link";
 
 interface SocialPostDialogProps {
     open: boolean;
@@ -54,6 +55,7 @@ interface SocialPostDialogProps {
     commentsCount: number;
     repostsCount: number;
     comments: CommentData[];
+    isReposted?: boolean;
     isBookmarked: boolean;
     userId: string;
     isFollowed?: boolean; // Add this missing prop
@@ -75,6 +77,7 @@ export function SocialPostDialog({
     commentsCount,
     repostsCount,
     comments,
+    isReposted,
     isBookmarked,
     userId,
     onPostUpdate,
@@ -87,7 +90,6 @@ export function SocialPostDialog({
     const [isBookmarkActive, setIsBookmarkActive] = useState(isBookmarked);
     const [localLikesCount, setLocalLikesCount] = useState(likesCount);
     const [isLocalLiked, setIsLocalLiked] = useState(isLiked);
-    const [isRepostActive, setIsRepostActive] = useState(false);
     const [localRepostsCount, setLocalRepostsCount] = useState(repostsCount);
     const [repostConfirmOpen, setRepostConfirmOpen] = useState(false);
     const [isFollowedActive, setIsFollowedActive] = useState(false);
@@ -155,12 +157,6 @@ export function SocialPostDialog({
 
     const performRepost = async () => {
         try {
-            // Optimistically update UI
-            const newRepostState = !isRepostActive;
-            setIsRepostActive(newRepostState);
-            setLocalRepostsCount((prev) =>
-                newRepostState ? prev + 1 : prev - 1
-            );
 
             const response = await fetch(`/api/post/post-action`, {
                 method: "PATCH",
@@ -174,11 +170,6 @@ export function SocialPostDialog({
             });
 
             if (!response.ok) {
-                // Revert changes if API call fails
-                setIsRepostActive(!newRepostState);
-                setLocalRepostsCount((prev) =>
-                    newRepostState ? prev - 1 : prev + 1
-                );
                 throw new Error("Failed to repost");
             }
 
@@ -188,10 +179,11 @@ export function SocialPostDialog({
                 setLocalRepostsCount(data.repostsCount);
             }
 
+            
+
             // Invalidate query to fetch updated posts
             if (onPostUpdate) {
                 onPostUpdate();
-                window.scrollTo(0, 0);
             }
         } catch (error) {
             console.error("Error reposting:", error);
@@ -436,13 +428,13 @@ export function SocialPostDialog({
                         <Repeat
                             size={18}
                             className={
-                                isRepostActive
+                                isReposted
                                     ? "fill-current"
                                     : "text-gray-500"
                             }
                         />
                     ),
-                    label: isRepostActive ? "Reposted" : "Repost",
+                    label: isReposted ? "Reposted" : "Repost",
                     onClick: handleRepost,
                 },
             ]
@@ -488,13 +480,16 @@ export function SocialPostDialog({
                             />
                             <div className="ml-2">
                                 <div className="flex items-center">
-                                    <h4 className="font-semibold text-sm">
-                                        {name}
-                                    </h4>
-                                    {/* <span className="text-xs text-gray-500 ml-1.5">• Following</span> */}
+                                    <Link href={`/profile/${userId}`}>
+                                        <h4 className="font-semibold text-sm hover:underline">
+                                            {name}
+                                        </h4>
+                                    </Link>
                                 </div>
                                 <div className="flex flex-col justify-center text-xs text-gray-500">
-                                    <span>{handle}</span>
+                                    <Link href={`/profile/${userId}`}>
+                                        <span className="hover:underline">{handle}</span>
+                                    </Link>
                                     {/* <span className="mx-1.5">•</span> */}
                                     <span className="flex">
                                         {time}{isFollowedActive && '• Following'}
@@ -634,8 +629,8 @@ export function SocialPostDialog({
                     open={repostConfirmOpen}
                     onOpenChange={setRepostConfirmOpen}
                     clickFunc={performRepost}
-                    subject="Repost"
-                    object="post"
+                    subject={isReposted ? "Delete" :"Repost"}
+                    object={isReposted ? "Repost":"post"}
                 />
             </DialogContent>
             <ShareContent

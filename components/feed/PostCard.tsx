@@ -702,6 +702,7 @@ export const PostCard: React.FC<PostCardProps> = ({
                 commentsCount={localCommentsCount} // Use local state here
                 repostsCount={localRepostsCount} // Use local state here 
                 comments={comments}
+                isReposted={isReposted}
                 onPostUpdate={() => {
                     // First update local state
                     getComments();
