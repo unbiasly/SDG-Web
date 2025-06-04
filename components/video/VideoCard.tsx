@@ -208,9 +208,46 @@ const VideoCard = ({
                     onBookmarkToggle();
                 }
 
-                // Invalidate relevant queries to refresh data
-                queryClient.invalidateQueries({ queryKey: ["sdgVideos"] });
-                queryClient.invalidateQueries({ queryKey: ["bookmarkedVideos"] });
+                // Fix: Invalidate with the correct query key pattern
+                queryClient.invalidateQueries({
+                    queryKey: ["sdgVideos"],
+                    exact: false,
+                });
+    
+            // Method 2: Force refetch immediately
+                queryClient.refetchQueries({
+                    queryKey: ["sdgVideos"],
+                    exact: false,
+                });
+                
+                // Method 3: Update cache directly for immediate UI feedback
+                queryClient.setQueriesData({ 
+                    queryKey: ["sdgVideos"],
+                    exact: false
+                    },
+                    (oldData: any) => {
+                        if (!oldData) return oldData;
+                        
+                        return {
+                            ...oldData,
+                            pages: oldData.pages.map((page: any) => ({
+                                ...page,
+                                data: page.data.map((v: any) => 
+                                    v._id === video._id 
+                                        ? { ...v, isBookmarked: !v.isBookmarked }
+                                        : v
+                                )
+                            }))
+                        };
+                    }
+                );
+                
+                // Also invalidate bookmarked videos
+                queryClient.invalidateQueries({ 
+                    queryKey: ["bookmarkedVideos"],
+                    exact: false 
+                });
+
                 // Show success toast
                 toast.success(
                     isActive
@@ -238,8 +275,11 @@ const VideoCard = ({
     const handleReportSubmitted = () => {
         toast.success("Thank you for your report");
 
-        // Invalidate queries to refresh data after report submission
-        queryClient.invalidateQueries({ queryKey: ["sdgVideos"] });
+        // Fix: Invalidate with the correct query key pattern
+        queryClient.invalidateQueries({ 
+            queryKey: ["sdgVideos"],
+            exact: false 
+        });
     };
 
     const formattedDate = video.published_date

@@ -15,7 +15,7 @@ const Page = () => {
             const savedTab = localStorage.getItem("activeVideoTab");
             return savedTab ? savedTab : "The SDG Talks";
         }
-        return "The SDG Talks"; // Default value for server-side rendering or if localStorage is not available
+        return "The SDG Talks";
     });
     const { ref, inView } = useInView();
     const { user } = useUser();
@@ -36,59 +36,31 @@ const Page = () => {
         return "talk"; // default
     }, [activeVideoTab]);
 
-    // Memoize the fetchVideos function (but without error conditions)
-    const fetchVideos = useMemo(
-        () =>
-            async ({
-                pageParam = "",
-                type = "talk",
-                limit = 30,
-            }): Promise<SDGVideoResponse> => {
-                const response = await fetch("/api/video", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
-                    },
-                    body: JSON.stringify({
-                        cursor: pageParam,
-                        limit,
-                        type,
-                        userId: user?._id,
-                    }),
-                });
-
-                if (!response.ok) {
-                    throw new Error("Failed to fetch videos");
-                }
-
-                return response.json();
+    const fetchVideos = async ({
+        pageParam = "",
+        type = "talk",
+        limit = 30,
+    }): Promise<SDGVideoResponse> => {
+        const response = await fetch("/api/video", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
             },
-        [user?._id] // Only depend on user._id, not the entire user object
-    );
+            body: JSON.stringify({
+                cursor: pageParam,
+                limit,
+                type,
+                userId: user?._id,
+            }),
+        });
 
-    // Configure query options with proper caching strategy
-    const queryOptions = useMemo(
-        () => ({
-            queryKey: ["sdgVideos", getVideoType, user?._id], // Include user ID in the query key
-            queryFn: ({ pageParam }: { pageParam: string }) =>
-                fetchVideos({
-                    pageParam,
-                    type: getVideoType,
-                    limit: 30,
-                }),
-            initialPageParam: "",
-            getNextPageParam: (lastPage: SDGVideoResponse) =>
-                lastPage.pagination?.nextCursor || undefined,
-            staleTime: 5 * 60 * 1000, // 5 minutes
-            cacheTime: 10 * 60 * 1000, // 10 minutes
-            refetchOnWindowFocus: false,
-            refetchOnMount: false,
-            refetchOnReconnect: false,
-            enabled: Boolean(user?._id), // Only enable the query when user ID is available
-        }),
-        [getVideoType, fetchVideos, user?._id]
-    );
+        if (!response.ok) {
+            throw new Error("Failed to fetch videos");
+        }
+
+        return response.json();
+    };
 
     const {
         data,
@@ -97,7 +69,22 @@ const Page = () => {
         isFetchingNextPage,
         status,
         refetch,
-    } = useInfiniteQuery(queryOptions);
+    } = useInfiniteQuery({
+        queryKey: ["sdgVideos", getVideoType, user?._id],
+        queryFn: ({ pageParam }) =>
+            fetchVideos({
+                pageParam,
+                type: getVideoType,
+                limit: 30,
+            }),
+        initialPageParam: "",
+        getNextPageParam: (lastPage: SDGVideoResponse) =>
+            lastPage.pagination?.nextCursor || undefined,
+        enabled: !!user?._id, // Only enable when user is available
+        refetchOnMount: true,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        gcTime: 1000 * 60 * 10, // 10 minutes
+    });
 
     useEffect(() => {
         if (inView && hasNextPage) {
@@ -105,46 +92,13 @@ const Page = () => {
         }
     }, [inView, fetchNextPage, hasNextPage]);
 
-    // Prefetch data for other tabs when idle
-    useEffect(() => {
-        const prefetchOtherTabData = () => {
-            const otherType = getVideoType === "talk" ? "podcast" : "talk";
-            queryClient.prefetchInfiniteQuery({
-                queryKey: ["sdgVideos", otherType],
-                queryFn: ({ pageParam = "" }) =>
-                    fetchVideos({
-                        pageParam,
-                        type: otherType,
-                        limit: 10, // Prefetch fewer items for other tab
-                    }),
-                initialPageParam: "",
-            });
-        };
-
-        // Use requestIdleCallback if available, otherwise setTimeout
-        if ("requestIdleCallback" in window) {
-            window.requestIdleCallback(prefetchOtherTabData);
-        } else {
-            setTimeout(prefetchOtherTabData, 2000);
-        }
-    }, [getVideoType, queryClient, fetchVideos]);
-
-    // Refetch when tab changes (only if necessary)
+    // Simple tab change handler
     const handleTabChange = useCallback(
         (newTab: string) => {
             setActiveVideoTab(newTab);
             setPlayingVideoId(null); // Close any playing videos
-
-            // Check if we already have data for this tab
-            const newType = newTab === "The SDG Talks" ? "talk" : "podcast";
-            const hasData = queryClient.getQueryData(["sdgVideos", newType]);
-
-            if (!hasData) {
-                // Only refetch if we don't have data already
-                setTimeout(() => refetch(), 0);
-            }
         },
-        [queryClient, refetch]
+        []
     );
 
     // Memoize video data to prevent unnecessary re-renders
@@ -170,6 +124,12 @@ const Page = () => {
                     Error loading{" "}
                     {getVideoType === "talk" ? "videos" : "podcasts"}
                 </p>
+                <button 
+                    onClick={() => refetch()} 
+                    className="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                    Retry
+                </button>
             </div>
         );
     }
@@ -181,12 +141,6 @@ const Page = () => {
                 setActiveTab={handleTabChange}
                 tabs={VIDEO_TABS}
             >
-                <div className="flex justify-end mb-2">
-                    {/* <button aria-label="filter" className="p-2 rounded-md hover:bg-gray-100">
-            <Filter className="h-5 w-5 text-gray-500" />
-          </button> */}
-                </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-1 px-4 gap-4">
                     {videos.map((video) => (
                         <div className="px-0" key={video._id}>
@@ -194,6 +148,13 @@ const Page = () => {
                                 video={video}
                                 playingVideoId={playingVideoId}
                                 setPlayingVideoId={setPlayingVideoId}
+                                onBookmarkToggle={() => {
+                                    // Invalidate and refetch current tab data
+                                    queryClient.invalidateQueries({
+                                        queryKey: ["sdgVideos", getVideoType, user?._id],
+                                        exact: false,
+                                    });
+                                }}
                             />
                         </div>
                     ))}
@@ -237,5 +198,4 @@ const Page = () => {
     );
 };
 
-// Prevent unnecessary re-renders by exporting a memoized component
-export default React.memo(Page);
+export default Page;
