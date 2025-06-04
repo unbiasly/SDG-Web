@@ -220,14 +220,14 @@ export default function RootLayout({
                     <SearchBar className="w-fit" />
                 </div>
                 <ScrollArea
-                    className="flex-1 md:py-2 min-w-0 h-[calc(100vh)] overflow-y-auto"
+                    className="flex-1 md:pt-2 min-w-0 h-[calc(100vh)] overflow-y-auto"
                     showScrollbar={false}
                 >
                     {children}
                 </ScrollArea>
             </div>
 
-            <aside className="max-w-[250px] p-2 space-y-3 max-h-screen self-start hidden-scrollbar hidden lg:block">
+            <aside className="max-w-[250px] p-2 space-y-3 md:max-h-screen self-start hidden-scrollbar hidden lg:block">
                 <SearchBar />
                 <TrendingSection />
             </aside>

@@ -10,6 +10,7 @@ interface ProfileAvatarProps {
   size?: 'xs' | 'sm' | 'md' | 'profile' | 'lg' | 'xl';
   editable?: boolean;
   className?: string;
+  onClick?: () => void;
   displayName?: string;
 }
 
@@ -18,6 +19,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
   alt = 'Profile',
   size = 'sm',
   editable = false,
+  onClick,
   className = '',
   displayName = '',
 }) => {
@@ -45,6 +47,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
               imageLoaded ? 'opacity-100' : 'opacity-0'
             } image-lazy-load`}
             onLoad={() => setImageLoaded(true)}
+            onClick={onClick}
             priority
           />
         ) : (

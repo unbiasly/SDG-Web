@@ -177,6 +177,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
         // Only run initialization once
         fetchUserById(userId);
         getUserPosts(userId);
+        window.scrollTo(0, 0); // Scroll to top on profile load
         {
             !isOwnProfile && trackProfileView(userId);
         }
@@ -204,6 +205,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             );
         };
     }, []); // This listener is for global updates, keep it simple.
+ 
 
     // Function to open dialog for adding new education
     const handleAddEducation = () => {
@@ -286,7 +288,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
         <div className="w-full min-h-screen flex flex-1 flex-col border-gray-300 rounded-2xl border-1 pb-20">
             {/* Header with gray background */}
             {/* Standard Profile Background Banner Height = 201px */}
-            <div className="h-full aspect-[4/1] rounded-t-xl relative overflow-hidden cursor-pointer" onClick={() => setIsBackgroundImageViewOpen(true)}>
+            <div className="h-full aspect-[4/1] rounded-t-xl relative overflow-hidden cursor-pointer" >
                 {profileUser?.profileBackgroundImage ? (
                     <Image
                         src={
@@ -299,6 +301,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                         fill
                         className="object-cover"
                         priority
+                        onClick={() => setIsBackgroundImageViewOpen(true)}
                     />
                 ) : (
                     <Image
@@ -315,12 +318,12 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             <div className="flex justify-between -mt-15 md:-mt-20 items-end px-6">
                 <div
                     className="relative cursor-pointer"
-                    onClick={() => setIsProfileImageViewOpen(true)}
                 >
                     <ProfileAvatar
                         size={avatarSize}
                         src={profileUser?.profileImage || ""}
                         alt="Profile"
+                        onClick={() => setIsProfileImageViewOpen(true)}
                     />
                     <div onClick={(e) => e.stopPropagation()}>{isOwnProfile && <ProfileImageDialog />}</div>
                 </div>

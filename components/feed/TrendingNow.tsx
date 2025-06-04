@@ -127,7 +127,7 @@ export const TrendingSection: React.FC = () => {
             <h3 className="text-xl text-accent font-semibold mb-1">SDG News</h3>
             <p className="text-sm text-gray-500 mb-4">@TheSDG story</p>
             
-            <ScrollArea className="h-[800px]">
+            <ScrollArea className="h-[80vh] ">
                 {articles.map((article:any) => (
                     <TrendingItem 
                         key={article._id}
