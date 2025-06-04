@@ -634,8 +634,8 @@ export const PostCard: React.FC<PostCardProps> = ({
                 </div>
                 <div className="flex items-center gap-2">
                     <span>{localCommentsCount} comments</span>
-                    {/* <span>•</span>
-          <span>{repostsCount} reposts</span> */}
+                    <span>•</span>
+                    <span>{repostsCount} reposts</span>
                 </div>
             </div>
             <div className="w-full border border-gray-200" />

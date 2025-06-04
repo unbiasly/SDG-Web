@@ -86,6 +86,7 @@ const BookmarksContent = () => {
     } = useInfiniteQuery({
         queryKey: ['bookmarkedPosts'],
         queryFn: fetchPosts,
+        enabled: true, // Enable the query
         getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
         initialPageParam: null
     });
@@ -101,6 +102,7 @@ const BookmarksContent = () => {
     } = useInfiniteQuery({
         queryKey: ['bookmarkedNews'],
         queryFn: fetchNews,
+        enabled: true, // Enable the query
         getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
         initialPageParam: null
     });
@@ -116,6 +118,7 @@ const BookmarksContent = () => {
     } = useInfiniteQuery({
         queryKey: ['bookmarkedVideos'],
         queryFn: fetchVideos,
+        enabled: true, // Enable the query
         getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
         initialPageParam: null
     });
@@ -263,6 +266,7 @@ const BookmarksContent = () => {
                                                 likesCount={bookmark.poststat_id.likes}
                                                 commentsCount={bookmark.poststat_id.comments}
                                                 repostsCount={bookmark.poststat_id.reposts}
+                                                isReposted={bookmark.isReposted}
                                                 isFollowed={bookmark?.user_id.isFollowing ?? undefined}
                                                 userId={bookmark.user_id._id}
                                                 onPostUpdate={createPostInvalidationCallback(bookmark._id)}

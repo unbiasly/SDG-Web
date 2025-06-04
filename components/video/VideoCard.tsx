@@ -23,7 +23,8 @@ import Image from "next/image";
 import { toast } from "react-hot-toast";
 import ReportPopover from "../post/ReportPopover";
 import ShareContent from "../post/ShareContent";
-import { useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
+import { useQueryClient } from "@tanstack/react-query";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface Goal {
     _id: string;
@@ -64,7 +65,11 @@ const VideoCard = ({
     const [isHovered, setIsHovered] = useState(false);
     const isBookmarked = video.isBookmarked;
     const [isActive, setIsActive] = useState(isBookmarked);
-    const queryClient = useQueryClient(); // Get the query client instance
+    const queryClient = useQueryClient();
+    const playerRef = useRef<any>(null);
+
+    // Use the useMediaQuery hook to detect mobile screens
+    const isMobile = useMediaQuery("(max-width: 768px)");
 
     // Menu state
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -88,6 +93,68 @@ const VideoCard = ({
         e.stopPropagation();
         // Stop all videos from playing
         setPlayingVideoId(null);
+    };
+
+    // Handle when YouTube player is ready
+    const onPlayerReady = (event: any) => {
+        playerRef.current = event.target;
+
+        // For mobile devices, try to play immediately when ready
+        if (isMobile) {
+            try {
+                // Small delay to ensure player is fully loaded
+                setTimeout(() => {
+                    event.target.playVideo();
+                }, 100);
+            } catch (error) {
+                console.log("Autoplay failed on mobile:", error);
+            }
+        }
+    };
+
+    // Handle player state changes
+    const onPlayerStateChange = (event: any) => {
+        // YouTube player states:
+        // -1 (unstarted), 0 (ended), 1 (playing), 2 (paused), 3 (buffering), 5 (video cued)
+
+        if (event.data === 0) {
+            // Video ended
+            setPlayingVideoId(null);
+        }
+
+        // If video is cued (state 5) on mobile, try to play it
+        if (event.data === 5 && isMobile) {
+            try {
+                setTimeout(() => {
+                    event.target.playVideo();
+                }, 200);
+            } catch (error) {
+                console.log("Failed to start playback:", error);
+            }
+        }
+    };
+
+    // Enhanced YouTube player options for mobile compatibility
+    const opts = {
+        height: "100%",
+        width: "100%",
+        playerVars: {
+            autoplay: 1,
+            mute: isMobile ? 1 : 0, // Mute on mobile to allow autoplay
+            playsinline: 1, // Essential for iOS
+            controls: 1,
+            rel: 0, // Don't show related videos
+            showinfo: 0,
+            fs: 1, // Allow fullscreen
+            cc_load_policy: 0, // Don't show captions by default
+            iv_load_policy: 3, // Don't show annotations
+            modestbranding: 1, // Minimal YouTube branding
+            // Mobile-specific parameters
+            ...(isMobile && {
+                enablejsapi: 1,
+                origin: typeof window !== 'undefined' ? window.location.origin : '',
+            }),
+        },
     };
 
     // Menu toggle functions
@@ -143,7 +210,7 @@ const VideoCard = ({
 
                 // Invalidate relevant queries to refresh data
                 queryClient.invalidateQueries({ queryKey: ["sdgVideos"] });
-
+                queryClient.invalidateQueries({ queryKey: ["bookmarkedVideos"] });
                 // Show success toast
                 toast.success(
                     isActive
@@ -180,18 +247,6 @@ const VideoCard = ({
               addSuffix: true,
           })
         : "";
-
-    // YouTube player options
-    const opts = {
-        height: "100%",
-        width: "100%",
-        playerVars: {
-            autoplay: 1,
-        },
-    };
-
-    // Determine if this is a podcast
-    const isPodcast = video.type === "podcast";
 
     const menuOptions = [
         {
@@ -248,6 +303,8 @@ const VideoCard = ({
                             videoId={video.video_id}
                             opts={opts}
                             className="w-full h-full"
+                            onReady={onPlayerReady}
+                            onStateChange={onPlayerStateChange}
                             onEnd={() => setPlayingVideoId(null)}
                         />
                         <button
@@ -257,6 +314,25 @@ const VideoCard = ({
                         >
                             <X className="h-5 w-5" color="white" />
                         </button>
+
+                        {/* Mobile-specific unmute button */}
+                        {isMobile && (
+                            <button
+                                onClick={() => {
+                                    if (playerRef.current) {
+                                        if (playerRef.current.isMuted()) {
+                                            playerRef.current.unMute();
+                                        } else {
+                                            playerRef.current.mute();
+                                        }
+                                    }
+                                }}
+                                className="absolute cursor-pointer top-2 left-2 bg-black/60 rounded-full p-1 text-white hover:bg-black/80 z-10"
+                                aria-label="Toggle sound"
+                            >
+                                <Volume2 className="h-5 w-5" color="white" />
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div className="cursor-pointer w-full h-full overflow-hidden aspect-video flex items-center justify-center">
@@ -279,7 +355,7 @@ const VideoCard = ({
                 <div className="flex items-center justify-between text-xs text-gray-500">
                     <div className="flex items-center">
                         <span className={cn(" rounded-full text-black")}>
-                            {isPodcast ? "Episode" : "SDG Talk"}
+                            {video.type === "podcast" ? "Episode" : "SDG Talk"}
                         </span>
                         <span className="mx-2">•</span>
                         <span>{video.channel_name}</span>

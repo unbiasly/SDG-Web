@@ -8,7 +8,7 @@ import QueryProvider from "./providers";
 
 export const metadata: Metadata = {
     title: "The SDG Story",
-    description: "GGI-Web",
+    description: "GGI-Web"
 };
 
 const merriweather = Merriweather({
@@ -24,7 +24,20 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={`${merriweather.className} antialiased bg-[#FFF]`}>
+            <head>
+                {/* Additional meta tag for iOS Safari */}
+                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" />
+            </head>
+            <body 
+                className={`${merriweather.className} antialiased bg-[#FFF]`}
+                style={{
+                    touchAction: 'manipulation', // Prevents double-tap zoom
+                    WebkitUserSelect: 'none', // Prevents text selection which can trigger zoom
+                    userSelect: 'none',
+                    WebkitTouchCallout: 'none', // Prevents callout on iOS
+                    WebkitTapHighlightColor: 'transparent' // Removes tap highlight
+                }}
+            >
                 <ReduxProvider>
                     <QueryProvider>{children}</QueryProvider>
                 </ReduxProvider>

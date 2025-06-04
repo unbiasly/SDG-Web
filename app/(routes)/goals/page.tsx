@@ -34,7 +34,7 @@ export default function Page() {
                         <Image 
                         src={goal.titleCard} 
                         alt={`SDG Goal ${goal.id}: ${goal.title}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full rounded-sm object-cover"
                         width={500}
                         height={500}
                         priority
