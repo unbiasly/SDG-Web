@@ -155,49 +155,23 @@ export interface Post {
     content: string;
     images: string[];
     status?: string;
+    deleted?: boolean;
     visibility: string;
     original_post_id: string | null;
     poststat_id: {
+        _id?: string;
         likes: number;
+        views?: number;
+        bookmarks?: number;
         comments: number;
         reposts: number;
     } | null;
-    createdAt: string;
-    updatedAt: string;
-    __v: number;
-    isLiked: boolean;
-    isBookmarked: boolean;
-    isReposted: boolean;
-}
-
-export interface PostData {
-    _id: string;
-    user_id: {
-        _id: string;
-        username: string;
-        profileImage?: string;
-        name?: string;
-        followerCount: number;
-        isFollowing: boolean | null;
-    };
-    content: string;
-    images: string[];
-    deleted?: boolean;
-    visibility: string;
-    poststat_id: {
-        _id: string;
-        likes: number;
-        views: number;
-        bookmarks: number;
-        comments: number;
-        reposts: number;
-    } | null;
-    original_post_id?: string | null;
     createdAt: string;
     updatedAt: string;
     __v: number;
     isLiked: boolean;
     isBookmarked?: boolean;
+    isReposted: boolean;
 }
 
 export interface CommentData {
@@ -448,11 +422,22 @@ export interface SessionsResponse {
 
 
 export interface JobListing {
-    id: number;
+    _id: string;
     title: string;
-    company: string;
+    companyName: string;
+    companyLogo?: string;
     location: string;
-    postedDays: number;
+    jobType: string;
+    salaryRange?: string;
+    experienceLevel: string;
+    description: string;
+    applyUrl: string;
+    expiresAt: string;
+    skills: string[];
+    isActive: boolean;
+    postedAt: string;
+    __v?: number;
     applicants?: number;
-    matches?: string[];
-  }
+    isSaved?: boolean;
+    isApplied?: boolean;
+}

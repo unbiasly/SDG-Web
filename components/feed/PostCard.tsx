@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
     ThumbsUp,
     MessageCircle,
@@ -11,358 +11,281 @@ import {
     UserPlus,
     Repeat,
     Send,
+    X,
 } from "lucide-react";
 import Image from "next/image";
 import CommentSection from "../post/CommentSection";
-import { CommentData } from "@/service/api.interface";
+import { CommentData, Post } from "@/service/api.interface";
 import ProfileAvatar from "../profile/ProfileAvatar";
-import { SocialPostDialog } from "../post/FocusedPost";
 import ReportPopover from "../post/ReportPopover";
 import EditPost from "../post/EditPost";
 import { useUser } from "@/lib/redux/features/user/hooks";
 import { BentoImageGrid } from "../post/BentoGrid";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
-import ConfirmationDialog from "../ConfirmationDialog";
+import ConfirmationDialog from "../custom-ui/ConfirmationDialog";
 import ShareContent from "../post/ShareContent";
-import { is } from "date-fns/locale";
 import { useQueryClient } from "@tanstack/react-query";
+import Options from "../custom-ui/Options";
+import { formatDate } from "@/lib/utilities/formatDate";
+import { AppApi } from "@/service/app.api";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "../ui/dialog";
+import ImageCarousel from "../post/ImageCarousel";
+import ColoredDivider from "./ColoredDivider";
 
 interface PostCardProps {
-    _id: string;
-    name: string;
-    handle: string;
-    time: string;
-    //   isVerified?: boolean;
-    content: string;
-    isLiked: boolean;
-    isReposted?: boolean;
-    userId: string;
-    isBookmarked: boolean;
-    imageUrl: string[];
-    avatar: string;
-    likesCount: number;
-    commentsCount: number;
-    repostsCount: number;
-    isFollowed?: boolean;
     isCommentOpen?: boolean;
-    onPostUpdate?: () => void; // Add callback for post updates
+    post?: Post;
+    onPostUpdate?: () => void;
 }
 
-export const PostCard: React.FC<PostCardProps> = ({
-    _id,
-    name,
-    handle,
-    time,
-    isReposted,
-    content,
-    imageUrl,
-    isLiked,
-    isBookmarked,
-    userId,
-    likesCount,
+export const PostCard: React.FC<PostCardProps> = React.memo(({
+    post,
     isCommentOpen = false,
-    commentsCount,
-    avatar,
-    repostsCount,
-    isFollowed,
     onPostUpdate,
 }) => {
+    // State management
     const [isCommentsOpen, setIsCommentsOpen] = useState(isCommentOpen);
     const [comments, setComments] = useState<CommentData[]>([]);
-    // Add state for local comment count
-    const [localCommentsCount, setLocalCommentsCount] = useState(commentsCount);
-    const [isActive, setIsActive] = useState(false);
+    const [localCommentsCount, setLocalCommentsCount] = useState(post?.poststat_id?.comments || 0);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [localLikesCount, setLocalLikesCount] = useState(likesCount);
-    const [isLocalLiked, setIsLocalLiked] = useState(isLiked);
-    // const [isRepostActive, setIsRepostActive] = useState(isReposted);
-    const [localRepostsCount, setLocalRepostsCount] = useState(repostsCount);
-
-    // PostMenu state
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
-    const buttonRef = useRef<HTMLButtonElement>(null);
+    const [localLikesCount, setLocalLikesCount] = useState(post?.poststat_id?.likes || 0);
+    const [isLocalLiked, setIsLocalLiked] = useState(post?.isLiked);
+    const [localRepostsCount, setLocalRepostsCount] = useState(post?.poststat_id?.reposts || 0);
+    const [isBookmarkActive, setIsBookmarkActive] = useState(post?.isBookmarked);
+    const [isFollowedActive, setIsFollowedActive] = useState(post?.user_id?.isFollowing);
+    
+    // Modal states
     const [reportOpen, setReportOpen] = useState(false);
     const [editPostOpen, setEditPostOpen] = useState(false);
-    const [deletePostOpen, setDeletePostOpen] = useState(false);
-    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false); // New state for delete confirmation
-    const [isBookmarkActive, setIsBookmarkActive] = useState(isBookmarked);
-    const [isFollowedActive, setIsFollowedActive] = useState(isFollowed);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [repostConfirmOpen, setRepostConfirmOpen] = useState(false);
     const [shareContentOpen, setShareContentOpen] = useState(false);
 
+    // Loading states
+    const [isLikeLoading, setIsLikeLoading] = useState(false);
+    const [isRepostLoading, setIsRepostLoading] = useState(false);
+    const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
+    const [isFollowLoading, setIsFollowLoading] = useState(false);
+
     const { user } = useUser();
-    const currentUserId = user?._id;
     const queryClient = useQueryClient();
 
-    const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-    const closeMenu = () => setIsMenuOpen(false);
+    // Memoized values
+    const currentUserId = useMemo(() => user?._id, [user?._id]);
+    const isOwnPost = useMemo(() => post?.user_id?._id === currentUserId, [post?.user_id?._id, currentUserId]);
+    const formattedDate = useMemo(() => formatDate(post?.createdAt || ''), [post?.createdAt]);
+    const postImages = useMemo(() => 
+        post?.images ? (Array.isArray(post?.images) ? post?.images : [post?.images]) : [], 
+        [post?.images]
+    );
 
-    // Add click outside listener to close the menu
+    // Sync state with props changes
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            // Check if the click was outside both the menu and the toggle button
-            if (
-                isMenuOpen &&
-                menuRef.current &&
-                buttonRef.current &&
-                !menuRef.current.contains(event.target as Node) &&
-                !buttonRef.current.contains(event.target as Node)
-            ) {
-                closeMenu();
-            }
-        };
+        setIsLocalLiked(post?.isLiked);
+        setLocalLikesCount(post?.poststat_id?.likes || 0);
+        setIsBookmarkActive(post?.isBookmarked);
+        setLocalRepostsCount(post?.poststat_id?.reposts || 0);
+        setLocalCommentsCount(post?.poststat_id?.comments || 0);
+        setIsFollowedActive(post?.user_id?.isFollowing);
+    }, [
+        post?.isLiked,
+        post?.poststat_id?.likes,
+        post?.poststat_id?.reposts,
+        post?.isBookmarked,
+        post?.poststat_id?.comments,
+        post?.user_id?.isFollowing
+    ]);
 
-        // Add event listener when menu is open
-        if (isMenuOpen) {
-            document.addEventListener("mousedown", handleClickOutside);
-        }
-
-        // Clean up event listener
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, [isMenuOpen]);
-
-    // Update this useEffect to properly sync with all prop changes 
-    useEffect(() => {
-        setIsActive(isLiked);
-        setIsLocalLiked(isLiked);
-        setLocalLikesCount(likesCount);
-        setIsBookmarkActive(isBookmarked);
-        setLocalRepostsCount(repostsCount);
-        setLocalCommentsCount(commentsCount);
-        setIsFollowedActive(isFollowed);
-    }, [isLiked, likesCount, isReposted, repostsCount, isBookmarked, commentsCount, isFollowed]);
-
-    const toggleComments = () => {
-        setIsCommentsOpen(!isCommentsOpen);
-        {
-            !isCommentsOpen && getComments();
-        }
-    };
-
-    const handleLike = async () => {
+    // API handlers with proper error handling and loading states
+    const handleLike = useCallback(async () => {
+        if (isLikeLoading || !post?._id) return;
+        
         try {
-            // Optimistically update UI
+            setIsLikeLoading(true);
             const newLikedState = !isLocalLiked;
-            setIsActive(newLikedState);
+            
+            // Optimistic update
             setIsLocalLiked(newLikedState);
-            setLocalLikesCount((prev) => (newLikedState ? prev + 1 : prev - 1));
+            setLocalLikesCount(prev => newLikedState ? prev + 1 : prev - 1);
 
-            const response = await fetch(`/api/post/post-action`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    actionType: "like",
-                    postId: _id,
-                }),
-            });
+            const response = await AppApi.postAction(post._id, "like", "PATCH");
 
-            if (!response.ok) {
-                // Revert changes if API call fails
-                setIsActive(isLocalLiked);
+            if (!response.success) {
+                // Revert on failure
                 setIsLocalLiked(!newLikedState);
-                setLocalLikesCount((prev) =>
-                    newLikedState ? prev - 1 : prev + 1
-                );
+                setLocalLikesCount(prev => newLikedState ? prev - 1 : prev + 1);
                 throw new Error("Failed to like post");
             }
 
-            // Get updated data from API response
-            const data = await response.json();
+            const data = await response.data;
             if (data.likesCount !== undefined) {
                 setLocalLikesCount(data.likesCount);
             }
         } catch (error) {
             console.error("Error liking post:", error);
+            toast.error("Failed to update like. Please try again.");
+        } finally {
+            setIsLikeLoading(false);
         }
-    };
+    }, [isLikeLoading, post?._id, isLocalLiked]);
 
-    const handleRepost = () => {
-        // Check if the post belongs to the current user
-        if (userId === currentUserId) {
+    const handleRepost = useCallback(() => {
+        if (isOwnPost) {
             toast.error("You cannot repost your own content");
             return;
         }
-        // Open the confirmation dialog
         setRepostConfirmOpen(true);
-    };
+    }, [isOwnPost]);
 
-    const performRepost = async () => {
+    const performRepost = useCallback(async () => {
+        if (isRepostLoading || !post?._id) return;
+
         try {
-            const response = await fetch(`/api/post/post-action`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    actionType: "repost",
-                    postId: _id,
-                }),
-            });
+            setIsRepostLoading(true);
+            const response = await AppApi.postAction(post._id, "repost", "PATCH");
 
-            if (!response.ok) {
+            if (!response.success) {
                 toast.error("Failed to repost");
                 return;
-            } 
+            }
 
-            toast.success(isReposted ? "Repost Deleted" : "Post reposted successfully");
+            toast.success(post?.isReposted ? "Repost deleted" : "Post reposted successfully");
 
-
-            // Get updated data from API response
-            const data = await response.json();
+            const data = await response.data;
             if (data.repostsCount !== undefined) {
                 setLocalRepostsCount(data.repostsCount);
             }
 
-            // Invalidate query to fetch updated posts including the new repost
-            if (onPostUpdate) {
-                onPostUpdate();
-            }
+            onPostUpdate?.();
         } catch (error) {
             console.error("Error reposting:", error);
             toast.error("Failed to repost. Please try again later.");
+        } finally {
+            setIsRepostLoading(false);
+            setRepostConfirmOpen(false);
         }
+    }, [isRepostLoading, post?._id, post?.isReposted, onPostUpdate]);
 
-        // Close the dialog
-        setRepostConfirmOpen(false);
-    };
+    const handleBookmark = useCallback(async () => {
+        if (isBookmarkLoading || !post?._id) return;
 
-    // PostMenu handlers
-    const handleReportClick = () => {
-        setIsMenuOpen(false);
-        setReportOpen(true);
-    };
-
-    const handleBookmark = async () => {
         try {
-            // Optimistically update UI
+            setIsBookmarkLoading(true);
             const newBookmarkState = !isBookmarkActive;
             setIsBookmarkActive(newBookmarkState);
 
-            const response = await fetch(`/api/post/post-action`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    actionType: "bookmark",
-                    postId: _id,
-                }),
-            });
+            const response = await AppApi.postAction(post._id, "bookmark", "PATCH");
 
-            if (!response.ok) {
-                // Revert changes if API call fails
+            if (!response.success) {
                 setIsBookmarkActive(!newBookmarkState);
                 throw new Error("Failed to bookmark post");
             }
-            if (onPostUpdate) {
-                onPostUpdate();
-            }
-            queryClient.invalidateQueries({ queryKey: ["bookmarkedPosts"] });
 
-            // Get updated data from API response
-            const data = await response.json();
-            console.log("Bookmark updated successfully", data);
+            onPostUpdate?.();
+            queryClient.invalidateQueries({ queryKey: ["bookmarkedPosts"] });
         } catch (error) {
             console.error("Error bookmarking post:", error);
+            toast.error("Failed to update bookmark. Please try again.");
+        } finally {
+            setIsBookmarkLoading(false);
         }
-    };
+    }, [isBookmarkLoading, post?._id, isBookmarkActive, onPostUpdate, queryClient]);
 
-    const handleEditPost = () => {
-        setIsMenuOpen(false);
-        setEditPostOpen(true);
-    };
+    const handleFollow = useCallback(async () => {
+        if (isFollowLoading || !post?.user_id?._id || !currentUserId) return;
 
-    const handleDeletePost = () => {
-        setIsMenuOpen(false);
-        setDeleteConfirmOpen(true); // Open confirmation dialog instead
-    };
-
-    // New function to handle deletion after confirmation
-    const handleDeleteConfirm = async () => {
         try {
-            const response = await fetch(`/api/post`, {
-                method: 'DELETE',
-                body: JSON.stringify({ postId: _id }),
+            setIsFollowLoading(true);
+            const newFollowState = !isFollowedActive;
+
+            const response = await AppApi.handleFollow(post.user_id._id, currentUserId, newFollowState);
+
+            if (!response.success) {
+                throw new Error("Failed to update follow status");
+            }
+            console.log("Follow status updated successfully");
+            queryClient.invalidateQueries({ 
+            queryKey: ["posts"],
+            exact: false 
             });
+            queryClient.invalidateQueries({ 
+                queryKey: ["bookmarkedPosts"],
+                exact: false 
+            });
+
+        } catch (error) {
+            console.error("Error updating follow status:", error);
+            toast.error("Failed to update follow status. Please try again.");
+        } finally {
+            setIsFollowLoading(false);
+        }
+    }, [isFollowLoading, post?.user_id?._id, currentUserId, isFollowedActive, queryClient]);
+
+    const handleDeleteConfirm = useCallback(async () => {
+        if (!post?._id) return;
+
+        try {
+            const response = await AppApi.deletePost(post._id);
             
-            if (!response.ok) {
+            if (!response.success) {
                 throw new Error('Failed to delete post');
             }
             
-            // Handle successful deletion
             toast.success('Post deleted successfully');
-            
-            
-            // Refresh posts data after successful deletion
-            if (onPostUpdate) {
-                onPostUpdate();
-            }
+            onPostUpdate?.();
         } catch (error) {
             console.error('Error deleting post:', error);
             toast.error('Failed to delete post. Please try again.');
         } finally {
-            // Close the dialog
             setDeleteConfirmOpen(false);
         }
-    };
+    }, [post?._id, onPostUpdate]);
 
-    const handleFollow = async () => {
-        try {
-            // Optimistically update UI
-            const newFollowState = !isFollowedActive;
-            setIsFollowedActive(newFollowState);
-
-            // Close the menu after action is taken
-            setIsMenuOpen(false);
-
-            // Make the API call
-            const response = await fetch("/api/follow", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    followingId: userId,
-                    userId: currentUserId,
-                    action: newFollowState ? "follow" : "unfollow",
-                }),
-            });
-
-            if (!response.ok) {
-                // If API fails, revert UI change
-                setIsFollowedActive(!newFollowState);
-                throw new Error("Failed to update follow status");
+    const toggleComments = useCallback(() => {
+        setIsCommentsOpen(prev => {
+            if (!prev) {
+                getComments();
             }
-            queryClient.invalidateQueries({ queryKey: ["bookmarkedPosts"] });
-            queryClient.invalidateQueries({ queryKey: ["posts"] });
+            return !prev;
+        });
+    }, []);
 
-            const data = await response.json();
-            console.log("Follow status updated successfully", data);
+    const getComments = useCallback(async () => {
+        if (!post?._id) return;
+
+        try {
+            const response = await AppApi.postAction(post._id, "comment", "POST");
+
+            if (!response.success) {
+                throw new Error("Failed to fetch comments");
+            }
+
+            const { data } = await response.data;
+            setComments(data || []);
         } catch (error) {
-            console.error("Error updating follow status:", error);
-            // Consider showing a toast notification here for error feedback
+            console.error("Error fetching comments:", error);
+            toast.error("Failed to load comments");
         }
-    };
+    }, [post?._id]);
 
-    // Handle report submission completion
-    const handleReportSubmitted = () => {
-        // Refresh posts data after successful report
-        if (onPostUpdate) {
-            onPostUpdate();
-        }
-    };
+    const handleCommentAdded = useCallback(() => {
+        setLocalCommentsCount(prev => prev + 1);
+        getComments();
+        onPostUpdate?.();
+    }, [getComments, onPostUpdate]);
 
-    const handleShare = () => {
-        setShareContentOpen(true);
-    };
+    const handleReportSubmitted = useCallback(() => {
+        onPostUpdate?.();
+    }, [onPostUpdate]);
 
-    const menuOptions = [
+    const handleImageClick = useCallback(() => {
+        setIsDialogOpen(true);
+        getComments();
+    }, [getComments]);
+
+    // Memoized menu options
+    const menuOptions = useMemo(() => [
         {
             icon: (
                 <Bookmark
@@ -375,64 +298,64 @@ export const PostCard: React.FC<PostCardProps> = ({
             ),
             label: isBookmarkActive ? "Saved" : "Save",
             onClick: handleBookmark,
+            disabled: isBookmarkLoading,
         },
+        ...(!isOwnPost ? [
+            {
+                icon: (
+                    <UserPlus
+                        className={`h-5 w-5 ${
+                            isFollowedActive
+                                ? "fill-current text-accent"
+                                : "text-gray-500"
+                        }`}
+                    />
+                ),
+                label: isFollowedActive ? "Unfollow" : "Follow",
+                onClick: handleFollow,
+                disabled: isFollowLoading,
+            },
+            {
+                icon: <Flag className="h-5 w-5 text-gray-500" />,
+                label: "Report post",
+                onClick: () => setReportOpen(true),
+                disabled: false,
+            },
+        ] : []),
+        ...(isOwnPost ? [
+            {
+                icon: <Pencil className="h-5 w-5 text-gray-500" />,
+                label: "Edit post",
+                onClick: () => setEditPostOpen(true),
+                disabled: false,
+            },
+            {
+                icon: <Trash className="h-5 w-5 text-gray-500" />,
+                label: "Delete post",
+                onClick: () => setDeleteConfirmOpen(true),
+                disabled: false,
+            },
+        ] : []),
+    ], [isBookmarkActive, isOwnPost, isFollowedActive, handleBookmark, handleFollow, isBookmarkLoading, isFollowLoading]);
 
-        ...(userId !== currentUserId
-            ? [
-                {
-                    icon: (
-                        <UserPlus
-                            className={`h-5 w-5 ${
-                                isFollowedActive
-                                    ? "fill-current text-accent"
-                                    : "text-gray-500"
-                            }`}
-                        />
-                    ),
-                    label: isFollowedActive ? "Unfollow" : "Follow",
-                    onClick: handleFollow,
-                },
-                {
-                    icon: <Flag className="h-5 w-5 text-gray-500" />,
-                    label: "Report post",
-                    onClick: handleReportClick,
-                },
-            ]
-            : []),
-
-        ...(userId === currentUserId
-            ? [
-                {
-                    icon: <Pencil className="h-5 w-5 text-gray-500" />,
-                    label: "Edit post",
-                    onClick: handleEditPost,
-                },
-                {
-                    icon: <Trash className="h-5 w-5 text-gray-500" />,
-                    label: "Delete post",
-                    onClick: handleDeletePost,
-                },
-            ]
-            : []),
-    ];
-
-    const postOptions = [
+    const postOptions = useMemo(() => [
         {
             icon: (
                 <ThumbsUp
                     size={18}
                     className={
-                        isActive
+                        isLocalLiked
                             ? "fill-current font-bold"
                             : "text-gray-500"
                     }
                 />
             ),
-            label: isActive ? "Liked" : "Like",
+            label: isLocalLiked ? "Liked" : "Like",
             onClick: handleLike,
-            isActive: isActive,
+            isActive: isLocalLiked,
+            disabled: isLikeLoading,
         },
-        {
+        ...(!isDialogOpen ? [{
             icon: (
                 <MessageCircle
                     size={18}
@@ -446,98 +369,53 @@ export const PostCard: React.FC<PostCardProps> = ({
             label: "Comment",
             onClick: toggleComments,
             isActive: isCommentsOpen,
-        },
-        ...(userId !== currentUserId
-            ? [
-                {
-                    icon: (
-                        <Repeat
-                            size={18}
-                            className={
-                                isReposted
-                                    ? "fill-current"
-                                    : "text-gray-500"
-                            }
-                        />
-                    ),
-                    label: isReposted ? "Reposted" : "Repost",
-                    onClick: handleRepost,
-                },
-            ]
-            : []),
+            disabled: false,
+        }] : []),
+        ...(!isOwnPost ? [{
+            icon: (
+                <Repeat
+                    size={18}
+                    className={
+                        post?.isReposted
+                            ? "fill-current"
+                            : "text-gray-500"
+                    }
+                />
+            ),
+            label: post?.isReposted ? "Reposted" : "Repost",
+            onClick: handleRepost,
+            disabled: isRepostLoading,
+        }] : []),
         {
             icon: <Send size={18} className="text-gray-500" />,
             label: "Share",
-            onClick: handleShare,
+            onClick: () => setShareContentOpen(true),
             isActive: false,
+            disabled: false,
         },
-    ];
+    ], [isLocalLiked, isDialogOpen, isCommentsOpen, isOwnPost, post?.isReposted, handleLike, toggleComments, handleRepost, isLikeLoading, isRepostLoading]);
 
-    const getComments = async () => {
-        try {
-            const response = await fetch(`/api/post/post-action`, {
-                method: "POST",
-                body: JSON.stringify({
-                    actionType: "comment",
-                    postId: _id,
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to fetch comments");
-            }
-
-            const { data } = await response.json();
-            setComments(data);
-
-            console.log("Fetched successfully", comments);
-            console.log(isLiked);
-        } catch (error) {
-            console.error("Error fetching comments:", error);
-        }
-    };
-
-    // Update comment handling
-    const handleCommentAdded = () => {
-        // Increment the local comment count
-        setLocalCommentsCount((prevCount) => prevCount + 1);
-        
-        // Refresh comments
-        getComments();
-        
-        // Notify any parent components
-        if (onPostUpdate) {
-            onPostUpdate();
-        }
-    };
-
-    // When dialog is open, ensure we have latest data
-    const handleImageClick = () => {
-        setIsDialogOpen(true);
-        getComments();
-    };
+    if (!post) {
+        return null;
+    }
 
     return (
-        <div className="w-full border-b  p-2 border-gray-300">
-            {/* {isReposted && (
-          <div className=" py-2 border-b px-4 mb-2  text-sm text-gray-500">
-            <Link href={`/profile/${userId}`} className="font-bold hover:underline">{name}</Link> reposted this
-          </div>
-        )} */}
+        <div className="w-full border-b p-2 border-gray-300">
+            {/* Header */}
             <div className="flex justify-between mb-3">
                 <div className="flex items-center">
-                    <Link href={`/profile/${userId}`}>
+                    <Link href={`/profile/${post.user_id?._id}`}>
                         <ProfileAvatar
-                            src={avatar}
-                            alt={name}
+                            src={post.user_id?.profileImage || ''}
+                            alt={post.user_id?.name}
                             size="xs"
                         />
                     </Link>
                     <div className="ml-2">
                         <div className="flex items-center">
-                            <Link href={`/profile/${userId}`}>
+                            <Link href={`/profile/${post.user_id?._id}`}>
                                 <h4 className="font-semibold text-sm hover:underline">
-                                    {name}
+                                    {post.user_id?.name}
                                 </h4>
                             </Link>
                             {isFollowedActive && (
@@ -547,67 +425,30 @@ export const PostCard: React.FC<PostCardProps> = ({
                             )}
                         </div>
                         <div className="flex items-center text-xs text-gray-500">
-                            <Link href={`/profile/${userId}`}>
-                                <span className="hover:underline">{handle}</span>
+                            <Link href={`/profile/${post.user_id?._id}`}>
+                                <span className="hover:underline">@{post.user_id?.username}</span>
                             </Link>
                             <div className="hidden md:block">
                                 <span className="mx-1.5">•</span>
-                                <span>{time}</span>
+                                <span>{formattedDate}</span>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    {/* Post Menu */}
-                    <div className="relative">
-                        <button
-                            ref={buttonRef} // Add ref to the button
-                            onClick={toggleMenu}
-                            className="p-2 rounded-full cursor-pointer hover:bg-gray-100 transition-colors"
-                            aria-label="More options"
-                        >
-                            <MoreVertical className="h-5 w-5 text-gray-500" />
-                        </button>
-
-                        {isMenuOpen && (
-                            <div
-                                ref={menuRef} // Add ref to the menu
-                                className="absolute right-0 mt-2 w-64 rounded-lg bg-white shadow-lg z-50 border border-gray-100 overflow-hidden"
-                                onClick={closeMenu}
-                            >
-                                <div className="py-1">
-                                    {menuOptions.map((item, index) => (
-                                        <button
-                                            key={index}
-                                            className="w-full cursor-pointer text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-100 transition-colors"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                item.onClick();
-                                            }}
-                                        >
-                                            {item.icon}
-                                            <span className="text-gray-700">
-                                                {item.label}
-                                            </span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <Options menuOptions={menuOptions} />
             </div>
 
+            {/* Content */}
             <div className="mb-3">
-                <p className="text-sm mb-3">{content}</p>
-                {imageUrl && imageUrl.length > 0 && (
+                <p className="text-sm mb-3">{post.content}</p>
+                {postImages.length > 0 && (
                     <div
                         className="rounded-lg overflow-hidden aspect-video bg-gray-50 cursor-pointer"
                         onClick={handleImageClick}
                     >
-                        {imageUrl.length === 1 ? (
+                        {postImages.length === 1 ? (
                             <Image
-                                src={imageUrl[0]}
+                                src={postImages[0]}
                                 alt="Post"
                                 width={0}
                                 height={0}
@@ -615,13 +456,14 @@ export const PostCard: React.FC<PostCardProps> = ({
                                 className="w-full h-full aspect-video object-contain"
                             />
                         ) : (
-                            <BentoImageGrid images={imageUrl} />
+                            <BentoImageGrid images={postImages} />
                         )}
                     </div>
                 )}
             </div>
 
-            <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
+            {/* Stats */}
+            <div className="flex justify-between items-center text-xs border-b border-gray-200 text-gray-500 pb-3">
                 <div className="flex items-center">
                     <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
                         <ThumbsUp
@@ -634,49 +476,165 @@ export const PostCard: React.FC<PostCardProps> = ({
                 </div>
                 <div className="flex items-center gap-2">
                     <span>{localCommentsCount} comments</span>
-                    {/* <span>•</span>
-          <span>{repostsCount} reposts</span> */}
+                    <span>•</span>
+                    <span>{localRepostsCount} reposts</span>
                 </div>
             </div>
-            <div className="w-full border border-gray-200" />
-            <div className="flex justify-evenly pt-2 ">
+
+            {/* Action buttons */}
+            <div className="flex justify-evenly pt-2">
                 {postOptions.map((action, index) => (
                     <button
                         key={index}
-                        className={`w-full flex items-center cursor-pointer justify-center gap-2 py-2 rounded-xl transition-colors duration-200 ${
+                        className={`w-full flex items-center cursor-pointer justify-center gap-2 py-2 rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                             action.isActive
                                 ? "font-bold"
-                                : "font-medium hover:bg-gray-200 "
+                                : "font-medium hover:bg-gray-200"
                         }`}
                         onClick={action.onClick}
+                        disabled={action.disabled}
                     >
                         {action.icon}
                         <span className="text-xs md:text-sm">{action.label}</span>
                     </button>
                 ))}
             </div>
-            <div className={isCommentsOpen ? "p-2" : "hidden"}>
-                <CommentSection
-                    post_id={_id}
-                    isOpen={isCommentsOpen}
-                    comments={comments}
-                    onCommentAdded={handleCommentAdded} // Use the new handler
-                />
-            </div>
-            {/* Modals and Popovers */}
+
+            {/* Comments */}
+            {isCommentsOpen && (
+                <div className="p-2">
+                    <CommentSection
+                        post_id={post._id}
+                        isOpen={isCommentsOpen}
+                        comments={comments}
+                        onCommentAdded={handleCommentAdded}
+                    />
+                </div>
+            )}
+
+            {/* Dialog */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent showDialogClose={false} className="lg:min-w-6xl min-w-screen lg:rounded-lg lg:h-[80vh] flex flex-col lg:flex-row p-0 ">
+                    <DialogClose className="absolute z-20 top-2 cursor-pointer right-2 p-1 rounded-full bg-black/20">
+                        <X color="white" size={20}/>
+                    </DialogClose>
+                    <DialogTitle className="sr-only hidden">Social Media Post</DialogTitle>
+                    <DialogDescription className="sr-only hidden">
+                        {post.content}
+                    </DialogDescription>
+
+                    {/* Image Carousel */}
+                    <div className="h-[40vh] lg:h-full w-full lg:w-2/3 rounded-b-lg lg:rounded-lg border-r-2 bg-[#1E1E1E] overflow-hidden flex-shrink-0">
+                        {postImages.length > 0 && (
+                            <ImageCarousel
+                                images={postImages}
+                                className="w-full h-full"
+                            />
+                        )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex flex-col h-full w-full lg:w-1/3 overflow-hidden">
+                        {/* Header */}
+                        <div className="flex px-4 my-2 lg:my-4 justify-between items-center flex-shrink-0">
+                            <div className="flex items-center">
+                                <ProfileAvatar
+                                    src={post.user_id?.profileImage || ""}
+                                    alt={post.user_id?.name}
+                                    size="sm"
+                                />
+                                <div className="ml-2">
+                                    <div className="flex items-center">
+                                        <Link href={`/profile/${post.user_id?._id}`}>
+                                            <h4 className="font-semibold text-sm hover:underline">
+                                                {post.user_id?.name}
+                                            </h4>
+                                        </Link>
+                                    </div>
+                                    <div className="flex flex-col justify-center text-xs text-gray-500">
+                                        <Link href={`/profile/${post.user_id?._id}`}>
+                                            <span className="hover:underline">@{post.user_id?.username}</span>
+                                        </Link>
+                                        <span className="flex">
+                                            {formattedDate}{isFollowedActive && ' • Following'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <Options menuOptions={menuOptions}/>
+                        </div>
+
+                        {/* Scrollable content */}
+                        <div className="overflow-y-auto flex-1 flex flex-col max-h-[calc(100vh-15rem)] lg:max-h-none">
+                            <div className="px-4 flex-shrink-0">
+                                <h2 className="text-lg font-medium mb-3">
+                                    {post.content}
+                                </h2>
+
+                                {/* Stats */}
+                                <div className="flex justify-between text-sm text-gray-500 mb-3">
+                                    <div className="flex items-center">
+                                        <div className="bg-blue-500 rounded-full w-5 h-5 flex items-center justify-center mr-1">
+                                            <ThumbsUp size={12} color="white" />
+                                        </div>
+                                        <span>{localLikesCount}</span>
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <span>{localCommentsCount} comments</span>
+                                        <span>{localRepostsCount} reposts</span>
+                                    </div>
+                                </div>
+                                <ColoredDivider />
+
+                                {/* Action buttons */}
+                                <div className="flex justify-evenly my-3">
+                                    {postOptions.map((action, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={action.onClick}
+                                            disabled={action.disabled}
+                                            aria-label={action.label}
+                                            className={`flex w-full cursor-pointer justify-center items-center gap-1 px-2 py-1 rounded-md hover:bg-gray-100 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                                                action.isActive
+                                                    ? "text-accent font-medium"
+                                                    : "text-gray-600"
+                                            }`}
+                                        >
+                                            {action.icon}
+                                            <span>{action.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Comments section */}
+                                <div className="flex-1 overflow-y-auto px-4 pb-2 border-t border-gray-100 pt-2">
+                                    <CommentSection
+                                        post_id={post._id}
+                                        isOpen={true}
+                                        comments={comments}
+                                        onCommentAdded={handleCommentAdded}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Modals */}
             <ReportPopover
                 open={reportOpen}
                 onOpenChange={setReportOpen}
-                id={_id}
+                id={post._id}
                 onReportSubmitted={handleReportSubmitted}
             />
             <EditPost
                 open={editPostOpen}
                 onOpenChange={setEditPostOpen}
-                postId={_id}
-                initialContent={content}
+                postId={post._id}
+                initialContent={post.content}
                 onPostUpdate={onPostUpdate}
-                images={Array.isArray(imageUrl) ? imageUrl : [imageUrl]}
+                images={postImages}
             />
             <ConfirmationDialog
                 open={deleteConfirmOpen}
@@ -685,44 +643,21 @@ export const PostCard: React.FC<PostCardProps> = ({
                 subject="Delete"
                 object="post"
             />
-            <SocialPostDialog
-                open={isDialogOpen}
-                onOpenChange={setIsDialogOpen}
-                _id={_id}
-                name={name}
-                handle={handle}
-                userId={userId}
-                time={time}
-                content={content}
-                isLiked={isLocalLiked} // Use local state here
-                isBookmarked={isBookmarkActive} // Use local state here
-                imageUrl={Array.isArray(imageUrl) ? imageUrl : [imageUrl]}
-                avatar={avatar}
-                likesCount={localLikesCount} // Use local state here
-                commentsCount={localCommentsCount} // Use local state here
-                repostsCount={localRepostsCount} // Use local state here 
-                comments={comments}
-                onPostUpdate={() => {
-                    // First update local state
-                    getComments();
-                    // Then propagate update to parent
-                    if (onPostUpdate) onPostUpdate();
-                }}
-            />
-            {/* Add this near the bottom of your component, with the other dialogs */}
             <ConfirmationDialog
                 open={repostConfirmOpen}
                 onOpenChange={setRepostConfirmOpen}
                 clickFunc={performRepost}
-                subject={isReposted ? "Delete" :"Repost"}
-                object={isReposted ? "Repost":"post"}
+                subject={post.isReposted ? "Delete" : "Repost"}
+                object={post.isReposted ? "Repost" : "post"}
             />
             <ShareContent
                 open={shareContentOpen}
                 onOpenChange={setShareContentOpen}
-                contentUrl={`/post/${_id}`}
-                itemId={_id}
+                contentUrl={`/post/${post._id}`}
+                itemId={post._id}
             />
         </div>
     );
-};
+});
+
+PostCard.displayName = 'PostCard';

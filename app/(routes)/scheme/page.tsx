@@ -27,12 +27,10 @@ interface TabConfig {
 const Page = () => {
     const [activeTab, setActiveTab] = useState<string>("Categories");
     const [tabs, setTabs] = useState<SchemeAnalyticsResponse | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(true); // Add loading state
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    // Helper function to find icon for a scheme by label/id
-    
     const getTabs = async () => {
-        setIsLoading(true); // Set loading to true when fetching starts
+        setIsLoading(true);
         try {
             const response = await fetch('/api/scheme', {
                 method: 'GET',
@@ -45,7 +43,7 @@ const Page = () => {
         } catch (error) {
             console.error("Error fetching scheme data:", error);
         } finally {
-            setIsLoading(false); // Set loading to false when fetching ends
+            setIsLoading(false);
         }
     }
 
@@ -79,9 +77,8 @@ const Page = () => {
     // Check if we have actual data to display
     const hasData = tabs?.data && Object.keys(tabs.data).length > 0;
 
-
     return (
-        <div className='flex flex-1 overflow-hidden'>
+        <div className='flex flex-1'>
             <ContentFeed activeTab={activeTab} setActiveTab={setActiveTab} tabs={SCHEME_TABS}>
                 {isLoading ? (
                     <div className="w-full flex justify-center items-center p-8">
@@ -93,9 +90,9 @@ const Page = () => {
                             <h1 className="text-xl md:text-2xl font-bold p-2 md:p-4 text-center">
                                 {tabConfig[activeTab].title}
                             </h1>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-5"> {/* Changed from flex to grid */}
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-5 "> {/* Changed from flex to grid */}
                                 {tabConfig[activeTab].data.map((scheme, index) => (
-                                    <div key={index} className="flex justify-center  mb-3">
+                                    <div key={index} className="flex justify-center ">
                                         <SchemeCard
                                             icon={scheme.icon}
                                             count={scheme.count}
@@ -107,7 +104,7 @@ const Page = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="w-full flex justify-center items-center p-8">
+                        <div className="w-full flex justify-center items-center p-8 min-h-[50vh]">
                             <p className="text-gray-500">No scheme data available.</p>
                         </div>
                     )

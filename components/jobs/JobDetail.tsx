@@ -1,136 +1,240 @@
-import { MoreVertical, MapPin, Users, Check } from "lucide-react";
+'use client';
+import { MapPin, Users, BriefcaseBusiness, Bookmark } from "lucide-react";
 import { JobListing } from "@/service/api.interface";
 import ColoredDivider from "../feed/ColoredDivider";
 import Image from "next/image";
+import { formatDate } from "@/lib/utilities/formatDate";
+import Options from "../custom-ui/Options";
+import Link from "next/link";
+import { useState } from "react";
 
 interface JobDetailProps {
-  job: JobListing;
+    job: JobListing;
 }
 
+
 const JobDetail = ({ job }: JobDetailProps) => {
-  return (
-    <div className="p-6">
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-4">
-          <Image src='/Logo.svg' alt='SDG Logo' width={40} height={40}  />
-          <div>
-            <h3 className="text-xl font-medium text-blue-600">{job.title}</h3>
-            <p className="text-base">{job.company}</p>
-          </div>
-        </div>
-        <button aria-label="more-options" className="text-gray-500">
-          <MoreVertical size={24} />
-        </button>
-      </div>
 
-      <div className="mb-5">
-        <div className="flex items-center gap-2 mb-2">
-          <Users size={16} className="text-gray-600" />
-          <span className="text-sm text-gray-700">{job.applicants} applicants</span>
-        </div>
-        <div className="flex items-center gap-2 mb-2">
-          <MapPin size={16} className="text-gray-600" />
-          <span className="text-sm text-gray-700">{job.location} • {job.postedDays} days ago</span>
-        </div>
-      </div>
+    const [isBookmarkActive, setIsBookmarkActive] = useState(job.isSaved || false);
 
-      {job.matches && (
-        <div className="flex flex-wrap gap-2 mb-5">
-          {job.matches.map((match, index) => (
-            <div key={index} className="bg-gray-200 rounded-full py-1 px-3 flex items-center gap-1 text-sm">
-              <span className="text-gray-700">{match}</span>
-              <Check size={14} className="text-white bg-blue-500 rounded-full p-0.5" />
-            </div>
-          ))}
-        </div>
-      )}
+    const details = [
+        {
+            icon: <Users size={16} className="text-gray-600" />,
+            label: `${job?.applicants || 0} applicants`,
+        },
+        {
+            icon: <MapPin size={16} className="text-gray-600" />,
+            label: `${job.location} • ${formatDate(job.postedAt)}`,
+        },
+        // {
+        //     icon: <BriefcaseBusiness size={16} className="text-gray-600" />,
+        //     label: job.jobType.charAt(0).toUpperCase() + job.jobType?.slice(1).toLowerCase(),
+        // }
+        // jobtype, salaryRange, experienceLevel, 
+    ];
 
-      <div className="grid grid-cols-2 gap-4 mb-5">
-        <button className="bg-[#154360] text-white py-2 rounded-md">Apply</button>
-        <button className="border border-gray-300 py-2 rounded-md">Save</button>
-      </div>
+    const aboutJob = [
+        {
+            label: "Job title:",
+            value: job.title
+        },
+        {
+            label: "Location:",
+            value: job.location
+        },
+        // {
+        //     label: "Job type:",
+        //     value: job.jobType.charAt(0).toUpperCase() + job.jobType?.slice(1).toLowerCase()
+        // },
+        {
+            label: job.jobType === 'internship' ? "Stipend:" : "Salary:",
+            value: job.salaryRange
+        }
+    ];
 
-      <ColoredDivider />
+    const handleBookmark = () => {
+        setIsBookmarkActive(!isBookmarkActive);
+    };
 
-      <div className="mt-5">
-        <h2 className="font-semibold mb-4">About the job</h2>
-        
-        <section className="mb-6">
-          <h3 className="font-medium mb-2">Overview</h3>
-          <p className="text-sm leading-relaxed">
-            We are looking to hire Flutter & ReactJs Developer plays a crucial role in designing 
-            and implementing mobile and web applications using Flutter and ReactJs 
-            technologies. They are responsible for developing engaging user interfaces and 
-            ensuring seamless user experiences. This position is integral to the organization's 
-            digital presence and enhancing customer interactions through innovative and 
-            efficient applications.
-          </p>
-        </section>
+    const menuOptions = [
+        {
+            icon: (
+                <Bookmark
+                    className={`h-5 w-5 ${
+                        isBookmarkActive
+                            ? "fill-current text-accent"
+                            : "text-gray-500"
+                    }`}
+                />
+            ),
+            label: isBookmarkActive ? "Saved" : "Save",
+            onClick: handleBookmark,
+        },
+    ]
 
-        <section className="mb-6">
-          <h3 className="font-medium mb-2">Key Responsibilities</h3>
-          <ul className="list-disc list-outside ml-5 text-sm space-y-1">
-            <li>Develop and maintain high-quality mobile and web applications using Flutter and ReactJs.</li>
-            <li>Collaborate with cross-functional teams to define, design, and ship new features.</li>
-            <li>Optimize applications for maximum speed and scalability.</li>
-            <li>Implement clean, modern, and smooth animations and transitions for an enhanced user experience.</li>
-            <li>Ensure the technical feasibility of UI/UX designs.</li>
-            <li>Integrate mobile and web applications with back-end services and databases.</li>
-            <li>Monitor and improve front-end performance.</li>
-            <li>Stay updated on emerging technologies in mobile and web development.</li>
-            <li>Identify and correct bottlenecks and fix bugs.</li>
-            <li>Conduct code reviews, testing, and debugging.</li>
-            <li>Work on continuous improvement of development processes and tools.</li>
-            <li>Provide technical guidance and support to other team members.</li>
-            <li>Assure app quality, stability, and maintainability.</li>
-            <li>Collaborate with designers to translate UI/UX design wireframes into code.</li>
-          </ul>
-        </section>
 
-        <section className="mb-6">
-          <h3 className="font-medium mb-2">Required Qualifications</h3>
-          <ul className="list-disc list-outside ml-5 text-sm space-y-1">
-            <li>Bachelor's degree in Computer Science, Engineering, or related field.</li>
-            <li>Proven experience as a Flutter developer, ReactJs developer & AWS</li>
-            <li>Proficient in Dart programming language.</li>
-            <li>Familiarity with Git for version control.</li>
-            <li>Strong understanding of UI/UX design principles.</li>
-            <li>Experience with Firebase for mobile/web development.</li>
-            <li>Knowledge of RESTful APIs and JSON.</li>
-            <li>Experience with automated testing suites and CI/CD pipelines.</li>
-          </ul>
-        </section>
 
-        <section className="mb-6">
-          <h3 className="font-medium mb-2">Similar jobs</h3>
-          <div className="space-y-6">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="border-b border-gray-200 pb-6">
-                <div className="flex gap-4">
-                  <Image src='/Logo.svg' alt='SDG Logo' width={40} height={40}  />
-                  <div>
-                    <h4 className="text-blue-600 font-medium">Flutter & ReactJs Developer</h4>
-                    <p className="text-sm">UnbaislyAI</p>
-                    <p className="text-sm text-gray-600">{job.location}</p>
-                    <p className="text-sm text-gray-500 mt-1">Posted {job.postedDays} days ago</p>
-                  </div>
+
+    return (
+        <div className="px-4 relative">
+            <div className="flex justify-between items-start mb-4">
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-4">
+                        <Image
+                            src={job.companyLogo || "/Logo.svg"}
+                            alt="SDG Logo"
+                            width={40}
+                            height={40}
+                        />
+                        <p className="text-base">{job.companyName}</p>
+                    </div>
+                    <h3 className="text-xl font-bold text-accent">
+                        {job.title}
+                    </h3>
                 </div>
-              </div>
-            ))}
-          </div>
-          
-          <div className="mt-5 flex justify-center">
-            <button className="text-green-600 flex items-center gap-2 text-sm border border-gray-200 rounded-full px-4 py-1.5">
-              See more jobs like this
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          </div>
-        </section>
-      </div>
-    </div>
-  );
+                {/* <Options menuOptions={menuOptions}/> */}
+            </div>
+
+            <div className="mb-5">
+                {details.map((detail, index) => (
+                    <div key={index} className="flex items-center gap-2 mb-2">
+                        {detail.icon}
+                        <span className="text-sm text-gray-700">{detail.label}</span>
+                    </div>
+                ))}
+            </div>
+
+            {job.skills && (
+                <div className="flex flex-wrap gap-2 mb-5">
+                    {job.skills.map((match, index) => (
+                        <div
+                            key={index}
+                            className="bg-accent/80 rounded-full py-1.5 px-3 flex items-center gap-1 text-sm"
+                        >
+                            <span className="text-white">{match}</span>
+                            {/* <Check
+                                size={18}
+                                color="white"
+                            /> */}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4 mb-5">
+                {job.applyUrl ? 
+                <Link href={job.applyUrl} target="_blank" className="bg-accent text-center text-white py-2 rounded-full">
+                    Apply
+                </Link>
+                : <></>}
+                <button className={`border border-accent cursor-pointer text-accent py-2 rounded-full ${isBookmarkActive ? "bg-accent/80 text-white" : ""}`} onClick={handleBookmark}>
+                    Save
+                </button>
+            </div>
+
+            <ColoredDivider />
+
+            <h2 className="font-semibold my-4">About the job</h2>
+            <div className=" flex flex-col gap-6">
+                <section className="gap-2">
+                    <ul className=" list-outside  text-sm space-y-2">
+                        {aboutJob.map((item, index) => (
+                            <li key={index} className="text-base">
+                                <span className="font-bold">{item.label}</span> {item.value}
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+
+                <section className="gap-2">
+                    {/* <h3 className="font-medium mb-2">Overview</h3> */}
+                    <p className="text-sm leading-relaxed">
+                        {job.description || "No description provided."}
+                    </p>
+                </section>
+
+                {/* <section className="gap-2">
+                    <h3 className="font-medium mb-2">Key Responsibilities</h3>
+                    <ul className="list-disc list-outside ml-5 text-sm space-y-1">
+                        <li>
+                            Develop and maintain high-quality mobile and web
+                            applications using Flutter and ReactJs.
+                        </li>
+                        <li>
+                            Collaborate with cross-functional teams to define,
+                            design, and ship new features.
+                        </li>
+                        <li>
+                            Optimize applications for maximum speed and
+                            scalability.
+                        </li>
+                        <li>
+                            Implement clean, modern, and smooth animations and
+                            transitions for an enhanced user experience.
+                        </li>
+                        <li>
+                            Ensure the technical feasibility of UI/UX designs.
+                        </li>
+                        <li>
+                            Integrate mobile and web applications with back-end
+                            services and databases.
+                        </li>
+                        <li>Monitor and improve front-end performance.</li>
+                        <li>
+                            Stay updated on emerging technologies in mobile and
+                            web development.
+                        </li>
+                        <li>Identify and correct bottlenecks and fix bugs.</li>
+                        <li>Conduct code reviews, testing, and debugging.</li>
+                        <li>
+                            Work on continuous improvement of development
+                            processes and tools.
+                        </li>
+                        <li>
+                            Provide technical guidance and support to other team
+                            members.
+                        </li>
+                        <li>
+                            Assure app quality, stability, and maintainability.
+                        </li>
+                        <li>
+                            Collaborate with designers to translate UI/UX design
+                            wireframes into code.
+                        </li>
+                    </ul>
+                </section>
+
+                <section className="gap-2">
+                    <h3 className="font-medium mb-2">
+                        Required Qualifications
+                    </h3>
+                    <ul className="list-disc list-outside ml-5 text-sm space-y-1">
+                        <li>
+                            Bachelor's degree in Computer Science, Engineering,
+                            or related field.
+                        </li>
+                        <li>
+                            Proven experience as a Flutter developer, ReactJs
+                            developer & AWS
+                        </li>
+                        <li>Proficient in Dart programming language.</li>
+                        <li>Familiarity with Git for version control.</li>
+                        <li>
+                            Strong understanding of UI/UX design principles.
+                        </li>
+                        <li>
+                            Experience with Firebase for mobile/web development.
+                        </li>
+                        <li>Knowledge of RESTful APIs and JSON.</li>
+                        <li>
+                            Experience with automated testing suites and CI/CD
+                            pipelines.
+                        </li>
+                    </ul>
+                </section> */}
+            </div>
+        </div>
+    );
 };
 
 export default JobDetail;

@@ -29,12 +29,11 @@ export default function Page() {
                         key={goal.id} 
                         href={`/goals/${goalSlug}`} 
                         className="aspect-square relative hover:scale-105 transition-all"
-                        prefetch={false}
                     >
                         <Image 
                         src={goal.titleCard} 
                         alt={`SDG Goal ${goal.id}: ${goal.title}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full rounded-sm object-cover"
                         width={500}
                         height={500}
                         priority

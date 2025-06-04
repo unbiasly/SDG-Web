@@ -124,6 +124,7 @@ const SearchBar = ({ className = "" }: { className?: string }) => {
                                         <Link
                                             href={`/search/${search}`}
                                             className="flex items-center w-full"
+                                            prefetch={false} // Disable prefetching for performance
                                         >
                                             <History className="h-3.5 w-3.5 text-gray-400 mr-2" />
                                             {search}

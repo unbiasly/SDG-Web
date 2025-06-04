@@ -7,7 +7,7 @@ import Link from "next/link";
 import { Eye, EyeOff, Lock, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Loader from "../Loader";
-import { getCookie } from "@/service/app.api";
+import { AppApi } from "@/service/app.api";
 
 interface SignInFormProps {
     className?: string;
@@ -28,14 +28,14 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
 
     useEffect(() => {
         const checkSessionAndReload = async () => {
-            const sessionId = await getCookie("sessionId");
+            const sessionId = await AppApi.getCookie("sessionId");
             if (sessionId) {
                 // Force hard reload with cache busting
                 window.location.href = `/?t=${Date.now()}`;
             }
         };
         checkSessionAndReload();
-    }, []);
+    }, [isLoading]);
 
     const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -96,6 +96,9 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
                     );
                     // Force hard reload with cache busting
                     window.location.href = `/?t=${Date.now()}`;
+                    setTimeout(() => {
+                        setIsLoading(false)
+                    }, 1000);
                 } else {
                     toast.error(cookieData?.error || cookieData?.message);
                 }

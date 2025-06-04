@@ -6,7 +6,8 @@ import { toast } from 'react-hot-toast';
 import Link from 'next/link';
 import { Eye, EyeOff, Lock, Loader2 } from 'lucide-react'; // Added Loader2
 import { Input } from '@/components/ui/input';
-import { getCookie } from '@/service/app.api';
+import { AppApi } from '@/service/app.api';
+
 
 interface SignUpFormProps {
     className?: string;
@@ -24,7 +25,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ className }) => {
 
     useEffect(() => {
             const checkSessionAndReload = async () => {
-                const sessionId = await getCookie("sessionId");
+                const sessionId = await AppApi.getCookie("sessionId");
                 if (sessionId) {
                     window.location.reload();
                 }

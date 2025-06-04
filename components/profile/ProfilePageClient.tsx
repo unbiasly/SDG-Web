@@ -33,9 +33,16 @@ import BackgroundImageDialog from "../userDataDialogs/BackgroundImageDialog";
 import ProfileImageView from "./ProfileImageView";
 import BackgroundImageView from "./BackgroundImageView";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { AppApi } from "@/service/app.api";
 
 const ProfilePageClient = ({ userId }: { userId: string }) => {
-    const [activeTab, setActiveTab] = useState("about");
+    // Initialize activeProfileTab from localStorage or default to "about"
+    const [activeProfileTab, setActiveProfileTab] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('activeProfileTab') || "about";
+        }
+        return "about";
+    });
     const [posts, setPosts] = useState<PostsFetchResponse>();
     const [profileUser, setProfileUser] = useState<UserData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -74,19 +81,13 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
     const fetchUserById = async (id: string) => {
         setIsLoading(true);
         try {
-            const response = await fetch(`/api/user`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ userId: id }),
-            });
+            const response = await AppApi.fetchUser(id);
 
-            if (!response.ok) {
+            if (!response.success) {
                 throw new Error("User not found");
             }
 
-            const userData = await response.json();
+            const userData = await response.data;
             if (userData?.data) {
                 setProfileUser(userData.data);
                 setIsFollowingActive(userData.data.isFollowing);
@@ -103,15 +104,8 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
 
     const getUserPosts = async (userId: string) => {
         try {
-            const postsResponse = await fetch(`/api/post/user`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                body: JSON.stringify({ userId }),
-            });
-            const postsData = await postsResponse.json();
+            const postsResponse = await AppApi.fetchUserPosts(userId);
+            const postsData = await postsResponse.data;
             setPosts(postsData);
             return postsData;
         } catch (error) {
@@ -177,10 +171,19 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
         // Only run initialization once
         fetchUserById(userId);
         getUserPosts(userId);
+        window.scrollTo(0, 0); // Scroll to top on profile load
         {
             !isOwnProfile && trackProfileView(userId);
         }
     }, [profileUser?._id]); // Add userId to dependencies to reset state when it changes
+    
+    // Save activeProfileTab to localStorage whenever it changes
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('activeProfileTab', activeProfileTab);
+        }
+    }, [activeProfileTab]);
+    
     useEffect(() => {
         getAnalytics();
     }
@@ -204,6 +207,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             );
         };
     }, []); // This listener is for global updates, keep it simple.
+ 
 
     // Function to open dialog for adding new education
     const handleAddEducation = () => {
@@ -286,7 +290,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
         <div className="w-full min-h-screen flex flex-1 flex-col border-gray-300 rounded-2xl border-1 pb-20">
             {/* Header with gray background */}
             {/* Standard Profile Background Banner Height = 201px */}
-            <div className="h-full aspect-[4/1] rounded-t-xl relative overflow-hidden cursor-pointer" onClick={() => setIsBackgroundImageViewOpen(true)}>
+            <div className="h-full aspect-[4/1] rounded-t-xl relative overflow-hidden cursor-pointer" >
                 {profileUser?.profileBackgroundImage ? (
                     <Image
                         src={
@@ -299,6 +303,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                         fill
                         className="object-cover"
                         priority
+                        onClick={() => setIsBackgroundImageViewOpen(true)}
                     />
                 ) : (
                     <Image
@@ -315,12 +320,12 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             <div className="flex justify-between -mt-15 md:-mt-20 items-end px-6">
                 <div
                     className="relative cursor-pointer"
-                    onClick={() => setIsProfileImageViewOpen(true)}
                 >
                     <ProfileAvatar
                         size={avatarSize}
                         src={profileUser?.profileImage || ""}
                         alt="Profile"
+                        onClick={() => setIsProfileImageViewOpen(true)}
                     />
                     <div onClick={(e) => e.stopPropagation()}>{isOwnProfile && <ProfileImageDialog />}</div>
                 </div>
@@ -397,14 +402,14 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                 {/* Tabs */}
                 <ProfileTabs
                     tabs={PROFILE_TABS}
-                    activeTab={activeTab}
-                    onChange={setActiveTab}
+                    activeTab={activeProfileTab}
+                    onChange={setActiveProfileTab}
                     className="mt-4"
                 />
 
                 {/* Tab content */}
                 <div className="mt-6">
-                    {activeTab === "about" && (
+                    {activeProfileTab === "about" && (
                         <div className="space-y-8 animate-fade-in">
                             {/* Analytics section - only show for own profile */}
                             {isOwnProfile && (
@@ -523,10 +528,10 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                                                 handleEditClick={
                                                     isOwnProfile
                                                         ? () =>
-                                                              handleEditEducation(
-                                                                  edu,
-                                                                  index
-                                                              )
+                                                                handleEditEducation(
+                                                                    edu,
+                                                                    index
+                                                                )
                                                         : undefined
                                                 }
                                                 authUser={isOwnProfile}
@@ -542,39 +547,13 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                         </div>
                     )}
 
-                    {activeTab === "posts" && (
+                    {activeProfileTab === "posts" && (
                         <div className="">
                             {posts?.data && posts.data.length > 0 ? (
                                 posts.data.map((post) => (
                                     <div key={post._id}>
                                         <PostCard
-                                            isReposted={
-                                                post.original_post_id !== null
-                                            }
-                                            key={post._id}
-                                            _id={post._id}
-                                            name={post.user_id.name || ""}
-                                            handle={`@${post.user_id.username}`}
-                                            avatar={
-                                                post.user_id.profileImage || ""
-                                            }
-                                            time={formatDate(post.updatedAt)}
-                                            isLiked={post.isLiked}
-                                            userId={post.user_id._id}
-                                            isBookmarked={
-                                                post.isBookmarked || false
-                                            }
-                                            content={post.content}
-                                            imageUrl={post.images || []}
-                                            likesCount={
-                                                post.poststat_id?.likes || 0
-                                            }
-                                            commentsCount={
-                                                post.poststat_id?.comments || 0
-                                            }
-                                            repostsCount={
-                                                post.poststat_id?.reposts || 0
-                                            }
+                                            post={post}
                                             onPostUpdate={() =>
                                                 getUserPosts(userId)
                                             }

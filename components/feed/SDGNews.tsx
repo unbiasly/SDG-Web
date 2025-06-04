@@ -1,11 +1,14 @@
 import { SDG_NEWS } from "@/lib/constants/index-constants";
 import { formatDate } from "@/lib/utilities/formatDate";
 import { formatSDGLink } from "@/lib/utilities/sdgLinkFormat";
-import { ArrowRight, Bookmark, MoreVertical, Check } from "lucide-react";
+import { Bookmark, Flag } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useUser } from "@/lib/redux/features/user/hooks";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInView } from "react-intersection-observer";
+import ReportPopover from "../post/ReportPopover";
 
 export interface Article {
     _id: string;
@@ -15,7 +18,19 @@ export interface Article {
     isBookmarked?: boolean;
     createdAt: string;
     updatedAt: string;
-    //   imageUrl: string;
+}
+
+// API Response interface
+interface SDGNewsResponse {
+    success: boolean;
+    data: Article[];
+    pagination: {
+        limit: string;
+        cursor: string | null;
+        nextCursor: string | null;
+        hasMore: boolean;
+        totalItems: number;
+    };
 }
 
 // Update ArticleCard component to add working bookmark functionality
@@ -27,13 +42,12 @@ export const ArticleCard = ({
     article: Article;
     onBookmarkToggle?: () => void;
 }) => {
-    const [isBookmarked, setIsBookmarked] = useState(
-        article.isBookmarked || false
-    );
+    const [isBookmarked, setIsBookmarked] = useState(article.isBookmarked || false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const queryClient = useQueryClient();
 
     const handleBookmarkToggle = async (e: React.MouseEvent) => {
-        e.preventDefault(); // Prevent link navigation
+        e.preventDefault();
         e.stopPropagation();
 
         try {
@@ -57,12 +71,20 @@ export const ArticleCard = ({
                 throw new Error("Failed to update bookmark status");
             }
 
+            // Invalidate queries to refresh data
+            queryClient.invalidateQueries({
+                queryKey: ["sdgNews"],
+                exact: false,
+            });
+
             // If we're in bookmarks view and unbookmarking, trigger removal
             if (isBookmarked && onBookmarkToggle) {
                 onBookmarkToggle();
             }
         } catch (error) {
             console.error("Error toggling bookmark:", error);
+            // Revert optimistic update on error
+            setIsBookmarked(isBookmarked);
         }
     };
 
@@ -74,10 +96,10 @@ export const ArticleCard = ({
         >
             <div className="w-full border rounded-2xl p-4 flex flex-col justify-between">
                 <div>
-                    <h2 className="font-bold text-lg sm:text-xl mb-2">
+                    <h2 className="font-bold text-base mb-2">
                         {article.title}
                     </h2>
-                    <div className="flex items-center mb-2 font-semibold text-sm text-gray-500">
+                    <div className="flex items-center mb-2 font-semibold text-xs text-gray-500">
                         <span>{article.publisher}</span>
                         <span className="mx-3">•</span>
                         <span>{formatDate(article.updatedAt)}</span>
@@ -98,87 +120,93 @@ export const ArticleCard = ({
                             }`}
                         />
                     </button>
+                    
+                    <button 
+                        aria-label="Report" 
+                        onClick={(e: React.MouseEvent) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsMenuOpen(!isMenuOpen);
+                        }} 
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                        <Flag size={20} className="h-5 w-5" />  
+                    </button>
                 </div>
             </div>
+            <ReportPopover
+                open={isMenuOpen}
+                onOpenChange={setIsMenuOpen} 
+                id={article._id}
+                type="sdgNews"
+            />
         </Link>
     );
 };
 
 const SDGNews = () => {
-    const [articles, setArticles] = useState<Article[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const isMobile = useMediaQuery("(max-width: 768px)");
 
     const { user } = useUser();
+    const { ref, inView } = useInView();
 
-    const News = async () => {
-        try {
-            setIsLoading(true);
-            const response = await fetch("/api/sdgNews", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    userId: user?._id,
-                }),
-            });
+    // Fetch function for infinite query
+    const fetchSDGNews = async ({ pageParam }: { pageParam: string | null }): Promise<SDGNewsResponse> => {
+        const response = await fetch("/api/sdgNews", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                userId: user?._id,
+                cursor: pageParam,
+                limit: 20, // Adjust limit as needed
+            }),
+        });
 
-            // if (!response.ok) {
-            //     throw new Error('Failed to fetch SDG news');
-            // }
-
-            const data = await response.json();
-            console.log("Fetched SDG news:", data);
-            setArticles(data.data || []);
-        } catch (error) {
-            console.error("Error fetching SDG news:", error);
-        } finally {
-            setIsLoading(false);
+        if (!response.ok) {
+            throw new Error('Failed to fetch SDG news');
         }
+
+        return response.json();
     };
+
+    // Infinite query setup
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        status,
+        error,
+    } = useInfiniteQuery({
+        queryKey: ["sdgNews"],
+        queryFn: fetchSDGNews,
+        getNextPageParam: (lastPage) =>
+            lastPage.pagination?.hasMore 
+                ? lastPage.pagination.nextCursor 
+                : undefined,
+        initialPageParam: null,
+        enabled: isMobile && !!user?._id, // Only fetch on mobile when user is available
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        gcTime: 1000 * 60 * 10, // 10 minutes
+    });
+
+    // Auto-fetch next page when in view
     useEffect(() => {
-        // Only fetch news on mobile devices
-        if (isMobile) {
-            News();
+        if (inView && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
         }
-    }, [isMobile]);
+    }, [inView, fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-    const NewsSection = ({
-        title,
-        articleIds,
-        allArticles,
-    }: {
-        title: string;
-        articleIds: string[];
-        allArticles: Article[];
-    }) => {
-        const sectionArticles = allArticles.filter((article) =>
-            articleIds.includes(article._id)
-        );
+    // Flatten all articles from all pages
+    const articles = useMemo(
+        () => data?.pages.flatMap((page) => page.data) || [],
+        [data?.pages]
+    );
 
-        return (
-            <section className="mb-10">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold">{title}</h2>
-                    {/* <a href="#" className="text-gray-500 flex items-center hover:text-gray-700 transition-colors">
-            <span className="mr-1">See all</span>
-            <ArrowRight size={16} />
-          </a> */}
-                </div>
-                <div className="space-y-4">
-                    {sectionArticles.map((article, index) => (
-                        <ArticleCard
-                            key={`${article._id}-${index}`}
-                            article={article}
-                        />
-                    ))}
-                </div>
-            </section>
-        );
-    };
-
-    if (isLoading) {
+    // Loading state
+    if (status === "pending") {
         return (
             <div className="max-w-5xl mx-auto px-4 py-8 animate-pulse">
                 <div className="h-8 bg-gray-200 rounded w-1/3 mb-8"></div>
@@ -197,17 +225,99 @@ const SDGNews = () => {
         );
     }
 
+    // Error state
+    if (status === "error") {
+        return (
+            <div className="max-w-5xl mx-auto px-4 py-8">
+                <div className="text-center text-red-500">
+                    <p>Error loading SDG news</p>
+                    <p className="text-sm text-gray-500 mt-2">{error?.message}</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Don't render on desktop
+    if (!isMobile) {
+        return null;
+    }
+
     return (
         <div className="max-w-5xl mx-auto px-4 py-8">
             {SDG_NEWS.map((section) => (
                 <NewsSection
                     key={section.id}
                     title={section.title}
-                    articleIds={articles.map((a) => a._id)} // In a real app, you'd filter by category
+                    articleIds={articles.map((a) => a._id)}
                     allArticles={articles}
                 />
             ))}
+
+            {/* Loading indicator for infinite scroll */}
+            {hasNextPage && (
+                <div
+                    ref={ref}
+                    className="flex justify-center py-8"
+                >
+                    {isFetchingNextPage ? (
+                        <div className="flex items-center space-x-2">
+                            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-gray-500">Loading more news...</span>
+                        </div>
+                    ) : (
+                        <div className="h-8"></div> // Trigger area for intersection observer
+                    )}
+                </div>
+            )}
+
+            {/* End of content message */}
+            {!hasNextPage && articles.length > 0 && (
+                <div className="text-center py-8 text-gray-500">
+                    <p>You've reached the end of SDG news</p>
+                </div>
+            )}
+
+            {/* Empty state */}
+            {articles.length === 0 && !isFetchingNextPage && (
+                <div className="text-center py-8">
+                    <p className="text-gray-500">No SDG news available</p>
+                </div>
+            )}
         </div>
+    );
+};
+
+const NewsSection = ({
+    title,
+    articleIds,
+    allArticles,
+}: {
+    title: string;
+    articleIds: string[];
+    allArticles: Article[];
+}) => {
+    const sectionArticles = allArticles.filter((article) =>
+        articleIds.includes(article._id)
+    );
+
+    if (sectionArticles.length === 0) {
+        return null;
+    }
+
+    return (
+        <section className="mb-10">
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">{title}</h2>
+            </div>
+            <div className="space-y-4">
+                {sectionArticles.map((article, index) => (
+                    <ArticleCard
+                        key={`${article._id}-${index}`}
+                        article={article}
+                    />
+                ))}
+            </div>
+        </section>
     );
 };
 

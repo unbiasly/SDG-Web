@@ -20,7 +20,10 @@ export async function GET(req: NextRequest) {
         });
         
         if (!response.ok) {
-            throw new Error(`Failed to fetch posts: ${response.status} ${response.statusText}`);
+            return NextResponse.json(
+                { error: `Failed to fetch posts: ${response.status}` },
+                { status: response.status }
+            );
         }
         
         const data = await response.json();

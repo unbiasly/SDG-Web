@@ -17,7 +17,7 @@ export const ContentFeed: React.FC<ContentFeedProps> = ({
     return (
         <div className="w-full bg-white md:rounded-2xl md:border-1 border-gray-300">
             {/* Tab Navigation */}
-            <div className="border-b border-gray-300 mb-0.5">
+            <div className="border-b border-gray-300 ">
                 <div className="flex w-full justify-evenly">
                     {tabs.map((tab, index) => (
                         <React.Fragment key={tab}>

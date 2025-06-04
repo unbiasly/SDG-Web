@@ -353,19 +353,18 @@ body {
     }
   }
 
-  svg {
+svg {
     color: black;
-  }
-  @keyframes fade-in {
+}
+@keyframes fade-in {
     from { opacity: 0; }
     to { opacity: 1; }
-  }
-  
-  .animate-fade-in {
-    animation: fade-in 0.5s ease-in-out;
-  }
+}
 
-  /* Add this to your existing global CSS file */
+.animate-fade-in {
+    animation: fade-in 0.5s ease-in-out;    
+}
+
 .hidden-scrollbar {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
@@ -373,4 +372,68 @@ body {
 
 .hidden-scrollbar::-webkit-scrollbar {
   display: none;  /* Chrome, Safari and Opera */
+}
+::-webkit-scrollbar-thumb {
+    background: #a7a7a7;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent bounce scrolling on iOS */
+body {
+    overscroll-behavior: none;
+}
+/* Feature detection for older iOS Safari */
+@supports not (overscroll-behavior: none) {
+    body {
+        position: fixed;
+        overflow: hidden;
+    }
+    
+    html {
+        height: 100%;
+        overflow: auto;
+    }
+}
+
+* {
+    touch-action: manipulation;
+}
+
+/* Prevent zoom on input focus for iOS */
+input, 
+textarea, 
+select {
+  font-size: 16px !important; /* Prevents iOS zoom on input focus */
+}
+
+/* Additional iOS Safari zoom prevention */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    select,
+    textarea,
+    input {
+        font-size: 16px !important;
+    }
+}
+
+/* Prevent double-tap zoom */
+a, button, input, select, textarea {
+    touch-action: manipulation;
+}
+
+/* Prevent zoom on specific mobile browsers */
+html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+/* Additional prevention for older iOS versions */
+body {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
 }

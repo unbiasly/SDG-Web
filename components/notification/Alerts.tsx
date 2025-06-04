@@ -10,17 +10,20 @@ const Alerts = ({ _id, post, category, type, message, isRead, userProfile }: Not
     let Icon = Bell; // Default icon
     let iconStyle = "";
     
-    switch (category) {
+    switch (message) {
         case "post":
+        case "like":
+        case "comment":
+        case "repost":
             alertStyle = !isRead ? "bg-blue-50 border-blue-500" : "bg-white";
             Icon = MessageSquare;
             iconStyle = "bg-blue-200";
             break;
-        case "videos":
-            alertStyle = !isRead ? "bg-pink-50 border-pink-500" : "bg-white";
-            Icon = Video;
-            iconStyle = "bg-[#19484A]";
-            break;
+        // case "videos":
+        //     alertStyle = !isRead ? "bg-pink-50 border-pink-500" : "bg-white";
+        //     Icon = Video;
+        //     iconStyle = "bg-[#19484A]";
+        //     break;
         case "follow":
             alertStyle = !isRead ? "bg-purple-50 border-purple-500" : "bg-white";
             Icon = UserPlus;

@@ -52,6 +52,12 @@ export const SEARCH_RESULT_CATEGORIES = [
     // {id: "podcast", label: "Podcast"}
 ];
 
+export const JOB_TABS = [
+        { id: "preferences", label: "Preferences" },
+        { id: "applied", label: "Applied Jobs" },
+        { id: "saved", label: "Saved Jobs" },
+    ];
+
 export const PROFILE_OPTIONS = [
     {
         icon: "/icons/house.svg",
@@ -68,12 +74,12 @@ export const PROFILE_OPTIONS = [
     { route: "/videos", label: "Videos", icon: "/icons/tv-minimal-play.svg" },
     // {route: "/society", label: "The SDG Society", icon: "/icons/society.png"},
     // {route: "/mentorship", label: "Mentorship", icon: "/icons/leadership-development.png"},
-    // {route: "/internship", label: "Internship", icon: "/icons/id-card.svg"},
-    // {route: "/job", label: "Job", icon: "/icons/briefcase-business.svg"},
+    {route: "/internship", label: "Internship", icon: "/icons/id-card.svg"},
+    {route: "/jobs", label: "Job", icon: "/icons/briefcase-business.svg"},
     {
         route: "/scheme",
         label: "Scheme Search",
-        icon: "/icons/chart-no-axes-gantt.svg",
+        icon: "/icons/Scheme.svg",
     },
     {route: "/notifications", label: "Notifications", icon: "/icons/bell-ring.svg"},
     { route: "/settings", label: "Settings", icon: "/icons/settings.svg" },

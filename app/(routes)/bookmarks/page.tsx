@@ -12,8 +12,8 @@ import Loader from '@/components/Loader'
 import { toast } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import { 
-  useInfiniteQuery, 
-  useQueryClient
+    useInfiniteQuery, 
+    useQueryClient
 } from '@tanstack/react-query'
 import { useNewsBookmarkSync } from '@/hooks/useNewsBookmarkSync'
 import { formatDate } from '@/lib/utilities/formatDate'
@@ -86,6 +86,7 @@ const BookmarksContent = () => {
     } = useInfiniteQuery({
         queryKey: ['bookmarkedPosts'],
         queryFn: fetchPosts,
+        enabled: true, // Enable the query
         getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
         initialPageParam: null
     });
@@ -101,6 +102,7 @@ const BookmarksContent = () => {
     } = useInfiniteQuery({
         queryKey: ['bookmarkedNews'],
         queryFn: fetchNews,
+        enabled: true, // Enable the query
         getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
         initialPageParam: null
     });
@@ -116,6 +118,7 @@ const BookmarksContent = () => {
     } = useInfiniteQuery({
         queryKey: ['bookmarkedVideos'],
         queryFn: fetchVideos,
+        enabled: true, // Enable the query
         getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
         initialPageParam: null
     });
@@ -141,20 +144,20 @@ const BookmarksContent = () => {
 
     // Create invalidation functions instead of direct handlers
     const createPostInvalidationCallback = useCallback((postId: string) => {
-      // This function will be passed to PostCard's onPostUpdate prop
-      return () => {
-        // Just invalidate the query, let PostCard handle the API call
-        queryClient.invalidateQueries({queryKey: ['bookmarkedPosts']});
-        // toast.success("Post removed from bookmarks");
-      };
+        // This function will be passed to PostCard's onPostUpdate prop
+        return () => {
+            // Just invalidate the query, let PostCard handle the API call
+            queryClient.invalidateQueries({queryKey: ['bookmarkedPosts']});
+            // toast.success("Post removed from bookmarks");
+        };
     }, [queryClient]);
     
     const createVideoInvalidationCallback = useCallback((videoId: string) => {
-      // This function will be passed to VideoCard's onBookmarkToggle prop
-      return () => {
-        // Just invalidate the query, let VideoCard handle the API call
-        queryClient.invalidateQueries({queryKey: ['bookmarkedVideos']});
-      };
+        // This function will be passed to VideoCard's onBookmarkToggle prop
+        return () => {
+            // Just invalidate the query, let VideoCard handle the API call
+            queryClient.invalidateQueries({queryKey: ['bookmarkedVideos']});
+        };
     }, [queryClient]);
     
     // Use the specialized news bookmark hook
@@ -251,20 +254,7 @@ const BookmarksContent = () => {
                                     {postBookmarks.map((bookmark) => (
                                         <div key={bookmark._id}>
                                             <PostCard 
-                                                _id={bookmark._id}
-                                                name={bookmark.user_id.name || bookmark.user_id.username}
-                                                handle={bookmark.user_id.username}
-                                                time={formatDate(bookmark.updatedAt)}
-                                                content={bookmark.content}
-                                                isLiked={bookmark.isLiked}
-                                                isBookmarked={bookmark.isBookmarked}
-                                                imageUrl={bookmark.images}
-                                                avatar={bookmark.user_id.profileImage || ''}
-                                                likesCount={bookmark.poststat_id.likes}
-                                                commentsCount={bookmark.poststat_id.comments}
-                                                repostsCount={bookmark.poststat_id.reposts}
-                                                isFollowed={bookmark?.user_id.isFollowing ?? undefined}
-                                                userId={bookmark.user_id._id}
+                                                post={bookmark}
                                                 onPostUpdate={createPostInvalidationCallback(bookmark._id)}
                                             />
                                         </div>
@@ -367,19 +357,7 @@ const BookmarksContent = () => {
                             {postBookmarks.map((bookmark) => (
                                 <div key={bookmark._id}>
                                     <PostCard 
-                                        _id={bookmark._id}
-                                        name={bookmark.user_id.name || bookmark.user_id.username}
-                                        handle={bookmark.user_id.username}
-                                        time={bookmark.createdAt}
-                                        content={bookmark.content}
-                                        isLiked={bookmark.isLiked}
-                                        isBookmarked={bookmark.isBookmarked}
-                                        imageUrl={bookmark.images}
-                                        avatar={bookmark.user_id.profileImage || ''}
-                                        likesCount={bookmark.poststat_id.likes}
-                                        commentsCount={bookmark.poststat_id.comments}
-                                        repostsCount={bookmark.poststat_id.reposts}
-                                        userId={bookmark.user_id._id}
+                                        post={bookmark}
                                         // isFollowed={}
                                         onPostUpdate={createPostInvalidationCallback(bookmark._id)}
                                     />

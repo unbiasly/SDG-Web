@@ -2,7 +2,7 @@
 import Loading from '@/components/Loader';
 import { PostCard } from '@/components/feed/PostCard';
 import { formatDate } from '@/lib/utilities/formatDate';
-import { PostData } from '@/service/api.interface';
+import { Post } from '@/service/api.interface';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -12,7 +12,7 @@ const Page = () => {
     const { id } = useParams();
     // const searchParams = useSearchParams();
     // const isSharedPost = searchParams.get('share') === 'true';
-    const [post, setPost] = useState<PostData | null>(null);
+    const [post, setPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -90,21 +90,8 @@ const Page = () => {
             </div>
             <div className="w-full mx-auto mt-8 px-4">
                 <PostCard
-                    _id={post._id}
-                    userId={post.user_id._id}
-                    name={post.user_id.name || ""}
-                    handle={`@${post.user_id.username}`}
-                    avatar={post.user_id.profileImage || ""}
-                    time={formatDate(post.updatedAt)}
-                    isLiked={post.isLiked || false}
-                    content={post.content}
-                    imageUrl={post.images || []}
-                    likesCount={post.poststat_id?.likes || 0}
-                    commentsCount={post.poststat_id?.comments || 0}
-                    repostsCount={post.poststat_id?.reposts || 0}
-                    isBookmarked={post.isBookmarked || false}
+                    post={post}
                     isCommentOpen={true}
-                    // isVerified={post.user_id.isFollowing || false}
                 />
         </div>
         </div>
