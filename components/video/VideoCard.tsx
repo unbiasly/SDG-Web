@@ -3,14 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import {
     Bookmark,
-    PlayCircle,
-    PauseCircle,
     X,
     Volume2,
-    Video,
-    ExternalLink,
     Share2,
-    MoreVertical,
     CirclePlay,
     Play,
     Flag,
@@ -25,6 +20,7 @@ import ReportPopover from "../post/ReportPopover";
 import ShareContent from "../post/ShareContent";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import Options from "../custom-ui/Options";
 
 interface Goal {
     _id: string;
@@ -284,8 +280,8 @@ const VideoCard = ({
 
     const formattedDate = video.published_date
         ? formatDistanceToNow(new Date(video.published_date), {
-              addSuffix: true,
-          })
+            addSuffix: true,
+        })
         : "";
 
     const menuOptions = [
@@ -392,7 +388,7 @@ const VideoCard = ({
                     </p>
                 )}
 
-                <div className="flex items-center justify-between text-xs text-gray-500">
+                <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
                     <div className="flex items-center">
                         <span className={cn(" rounded-full text-black")}>
                             {video.type === "podcast" ? "Episode" : "SDG Talk"}
@@ -404,13 +400,13 @@ const VideoCard = ({
 
                 <div
                     className={cn(
-                        "overflow-hidden transition-all duration-300",
+                        " transition-all duration-300",
                         isHovered
                             ? "max-h-24 mt-3 pt-3 border-t border-gray-200"
                             : "max-h-0"
                     )}
                 >
-                    <div className="flex justify-between">
+                    <div className={`justify-between items-center ${isHovered ? "flex" : "hidden"}`}>
                         <button
                             onClick={handlePlayClick}
                             className="text-white font-semibold flex items-center gap-2 py-2 px-4 bg-zinc-400 cursor-pointer rounded-lg transition-colors"
@@ -420,40 +416,7 @@ const VideoCard = ({
                             <span>Preview</span>
                         </button>
                         <div className="flex items-center">
-                            <button
-                                ref={buttonRef}
-                                onClick={toggleMenu}
-                                className="p-2 rounded-full cursor-pointer hover:bg-gray-100 transition-colors"
-                                aria-label="More options"
-                            >
-                                <MoreVertical className="h-5 w-5 text-gray-500" />
-                            </button>
-
-                            {isMenuOpen && (
-                                <div
-                                    ref={menuRef}
-                                    className="absolute bottom-5 right-0 mt-2 w-64 rounded-lg bg-white shadow-lg z-50 border border-gray-100 overflow-hidden"
-                                    onClick={closeMenu}
-                                >
-                                    <div className="py-1">
-                                        {menuOptions.map((item, index) => (
-                                            <button
-                                                key={index}
-                                                className="w-full cursor-pointer text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-100 transition-colors"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    item.onClick();
-                                                }}
-                                            >
-                                                {item.icon}
-                                                <span className="text-gray-700">
-                                                    {item.label}
-                                                </span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                            <Options menuOptions={menuOptions} position="above" isHovered={isHovered} />
                             <Link
                                 href={`/videos/${video._id}`}
                                 className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-100 rounded-lg transition-colors"

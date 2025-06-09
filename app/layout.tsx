@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "@/app/globals.css";
 import { Toaster } from "react-hot-toast";
-// import { gilroy } from "@/lib/fonts";
 import { Merriweather } from "next/font/google";
 import { ReduxProvider } from "@/lib/redux/provider";
 import QueryProvider from "./providers";

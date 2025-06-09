@@ -2,6 +2,8 @@
 import React, { useState } from 'react'
 import { Button } from '../ui/button'
 import { useQueryClient } from '@tanstack/react-query';
+import { AppApi } from '@/service/app.api';
+import App from 'next/app';
 
 interface FollowButtonProps {
     targetId?: string;
@@ -16,13 +18,9 @@ const FollowButton = ({ targetId, userId, followed, onFollowChange }: FollowButt
     const [isFollowing, setIsFollowing] = useState(followed);
     const queryClient = useQueryClient();
     const handleFollow = async () => {
-        
-        const response = await fetch(`/api/follow`, {
-            method: 'POST',
-            body: JSON.stringify({ followingId: targetId, userId, action: 'follow' }),
-        });
-        const data = await response.json();
-        if (data.success) {
+        const response = await AppApi.handleFollow(targetId || '', userId, true);
+
+        if (response.success) {
             setIsFollowing(true);
             if (onFollowChange) {
                 onFollowChange(true);
@@ -33,12 +31,8 @@ const FollowButton = ({ targetId, userId, followed, onFollowChange }: FollowButt
 
     const handleUnfollow = async () => {
     
-        const response = await fetch(`/api/follow`, {
-            method: 'POST',
-            body: JSON.stringify({ followingId: targetId, userId, action: 'unfollow' }),
-        });
-        const data = await response.json();
-        if (data.success) {
+        const response = await AppApi.handleFollow(targetId || '', userId, false);
+        if (response.success) {
             setIsFollowing(false);
             if (onFollowChange) {
                 onFollowChange(false);

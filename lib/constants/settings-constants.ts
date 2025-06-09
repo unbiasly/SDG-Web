@@ -51,34 +51,6 @@ export const NOTIFICATIONS_OPTIONS = [
     }
 ]
 
-export const ADDITIONAL_RESOURCES_OPTIONS = [
-    {
-        id: 'terms-and-conditions',
-        label: 'Terms and Conditions',
-        description: "",
-        // link: '/terms-and-conditions',
-    },
-    {
-        id: 'privacy-policy',
-        label: 'Privacy Policy',
-        description: ""
-    },
-    {
-        id: 'cookies-policy',
-        label: 'Cookies Policy',
-        description: ""
-    },
-    {
-        id: 'legal',
-        label: 'Legal',
-        description: ""
-    },
-    {
-        id: 'about-us',
-        label: 'About Us',
-        description: ""
-    },
-]
 export const SETTINGS_OPTIONS: SettingOption[] = [
     {
         id: 'account',

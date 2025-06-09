@@ -1,47 +1,53 @@
-import Link from 'next/link'
-import React from 'react'
+import Link from "next/link";
+import React from "react";
+import ProfileAvatar from "../profile/ProfileAvatar";
 
 export interface User {
-  _id: string;
-  profileImage?: string;
-  username: string;
-  name?: string;
-  occupation?: string;
-  email?: string;
-  following?: boolean;
+    _id: string;
+    profileImage?: string;
+    username: string;
+    name?: string;
+    occupation?: string;
+    email?: string;
+    following?: boolean;
 }
 
 interface PersonCardProps {
-  user: User;
-  handleFollowToggle?: (user: User) => void;
-  followMutation?: {
-    isPending: boolean;
-    variables?: {
-      targetUserId: string;
+    user: User;
+    handleFollowToggle?: (user: User) => void;
+    followMutation?: {
+        isPending: boolean;
+        variables?: {
+            targetUserId: string;
+        };
     };
-  };
 }
 
-const PersonCard = ({ user, handleFollowToggle, followMutation }: PersonCardProps) => {
-  return (
-    <div
-      className="flex items-center justify-between p-4 border-b"
-    >
-      <Link 
-        href={`/profile/${user._id}`} 
-        className="flex items-center flex-1"
-      >
-        <img
-          src={user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`}
-          alt={user.name || user.username}
-          className="w-12 h-12 rounded-full mr-3 object-cover"
-        />
-        <div>
-          <h3 className="font-bold">{user.name || user.username}</h3>
-          <p className="text-gray-600">{user.occupation || user.email}</p>
-        </div>
-      </Link>
-      {/* <button
+const PersonCard = ({
+    user,
+    handleFollowToggle,
+    followMutation,
+}: PersonCardProps) => {
+    return (
+        <div className="flex items-center justify-between p-4 border-b">
+            <Link
+                href={`/profile/${user._id}`}
+                className="flex items-center flex-1"
+            >
+                <ProfileAvatar
+                    src={user?.profileImage || ""}
+                    size="xs"
+                    className="mr-4"
+                    borderColor="gray-400"
+                />
+                <div>
+                    <h3 className="font-bold">{user.name || user.username}</h3>
+                    <p className="text-gray-600">
+                        {user.occupation || user.email}
+                    </p>
+                </div>
+            </Link>
+            {/* <button
         onClick={() => handleFollowToggle(user)}
         className={`font-medium py-2 px-6 rounded-full transition-colors ${
           user.following 
@@ -54,8 +60,8 @@ const PersonCard = ({ user, handleFollowToggle, followMutation }: PersonCardProp
           ? 'Loading...'
           : user.following ? 'Following' : 'Follow'}
       </button> */}
-    </div>
-  )
-}
+        </div>
+    );
+};
 
-export default PersonCard
+export default PersonCard;

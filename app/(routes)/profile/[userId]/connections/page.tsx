@@ -364,26 +364,26 @@ export default function Page({ params }: ConnectionsPageProps) {
 
             {/* Filter bar */}
             {/* <div className="flex justify-between items-center px-4 py-3">
-        <div className="flex items-center">
-          <span className="text-gray-600 mr-2">Sort by:</span>
-          <button className="flex items-center font-medium">
-            {sortOption} <ChevronDown size={20} className="ml-1" />
-          </button>
-        </div>
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 border border-gray-300 rounded-full w-40 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-          <Search
-            size={18}
-            className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400"
-          />
-        </div>
-      </div> */}
+                <div className="flex items-center">
+                <span className="text-gray-600 mr-2">Sort by:</span>
+                <button className="flex items-center font-medium">
+                    {sortOption} <ChevronDown size={20} className="ml-1" />
+                </button>
+                </div>
+                <div className="relative">
+                <input
+                    type="text"
+                    placeholder="Search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-full w-40 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <Search
+                    size={18}
+                    className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400"
+                />
+                </div>
+            </div> */}
 
             {/* User List */}
             <div className="flex-1 overflow-y-auto">
@@ -425,18 +425,18 @@ export default function Page({ params }: ConnectionsPageProps) {
                                     </div>
                                 </Link>
                                 {/* <button
-                  onClick={() => handleFollowToggle(user)}
-                  className={`font-medium py-2 px-6 rounded-full transition-colors ${
-                    user.following 
-                      ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                      : 'bg-blue-700 text-white hover:bg-blue-800'
-                  }`}
-                  disabled={followMutation.isPending}
-                >
-                  {followMutation.isPending && followMutation.variables?.targetUserId === user._id
-                    ? 'Unfollow...'
-                    : user.following ? 'Following' : 'Follow'}
-                </button> */}
+                                    onClick={() => handleFollowToggle(user)}
+                                    className={`font-medium py-2 px-6 rounded-full transition-colors ${
+                                        user.following 
+                                        ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                                        : 'bg-blue-700 text-white hover:bg-blue-800'
+                                    }`}
+                                    disabled={followMutation.isPending}
+                                    >
+                                    {followMutation.isPending && followMutation.variables?.targetUserId === user._id
+                                        ? 'Unfollow...'
+                                        : user.following ? 'Following' : 'Follow'}
+                                    </button> */}
                             </div>
                         ))}
 

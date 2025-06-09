@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { PostCard } from './PostCard';
 import { useUser } from '@/lib/redux/features/user/hooks';
 import { formatDate } from '@/lib/utilities/formatDate';
+import { Post } from '@/service/api.interface';
 
 interface PostWithImpressionTrackingProps {
-  post: any;
+  post: Post;
   onPostUpdate: () => void;
 }
 
@@ -64,21 +65,7 @@ export const PostWithImpressionTracking: React.FC<PostWithImpressionTrackingProp
   return (
     <div ref={postRef}>
       <PostCard
-        isReposted={post.isReposted}
-        _id={post._id}
-        name={post.user_id.name || `@${post.user_id.username}`}
-        handle={`@${post.user_id.username}`}
-        avatar={post.user_id.profileImage || ''}
-        time={formatDate(post.updatedAt)}
-        isLiked={post.isLiked || false}
-        userId={post.user_id._id}
-        isBookmarked={post.isBookmarked || false}
-        content={post.content}
-        imageUrl={post.images|| []}
-        isFollowed={post.user_id.isFollowing || undefined}
-        likesCount={post.poststat_id?.likes || 0}
-        commentsCount={post.poststat_id?.comments || 0}
-        repostsCount={post.poststat_id?.reposts || 0}
+        post={post}
         onPostUpdate={onPostUpdate}
       />
     </div>

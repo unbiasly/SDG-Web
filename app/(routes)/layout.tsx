@@ -16,7 +16,7 @@ import { getRandomColor } from "@/lib/utilities/generateColor";
 import SearchBar from "@/components/feed/SearchBar";
 import { setupAPIInterceptor } from "@/lib/utilities/interceptor";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getCookie } from "@/service/app.api";
+import { AppApi } from "@/service/app.api";
 
 
 export default function RootLayout({
@@ -25,6 +25,43 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     const dispatch = useAppDispatch();
+
+    // Consolidated session validation function
+    const validateSession = useCallback(async () => {
+        const sessionId = await AppApi.getCookie("sessionId");
+        const jwtToken = await AppApi.getCookie("jwtToken");
+        return { sessionId, jwtToken, isValid: !!(sessionId && jwtToken) };
+    }, []);
+
+    // Consolidated redirect function
+    const redirectToLogin = useCallback(async (reason: string) => {
+        console.log(`${reason}, redirecting to login`);
+        
+        // Clear any remaining cookies and cache
+        try {
+            await fetch('/api/logout', { 
+                method: 'POST',
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            });
+        } catch (error) {
+            console.error('Error during cleanup logout:', error);
+        }
+        
+        // Force hard reload to clear cache with timestamp
+        window.location.href = `/login?t=${Date.now()}`;
+    }, []);
+
+    // Main session check function
+    const checkSessionAndRedirect = useCallback(async () => {
+        const { isValid } = await validateSession();
+        if (!isValid) {
+            await redirectToLogin("Invalid or missing session");
+        }
+    }, [validateSession, redirectToLogin]);
 
     const fetchUser = useCallback(async () => {
         dispatch(fetchUserStart());
@@ -71,36 +108,10 @@ export default function RootLayout({
         fetchUser();
     }, [fetchUser]);
 
+    // Initial session check
     useEffect(() => {
-        const checkSessionAndRedirect = async () => {
-            const sessionId = await getCookie("sessionId");
-            const jwtToken = await getCookie("jwtToken");
-            
-            // More strict session validation
-            if (!sessionId || !jwtToken) {
-                console.log("Invalid or missing session, redirecting to login");
-                
-                // Clear any remaining cookies and cache
-                try {
-                    await fetch('/api/logout', { 
-                        method: 'POST',
-                        cache: 'no-store',
-                        headers: {
-                            'Cache-Control': 'no-cache',
-                            'Pragma': 'no-cache'
-                        }
-                    });
-                } catch (error) {
-                    console.error('Error during cleanup logout:', error);
-                }
-                
-                // Force hard reload to clear cache with timestamp
-                window.location.href = `/login?t=${Date.now()}`;
-            }
-        };
-        
         checkSessionAndRedirect();
-    }, []);
+    }, [checkSessionAndRedirect]);
 
     // Add effect to prevent caching on protected routes
     useEffect(() => {
@@ -135,16 +146,6 @@ export default function RootLayout({
             }
         };
 
-        const checkSessionAndRedirect = async () => {
-            const sessionId = await getCookie("sessionId");
-            const jwtToken = await getCookie("jwtToken");
-            
-            if (!sessionId || !jwtToken) {
-                console.log("Session expired, redirecting to login");
-                window.location.href = `/login?t=${Date.now()}`;
-            }
-        };
-
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         // Cleanup function
@@ -158,7 +159,7 @@ export default function RootLayout({
                 // Ignore cleanup errors
             }
         };
-    }, []);
+    }, [checkSessionAndRedirect]);
 
     // Add storage event listener to detect logout from other tabs
     useEffect(() => {
@@ -180,22 +181,20 @@ export default function RootLayout({
     // Add periodic session check
     useEffect(() => {
         const sessionCheckInterval = setInterval(async () => {
-            const sessionId = await getCookie("sessionId");
-            const jwtToken = await getCookie("jwtToken");
-            
-            if (!sessionId || !jwtToken) {
+            const { isValid } = await validateSession();
+            if (!isValid) {
                 console.log("Periodic session check failed, redirecting to login");
                 clearInterval(sessionCheckInterval);
-                window.location.href = `/login?t=${Date.now()}`;
+                await redirectToLogin("Session expired during periodic check");
             }
         }, 30000); // Check every 30 seconds
 
         return () => clearInterval(sessionCheckInterval);
-    }, []);
+    }, [validateSession, redirectToLogin]);
 
     return (
         <main className="max-h-screen flex  md:gap-3  max-container">
-            <aside className="max-w-[250px] p-2 space-y-3 max-h-screen self-start  hidden md:block ">
+            <aside className="max-w-[250px] lg:flex-1 p-2 space-y-3 max-h-screen self-start  hidden md:block ">
                 <Link
                     href="/"
                     className="justify-center items-center gap-2 px-2 hidden lg:flex"
@@ -227,7 +226,7 @@ export default function RootLayout({
                 </ScrollArea>
             </div>
 
-            <aside className="max-w-[250px] p-2 space-y-3 md:max-h-screen self-start hidden-scrollbar hidden lg:block">
+            <aside className="max-w-[250px] flex-1 p-2 space-y-3 md:max-h-screen self-start hidden-scrollbar hidden lg:block">
                 <SearchBar />
                 <TrendingSection />
             </aside>

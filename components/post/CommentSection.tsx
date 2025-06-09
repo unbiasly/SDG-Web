@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
+import { AppApi } from "@/service/app.api";
 
 // New interface for pagination response
 interface PaginationResponse {
@@ -58,24 +59,20 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     }: {
         pageParam: string | null;
     }) => {
-        const response = await fetch(`/api/post/post-action`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                actionType: "comment",
-                postId: post_id,
-                cursor: pageParam,
-                limit: 30,
-            }),
-        });
+        const response = await AppApi.postAction(
+            post_id,
+            "comment",
+            "POST",
+            "",
+            pageParam || "",
+            30 // Limit to 30 comments per page
+        );
 
-        if (!response.ok) {
+        if (!response.success) {
             throw new Error("Failed to fetch comments");
         }
 
-        return response.json() as Promise<CommentsResponse>;
+        return response.data as Promise<CommentsResponse>;
     };
 
     // Set up the infinite query
@@ -115,19 +112,14 @@ const CommentSection: React.FC<CommentSectionProps> = ({
             setComment("");
 
             // Send API request
-            const response = await fetch(`/api/post/post-action/`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    postId: post_id,
-                    actionType: "comment",
-                    comment: comment,
-                }),
-            });
+            const response = await AppApi.postAction(
+                post_id,
+                "comment",
+                "PATCH",
+                comment
+            );
 
-            if (!response.ok) {
+            if (!response.success) {
                 throw new Error("Failed to comment");
             }
 

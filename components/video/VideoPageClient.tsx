@@ -214,12 +214,12 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
 
     return (
         <div 
-            className="w-full min-h-screen"
+            className="w-full max-h-screen"
             style={{
                 // Ensure proper touch scrolling on iOS
                 WebkitOverflowScrolling: 'touch',
                 overflowY: 'auto',
-                height: '100vh'
+                maxHeight: '100vh'
             }}
         >
             {/* Fixed Header - Remove sticky positioning that can interfere with scrolling */}
@@ -239,7 +239,7 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
             </div>
 
             {/* Scrollable Content Container */}
-            <div className="flex-col w-full max-w-3xl mx-auto px-2 sm:px-4 py-3 sm:py-6 md:px-0 flex gap-2 sm:gap-4">
+            <div className="flex-col w-full max-w-3xl mx-auto px-2 sm:px-4 py-3 lg:py-6 md:px-0 flex gap-2 sm:gap-4">
                 {/* Video Player - Add touch-action for better mobile interaction */}
                 <div 
                     className="aspect-video w-full bg-black rounded-lg overflow-hidden mb-2 sm:mb-4"
@@ -340,12 +340,12 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                                 <span className="text-sm sm:text-md text-gray-600">
                                     {data?.published_date
                                         ? `${Math.floor(
-                                              (Date.now() -
-                                                  new Date(
-                                                      data.published_date
-                                                  ).getTime()) /
-                                                  (1000 * 60 * 60 * 24)
-                                          )} days ago`
+                                                (Date.now() -
+                                                    new Date(
+                                                        data.published_date
+                                                    ).getTime()) /
+                                                    (1000 * 60 * 60 * 24)
+                                            )} days ago`
                                         : ""}
                                 </span>
                             </div>
@@ -413,7 +413,7 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                     </div>
 
                     {/* Comments Section */}
-                    <div className="mb-8 py-2 px-4 border rounded-lg border-gray-400">
+                    <div className="mb-2 py-2 px-4 border rounded-lg border-gray-400">
                         <h3 className="text-lg font-semibold mb-4">Comments</h3>
                         
                         {/* Add Comment Input */}
@@ -447,36 +447,38 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                         </div>
 
                         {/* Comments */}
-                        {data?.comments?.length ? (
-                            data.comments.map((comment, index) => (
-                                <div key={index} className="flex gap-3 mb-4">
-                                    <ProfileAvatar
-                                        src={comment.user_id.profileImage || ""}
-                                        size="xs"
-                                    />
-                                    <div className="flex flex-col">
-                                        <div className="flex items-center gap-2">
-                                            <Link
-                                                href={`/profile/${comment.user_id._id}`}
-                                                className="font-bold text-sm touch-manipulation"
-                                                style={{ touchAction: 'manipulation' }}
-                                            >
-                                                <span className="font-semibold hover:underline">
-                                                    {comment.user_id.name}
-                                                </span>
-                                            </Link>
+                        <div className="max-h-[200px] overflow-y-auto">
+                            {data?.comments?.length ? (
+                                data.comments.map((comment, index) => (
+                                    <div key={index} className="flex gap-3 mb-4">
+                                        <ProfileAvatar
+                                            src={comment.user_id.profileImage || ""}
+                                            size="xs"
+                                        />
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center gap-2">
+                                                <Link
+                                                    href={`/profile/${comment.user_id._id}`}
+                                                    className="font-bold text-sm touch-manipulation"
+                                                    style={{ touchAction: 'manipulation' }}
+                                                >
+                                                    <span className="font-semibold hover:underline">
+                                                        {comment.user_id.name}
+                                                    </span>
+                                                </Link>
+                                            </div>
+                                            <p className="text-gray-700">
+                                                {comment.comment}
+                                            </p>
                                         </div>
-                                        <p className="text-gray-700">
-                                            {comment.comment}
-                                        </p>
                                     </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-4 text-gray-500">
+                                    No comments yet. Be the first to comment!
                                 </div>
-                            ))
-                        ) : (
-                            <div className="text-center py-4 text-gray-500">
-                                No comments yet. Be the first to comment!
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
