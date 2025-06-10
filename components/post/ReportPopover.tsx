@@ -1,7 +1,6 @@
 import { X, AlertTriangle, FileText, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
-import { cn } from "@/lib/utils";
 import {
     Dialog,
     DialogContent,
@@ -22,13 +21,12 @@ import {
 } from "@/lib/constants/index-constants";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppApi } from "@/service/app.api";
-import App from "next/app";
 
 interface ReportPopoverProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     id: string;
-    type?: "post" | "video" | "news"; // New parameter for content type
+    type?: "post" | "video" | "sdgNews"; // New parameter for content type
     onReportSubmitted?: () => void; // Add callback for successful report
 }
 
@@ -91,7 +89,7 @@ const ReportPopover = ({
                 case "post":
                     queryClient.invalidateQueries({ queryKey: ["posts"] });
                     break;
-                case "news":
+                case "sdgNews":
                     queryClient.invalidateQueries({ queryKey: ["sdgNews"] });
                     break;
                 default:
@@ -121,7 +119,6 @@ const ReportPopover = ({
             toast.error("Please select at least one policy");
             return;
         }
-
         setIsSubmitting(true);
         try {
             const response = await AppApi.report(
@@ -130,6 +127,8 @@ const ReportPopover = ({
                 "Report",
                 id
             );
+
+            console.log("Report response:", response);
 
             if (!response.success) {
                 throw new Error(response.error || "Failed to submit report");
@@ -145,7 +144,7 @@ const ReportPopover = ({
                 case "post":
                     queryClient.invalidateQueries({ queryKey: ["posts"] });
                     break;
-                case "news":
+                case "sdgNews":
                     queryClient.invalidateQueries({ queryKey: ["sdgNews"] });
                     break;
                 default:
@@ -369,7 +368,7 @@ const ReportPopover = ({
                 <DrawerContent className="max-h-[85vh]">
                     <DrawerHeader className="border-b border-gray-100 pb-4">
                         <DrawerTitle className="text-2xl font-bold">
-                            Report this {type}
+                            Report this {type === "sdgNews" ? "News" : type}
                         </DrawerTitle>
                     </DrawerHeader>
                     <div className="p-4 overflow-y-auto">

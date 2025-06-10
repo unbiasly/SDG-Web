@@ -29,7 +29,6 @@ export default function Page() {
                         key={goal.id} 
                         href={`/goals/${goalSlug}`} 
                         className="aspect-square relative hover:scale-105 transition-all"
-                        prefetch={false}
                     >
                         <Image 
                         src={goal.titleCard} 

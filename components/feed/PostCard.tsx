@@ -11,6 +11,7 @@ import {
     UserPlus,
     Repeat,
     Send,
+    X,
 } from "lucide-react";
 import Image from "next/image";
 import CommentSection from "../post/CommentSection";
@@ -28,7 +29,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import Options from "../custom-ui/Options";
 import { formatDate } from "@/lib/utilities/formatDate";
 import { AppApi } from "@/service/app.api";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "../ui/dialog";
 import ImageCarousel from "../post/ImageCarousel";
 import ColoredDivider from "./ColoredDivider";
 
@@ -197,20 +198,22 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
         try {
             setIsFollowLoading(true);
             const newFollowState = !isFollowedActive;
-            setIsFollowedActive(newFollowState);
 
-            const response = await AppApi.handleFollow(
-                post.user_id._id,
-                currentUserId,
-                newFollowState
-            );
+            const response = await AppApi.handleFollow(post.user_id._id, currentUserId, newFollowState);
 
             if (!response.success) {
-                setIsFollowedActive(!newFollowState);
                 throw new Error("Failed to update follow status");
             }
+            console.log("Follow status updated successfully");
+            queryClient.invalidateQueries({ 
+            queryKey: ["posts"],
+            exact: false 
+            });
+            queryClient.invalidateQueries({ 
+                queryKey: ["bookmarkedPosts"],
+                exact: false 
+            });
 
-            queryClient.invalidateQueries({ queryKey: ["bookmarkedPosts", "posts"] });
         } catch (error) {
             console.error("Error updating follow status:", error);
             toast.error("Failed to update follow status. Please try again.");
@@ -511,14 +514,17 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
 
             {/* Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent showDialogClose={false} className="lg:min-w-6xl rounded-lg h-[80vh] flex flex-col lg:flex-row p-0">
-                    <DialogTitle className="sr-only">Social Media Post</DialogTitle>
-                    <DialogDescription className="sr-only">
+                <DialogContent showDialogClose={false} className="lg:min-w-6xl min-w-screen lg:rounded-lg lg:h-[80vh] flex flex-col lg:flex-row p-0 ">
+                    <DialogClose className="absolute z-20 top-2 cursor-pointer right-2 p-1 rounded-full bg-black/20">
+                        <X color="white" size={20}/>
+                    </DialogClose>
+                    <DialogTitle className="sr-only hidden">Social Media Post</DialogTitle>
+                    <DialogDescription className="sr-only hidden">
                         {post.content}
                     </DialogDescription>
 
                     {/* Image Carousel */}
-                    <div className="h-[40vh] lg:h-full w-full lg:w-2/3 rounded-lg border-r-2 bg-[#1E1E1E] overflow-hidden flex-shrink-0">
+                    <div className="h-[40vh] lg:h-full w-full lg:w-2/3 rounded-b-lg lg:rounded-lg border-r-2 bg-[#1E1E1E] overflow-hidden flex-shrink-0">
                         {postImages.length > 0 && (
                             <ImageCarousel
                                 images={postImages}

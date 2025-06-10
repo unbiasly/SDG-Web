@@ -78,7 +78,7 @@ const Page = () => {
     const hasData = tabs?.data && Object.keys(tabs.data).length > 0;
 
     return (
-        <div className='flex flex-1 h-full overflow-y-auto'>
+        <div className='flex flex-1'>
             <ContentFeed activeTab={activeTab} setActiveTab={setActiveTab} tabs={SCHEME_TABS}>
                 {isLoading ? (
                     <div className="w-full flex justify-center items-center p-8">

@@ -116,7 +116,7 @@ const Page = () => {
                         <>
                             {displayNotifications.map((notif, index) => (
                                 <Alerts
-                                    key={notif._id || index}
+                                    key={index}
                                     _id={notif._id}
                                     type={notif.type}
                                     message={notif.message}

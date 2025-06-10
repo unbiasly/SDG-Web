@@ -15,7 +15,6 @@ import Link from "next/link";
 import { getRandomColor } from "@/lib/utilities/generateColor";
 import SearchBar from "@/components/feed/SearchBar";
 import { setupAPIInterceptor } from "@/lib/utilities/interceptor";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { AppApi } from "@/service/app.api";
 
 
@@ -162,21 +161,21 @@ export default function RootLayout({
     }, [checkSessionAndRedirect]);
 
     // Add storage event listener to detect logout from other tabs
-    useEffect(() => {
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'user_logout' && e.newValue === 'true') {
-                // User logged out from another tab
-                localStorage.removeItem('user_logout');
-                window.location.href = `/login?t=${Date.now()}`;
-            }
-        };
+    // useEffect(() => {
+    //     const handleStorageChange = (e: StorageEvent) => {
+    //         if (e.key === 'user_logout' && e.newValue === 'true') {
+    //             // User logged out from another tab
+    //             localStorage.removeItem('user_logout');
+    //             window.location.href = `/login?t=${Date.now()}`;
+    //         }
+    //     };
 
-        window.addEventListener('storage', handleStorageChange);
+    //     window.addEventListener('storage', handleStorageChange);
 
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-        };
-    }, []);
+    //     return () => {
+    //         window.removeEventListener('storage', handleStorageChange);
+    //     };
+    // }, []);
 
     // Add periodic session check
     useEffect(() => {
@@ -193,43 +192,138 @@ export default function RootLayout({
     }, [validateSession, redirectToLogin]);
 
     return (
-        <main className="max-h-screen flex  md:gap-3  max-container">
-            <aside className="max-w-[250px] lg:flex-1 p-2 space-y-3 max-h-screen self-start  hidden md:block ">
-                <Link
-                    href="/"
-                    className="justify-center items-center gap-2 px-2 hidden lg:flex"
-                >
-                    <Image
-                        src="/Logo.svg"
-                        alt="SDG Logo"
-                        width={40}
-                        height={40}
-                    />
-                    <h1 className="text-xl font-bold">The SDG Story</h1>
-                </Link>
-                <div className="hidden md:block flex-1">
-                    <UserSidebar />
-                </div>
-            </aside>
+        // <main className="max-h-screen flex md:gap-3  max-container">
+        //     <aside className="max-w-[250px] lg:flex-1 p-2 space-y-3 max-h-screen self-start hidden md:block ">
+        //         <Link
+        //             href="/"
+        //             className="justify-center items-center gap-2 px-2 hidden lg:flex"
+        //         >
+        //             <Image
+        //                 src="/Logo.svg"
+        //                 alt="SDG Logo"
+        //                 width={40}
+        //                 height={40}
+        //             />
+        //             <h1 className="text-xl font-bold">The SDG Story</h1>
+        //         </Link>
+        //         <div className="hidden md:block flex-1">
+        //             <UserSidebar />
+        //         </div>
+        //     </aside>
 
-            {/* Optimized main content div */}
-            <div className="flex-1 lg:gap-0 gap-2  relative">
-                <div className="flex space-x-2 items-center justify-center md:hidden z-20 bg-white sticky top-0 left-0 right-0 p-2 border-b shadow-sm">
+        //     <div 
+        //         className="flex-1  gap-2 relative"
+        //     >
+        //         {/* Mobile header - keep sticky */}
+        //         <div className="flex space-x-2 items-center justify-center md:hidden z-20 bg-white sticky top-0 left-0 right-0 p-2 border-b shadow-sm">
+        //             <UserSidebar />
+        //             <SearchBar className="w-fit" />
+        //         </div>
+
+        //         {/* Content area - Use native scrolling instead of ScrollArea */}
+        //         <div
+        //             className="flex-1  md:pt-2 w-full hidden-scrollbar"
+        //             style={{
+        //                 height: '100%',
+        //                 overflowY: 'auto',
+        //                 overflowX: 'hidden',
+        //                 WebkitOverflowScrolling: 'touch',
+        //                 overscrollBehavior: 'none',
+        //                 touchAction: 'pan-y',
+        //                 willChange: 'scroll-position',
+        //                 scrollBehavior: 'smooth',
+        //             }}
+        //         >
+        //             {children}
+        //         </div>
+        //     </div>
+
+        //     {/* Right sidebar */}
+        //     <aside className="max-w-[250px] flex-1 p-2 space-y-3 md:max-h-screen self-start hidden-scrollbar hidden lg:block">
+        //         <SearchBar />
+        //         <TrendingSection />
+        //     </aside>
+        // </main>
+        <>
+            {/* Desktop Layout */}
+            <main className="hidden md:flex md:gap-3 h-[100vh] max-container">
+                <aside className="max-w-[250px] lg:flex-1 p-2 space-y-3 max-h-screen self-start">
+                    <Link
+                        href="/"
+                        className="justify-center items-center gap-2 px-2 hidden lg:flex"
+                    >
+                        <Image
+                            src="/Logo.svg"
+                            alt="SDG Logo"
+                            width={40}
+                            height={40}
+                        />
+                        <h1 className="text-xl font-bold">The SDG Story</h1>
+                    </Link>
+                    <div className="flex-1">
+                        <UserSidebar />
+                    </div>
+                </aside>
+
+                <div className="flex-1 lg:gap-0 gap-2 relative flex flex-col">
+                    <div
+                        className="pt-2 min-w-0 hidden-scrollbar"
+                        style={{
+                            height: '100%',
+                            overflowY: 'auto',
+                            overflowX: 'hidden',
+                            WebkitOverflowScrolling: 'touch',
+                        }}
+                    >
+                        {children}
+                    </div>
+                </div>
+
+                <aside className="max-w-[250px] flex-1 p-2 space-y-3 max-h-screen self-start hidden-scrollbar hidden lg:block">
+                    <SearchBar />
+                    <TrendingSection />
+                </aside>
+            </main>
+
+            {/* Mobile Layout */}
+            <main 
+                className="md:hidden relative h-[100vh] flex flex-col"
+            >
+                {/* Sticky Mobile Header */}
+                <header 
+                    className="flex space-x-2 items-center justify-center bg-white border-b shadow-sm px-2 py-3 z-50"
+                    style={{
+                        position: 'sticky',
+                        top: 0,
+                        flexShrink: 0, // Prevent header from shrinking
+                        backdropFilter: 'blur(10px)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    }}
+                >
                     <UserSidebar />
                     <SearchBar className="w-fit" />
-                </div>
-                <ScrollArea
-                    className="flex-1 md:pt-2 min-w-0 h-[calc(100vh)] overflow-y-auto"
-                    showScrollbar={false}
+                </header>
+
+                {/* Full Screen Scrollable Content */}
+                <div
+                    className="flex-1 w-full"
+                    style={{
+                        overflowY: 'auto',
+                        overflowX: 'hidden',
+                        // Native mobile scrolling optimizations
+                        WebkitOverflowScrolling: 'touch',
+                        overscrollBehavior: 'none',
+                        touchAction: 'pan-y',
+                        // Prevent scroll blocking
+                        willChange: 'scroll-position',
+                        transform: 'translateZ(0)', // Force hardware acceleration
+                        // Ensure smooth scrolling
+                        scrollBehavior: 'smooth',
+                    }}
                 >
                     {children}
-                </ScrollArea>
-            </div>
-
-            <aside className="max-w-[250px] flex-1 p-2 space-y-3 md:max-h-screen self-start hidden-scrollbar hidden lg:block">
-                <SearchBar />
-                <TrendingSection />
-            </aside>
-        </main>
+                </div>
+            </main>
+        </>
     );
 }

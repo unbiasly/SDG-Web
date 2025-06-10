@@ -4,7 +4,7 @@ import { MoreVertical } from 'lucide-react'
 interface MenuOption {
     label: string
     icon: React.ReactNode
-    onClick: () => void
+    onClick: (e?: React.MouseEvent) => void
 }
 
 interface OptionsProps {
@@ -78,8 +78,9 @@ const Options: React.FC<OptionsProps> = ({ menuOptions, position = 'below', isHo
                                 key={index}
                                 className="w-full cursor-pointer text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-100 transition-colors"
                                 onClick={(e) => {
+                                    e.preventDefault();
                                     e.stopPropagation();
-                                    item.onClick();
+                                    item.onClick(e); // Pass the event to the onClick handler
                                     closeMenu();
                                 }}
                             >

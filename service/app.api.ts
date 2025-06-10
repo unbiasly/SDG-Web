@@ -171,7 +171,7 @@ export const AppApi = {
 
     report : async (type: string, reason: string, reportCategory: string, id: string) => {
         try {
-            const response = await fetch(`/api/${type}report`, {
+            const response = await fetch(`/api/${type}/report`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
