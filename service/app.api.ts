@@ -1,3 +1,4 @@
+import { QuestionAnswer } from "./api.interface";
 
 export const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -341,5 +342,40 @@ export const AppApi = {
             };
         }
     },
+
+    jobAction: async (jobId: string, action: string, answers?: QuestionAnswer[], resume?: File) => {
+        try {
+            const formData = new FormData();
+            if (answers) {
+                formData.append('answers', JSON.stringify(answers));
+            }
+            if (resume) {
+                formData.append('resume', resume);
+            }
+            const response = await fetch(`/api/jobs?action=${action}&jobId=${jobId}`, {
+                method: 'PATCH',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            // Get updated data from API response
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    }
 
 };

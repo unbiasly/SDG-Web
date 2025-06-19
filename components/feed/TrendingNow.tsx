@@ -4,7 +4,6 @@ import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { Article } from './SDGNews';
 import { formatSDGLink } from '@/lib/utilities/sdgLinkFormat';
-import { ScrollArea } from '../ui/scroll-area';
 import { Bookmark, Flag, MoreVertical, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useUser } from '@/lib/redux/features/user/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'; // Add this import
@@ -127,7 +126,7 @@ export const TrendingSection: React.FC = () => {
             <h3 className="text-xl text-accent font-semibold mb-1">SDG News</h3>
             <p className="text-sm text-gray-500 mb-4">@TheSDG story</p>
             
-            <ScrollArea className="h-[80vh] ">
+            <div className="max-h-[70vh] overflow-y-auto hidden-scrollbar ">
                 {articles.map((article:any) => (
                     <TrendingItem 
                         key={article._id}
@@ -139,7 +138,7 @@ export const TrendingSection: React.FC = () => {
                         isBookmarked={article.isBookmarked}
                     />
                 ))}
-            </ScrollArea>
+            </div>
         </div>
     );
 };

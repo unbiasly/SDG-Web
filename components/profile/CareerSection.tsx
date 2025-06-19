@@ -11,9 +11,9 @@ export const CareerSection: React.FC<{
   }> = ({ title, children, className, onAddClick, authUser }) => {
     
     return (
-      <div className={cn('py-6 border-b border-t border-profile-border', className)}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">{title}</h2>
+      <div className={cn('lg:py-6 border-b  border-profile-border', className)}>
+        <div className="flex items-center justify-between lg:mb-4">
+          <h2 className="text-xl lg:text-2xl font-bold">{title}</h2>
           <div className="flex items-center gap-2">
             {authUser && onAddClick && (
               <TooltipProvider>

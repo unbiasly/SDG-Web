@@ -221,7 +221,12 @@ const SearchPageClient = ({ q }: { q: string }) => {
                     className="w-full border border-gray-600 py-1 sm:py-2 px-3 sm:px-4 rounded-full text-base sm:text-lg"
                     placeholder="Search..."
                 />
-                <Search color='black' className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <Search 
+                    color='black' 
+                    className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer" 
+                    size={20} 
+                    onClick={() => getSearchResults(searchQuery)}
+                />
             </div>
         </div>
 

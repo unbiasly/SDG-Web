@@ -35,6 +35,8 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
             }
         };
         checkSessionAndReload();
+
+        setIsLoading(false);
     }, [isLoading]);
 
     const handleSignIn = async (e: React.FormEvent) => {
@@ -96,9 +98,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
                     );
                     // Force hard reload with cache busting
                     window.location.href = `/?t=${Date.now()}`;
-                    setTimeout(() => {
-                        setIsLoading(false)
-                    }, 1000);
+                    
                 } else {
                     toast.error(cookieData?.error || cookieData?.message);
                 }

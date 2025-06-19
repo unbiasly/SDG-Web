@@ -51,7 +51,7 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
                             }`}
                         >
                             <button
-                                className="flex justify-start text-xl  cursor-pointer"
+                                className="flex justify-start text-base md:text-xl  cursor-pointer"
                                 onClick={() => onChange(tab.id)}
                             >
                                 {tab.label}

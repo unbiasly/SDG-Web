@@ -10,16 +10,19 @@ interface BackgroundImageViewProps {
   imageUrl: string | File;
 }
 const BackgroundImageView = ({ open, onOpenChange, imageUrl }: BackgroundImageViewProps ) => {
+
+    const isDefaultImage = imageUrl === '/Profile-BG.png';
+
   return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent showDialogClose={false} className='bg-[#1e1e1e] text-white border-none w-full lg:min-w-4xl aspect-[4/1]'>
-            <DialogTitle className=' hidden' >Background Photo</DialogTitle>
+            <DialogContent showDialogClose={false} className={`bg-[#1e1e1e] text-white border-none w-full lg:min-w-4xl ${!isDefaultImage ? 'aspect-[4/1]' : 'aspect-[16/9]  '}`}>
+            <DialogTitle className='hidden'>Background Photo</DialogTitle>
             <Image
                 src={typeof imageUrl === 'string' ? imageUrl : ''}
                 alt="Background"
                 fill
                 sizes="500px"
-                className="object-cover "
+                className={`${isDefaultImage ? 'object-contain p-2' : 'object-cover'}`}
                 priority
             />
             <DialogClose className="absolute top-3 right-3 p-1 rounded-full bg-black/40 cursor-pointer">

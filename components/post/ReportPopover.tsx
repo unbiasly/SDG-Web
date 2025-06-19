@@ -1,4 +1,4 @@
-import { X, AlertTriangle, FileText, ChevronRight } from "lucide-react";
+import { X, AlertTriangle, FileText, ChevronRight, ChevronLeft } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import {
@@ -193,8 +193,8 @@ const ReportPopover = ({
         <>
             {/* Choice Step */}
             {step === "choice" && (
-                <div className="py-6">
-                    <h3 className="text-xl font-semibold mb-6">
+                <div className="lg:py-6">
+                    <h3 className="text-lg lg:text-xl font-semibold mb-4 lg:mb-6">
                         Select an action
                     </h3>
 
@@ -202,7 +202,7 @@ const ReportPopover = ({
                         {/* Feedback Option */}
                         <button
                             onClick={handleSelectFeedback}
-                            className="w-full flex items-center justify-between py-4 px-2 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors"
+                            className="w-full flex items-center justify-between lg:py-4 px-2 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors"
                         >
                             <div className="flex items-start gap-4">
                                 <div className="p-2">
@@ -212,7 +212,7 @@ const ReportPopover = ({
                                     />
                                 </div>
                                 <div className="text-left">
-                                    <h4 className="text-lg font-semibold">
+                                    <h4 className="text-base lg:text-lg font-semibold">
                                         Provide feedback to change your feed
                                     </h4>
                                     <p className="text-gray-500 text-xs mt-1">
@@ -228,7 +228,7 @@ const ReportPopover = ({
                         {/* Report Option */}
                         <button
                             onClick={handleSelectReport}
-                            className="w-full flex items-center justify-between py-4 px-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                            className="w-full flex items-center justify-between lg:py-4 px-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
                         >
                             <div className="flex items-start gap-4">
                                 <div className="p-2">
@@ -238,7 +238,7 @@ const ReportPopover = ({
                                     />
                                 </div>
                                 <div className="text-left">
-                                    <h4 className="text-lg font-semibold">
+                                    <h4 className="text-base lg:text-lg font-semibold">
                                         Report content for review
                                     </h4>
                                     <p className="text-gray-500 text-xs mt-1">
@@ -255,28 +255,28 @@ const ReportPopover = ({
 
             {/* Report Step */}
             {step === "report" && (
-                <div className="">
+                <div className="space-y-4">
                     <button
                         onClick={handleBackToChoice}
-                        className="flex items-center gap-1 text-accent mb-6 hover:underline"
+                        className="flex items-center gap-1 text-accent  hover:underline"
                     >
-                        <ChevronRight className="rotate-180 h-4 w-4" />
+                        <ChevronLeft color="gray" />
                         <span>Back</span>
                     </button>
 
-                    <h3 className="text-xl font-semibold mb-6">
+                    <h3 className="text-base lg:text-xl font-semibold ">
                         Select our policy that applies
                     </h3>
 
-                    <div className="flex flex-wrap gap-3 ">
+                    <div className="flex flex-wrap gap-2 ">
                         {POLICY_OPTIONS.map((policy) => (
                             <button
                                 key={policy}
-                                className={`px-3 py-1 cursor-pointer rounded-full border ${
+                                className={`px-2 py-1 cursor-pointer rounded-full border ${
                                     selectedPolicies.includes(policy)
                                         ? "border-accent bg-blue-50 text-accent"
                                         : "border-accent text-accent hover:bg-gray-50"
-                                } transition-colors text-sm md:text-base`}
+                                } transition-colors text-xs lg:text-base`}
                                 onClick={() => togglePolicy(policy)}
                                 disabled={isSubmitting}
                             >
@@ -305,20 +305,20 @@ const ReportPopover = ({
 
             {/* Feedback Step */}
             {step === "feedback" && (
-                <div className="">
+                <div className="space-y-4">
                     <button
                         onClick={handleBackToChoice}
-                        className="flex items-center gap-1 text-accent mb-6 hover:underline"
+                        className="flex items-center gap-1 text-accent  hover:underline"
                     >
-                        <ChevronRight className="rotate-180 h-4 w-4" />
+                        <ChevronLeft color="gray" />
                         <span>Back</span>
                     </button>
 
-                    <h3 className="text-xl font-semibold mb-8">
+                    <h3 className="text-base lg:text-xl font-semibold ">
                         Tell us why to help improve the feed.
                     </h3>
 
-                    <div className="space-y-5 mb-12">
+                    <div className="space-y-2 lg:space-y-5 lg:mb-12">
                         {FEEDBACK_OPTIONS.map((option) => (
                             <div
                                 key={option}
@@ -366,8 +366,8 @@ const ReportPopover = ({
         return (
             <Drawer open={open} onOpenChange={onOpenChange}>
                 <DrawerContent className="max-h-[85vh]">
-                    <DrawerHeader className="border-b border-gray-100 pb-4">
-                        <DrawerTitle className="text-2xl font-bold">
+                    <DrawerHeader className="border-b border-gray-100 lg:pb-4">
+                        <DrawerTitle className="text-lg lg:text-2xl font-bold">
                             Report this {type === "sdgNews" ? "News" : type}
                         </DrawerTitle>
                     </DrawerHeader>
@@ -382,9 +382,9 @@ const ReportPopover = ({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
-                <DialogHeader className="border-b border-gray-100 pb-4">
+                <DialogHeader className="border-b p-0 border-gray-100 pb-4">
                     <div className="flex items-center justify-between">
-                        <DialogTitle className="text-2xl font-bold">
+                        <DialogTitle className=" text-2xl font-bold">
                             Report this {type}
                         </DialogTitle>
                     </div>

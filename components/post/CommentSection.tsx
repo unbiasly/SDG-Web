@@ -5,7 +5,6 @@ import { CommentData } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
 import { Loader2, SendHorizonal } from "lucide-react";
 import Link from "next/link";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import { AppApi } from "@/service/app.api";

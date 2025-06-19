@@ -422,7 +422,7 @@ export interface SessionsResponse {
 
 
 export interface JobListing {
-    _id: string;
+    _id?: string;
     title: string;
     companyName: string;
     companyLogo?: string;
@@ -432,12 +432,26 @@ export interface JobListing {
     experienceLevel: string;
     description: string;
     applyUrl: string;
+    postedBy?: string; 
     expiresAt: string;
-    skills: string[];
-    isActive: boolean;
-    postedAt: string;
-    __v?: number;
+    skills?: string[];
+    tags?: string[];
+    isActive?: boolean;
     applicants?: number;
+    screeningQuestions: ScreeningQuestion[];
+    postedAt?: string;
+    __v?: number;
     isSaved?: boolean;
     isApplied?: boolean;
+}
+
+export interface ScreeningQuestion {
+    question?: string;
+    type?: 'numeric' | 'yes/no';
+    _id?: string;
+}
+
+export interface QuestionAnswer {
+    question: string;
+    answer: string | number;
 }

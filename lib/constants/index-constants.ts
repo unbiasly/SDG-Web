@@ -1,4 +1,3 @@
-import { Notification } from "@/service/api.interface";
 
 // Base tabs for desktop (we'll keep it minimal for desktop)
 export const FEED_TABS = [
@@ -139,4 +138,16 @@ export const SCHEME_DATA_TABS = [
     "Benefits",
     "Eligibility",
     "Application Process",
+];
+
+export const JOB_TYPE = [
+    "full-time", "part-time", "contract", "internship"
+];
+
+// export const LOCATION_TYPE = [
+//     "remote", "hybrid", "on-site"
+// ];
+
+export const EXPERIENCE_LEVEL = [
+    "entry", "mid", "senior"
 ];

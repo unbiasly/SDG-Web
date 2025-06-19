@@ -1,5 +1,5 @@
 'use client';
-import { MapPin, Users, BriefcaseBusiness, Bookmark } from "lucide-react";
+import { MapPin, Users, BriefcaseBusiness, Share2 } from "lucide-react";
 import { JobListing } from "@/service/api.interface";
 import ColoredDivider from "../feed/ColoredDivider";
 import Image from "next/image";
@@ -7,15 +7,23 @@ import { formatDate } from "@/lib/utilities/formatDate";
 import Options from "../custom-ui/Options";
 import Link from "next/link";
 import { useState } from "react";
+import { Button } from "../ui/button";
+import ShareContent from "../post/ShareContent";
+import { ApplyJob } from "./ApplyJob";
+import { AppApi } from "@/service/app.api";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface JobDetailProps {
     job: JobListing;
+    onSave?: (jobId: string) => void;
 }
 
 
-const JobDetail = ({ job }: JobDetailProps) => {
+const JobDetail =  ({ job, onSave }: JobDetailProps) => {
 
-    const [isBookmarkActive, setIsBookmarkActive] = useState(job.isSaved || false);
+    const [isSaved, setIsSaved] = useState(job.isSaved || false);
+    const [shareContentOpen, setShareContentOpen] = useState(false);
+    const queryClient = useQueryClient();
 
     const details = [
         {
@@ -24,13 +32,12 @@ const JobDetail = ({ job }: JobDetailProps) => {
         },
         {
             icon: <MapPin size={16} className="text-gray-600" />,
-            label: `${job.location} • ${formatDate(job.postedAt)}`,
+            label: `${job.location} • ${formatDate(job?.postedAt || new Date().toISOString())}`,
         },
-        // {
-        //     icon: <BriefcaseBusiness size={16} className="text-gray-600" />,
-        //     label: job.jobType.charAt(0).toUpperCase() + job.jobType?.slice(1).toLowerCase(),
-        // }
-        // jobtype, salaryRange, experienceLevel, 
+        {
+            icon: <BriefcaseBusiness size={16} className="text-gray-600" />,
+            label: job.jobType.charAt(0).toUpperCase() + job.jobType?.slice(1).toLowerCase(),
+        }
     ];
 
     const aboutJob = [
@@ -42,42 +49,42 @@ const JobDetail = ({ job }: JobDetailProps) => {
             label: "Location:",
             value: job.location
         },
-        // {
-        //     label: "Job type:",
-        //     value: job.jobType.charAt(0).toUpperCase() + job.jobType?.slice(1).toLowerCase()
-        // },
+        {
+            label: "Job type:",
+            value: job.jobType.charAt(0).toUpperCase() + job.jobType?.slice(1).toLowerCase()
+        },
         {
             label: job.jobType === 'internship' ? "Stipend:" : "Salary:",
-            value: job.salaryRange
+            value: `₹${job.salaryRange}`
         }
     ];
 
-    const handleBookmark = () => {
-        setIsBookmarkActive(!isBookmarkActive);
+    const handleSave = async () => {
+        try {
+            const action = isSaved ? 'unsave' : 'saved';
+            const answers = isSaved ? [] : [];
+            await AppApi.jobAction(job._id || '', action, answers);
+            if (onSave) {
+                onSave(job._id || '');
+            }
+            queryClient.invalidateQueries({ queryKey: ['jobs'], exact: false });
+        } catch (error) {
+            console.error('Failed to save/unsave job:', error);
+            // Optionally show user feedback about the error
+        }
     };
 
     const menuOptions = [
         {
-            icon: (
-                <Bookmark
-                    className={`h-5 w-5 ${
-                        isBookmarkActive
-                            ? "fill-current text-accent"
-                            : "text-gray-500"
-                    }`}
-                />
-            ),
-            label: isBookmarkActive ? "Saved" : "Save",
-            onClick: handleBookmark,
+            icon: <Share2 className={`h-5 w-5 text-gray-500`} />,
+            label: "Share",
+            onClick: () => setShareContentOpen(true),
         },
     ]
 
-
-
-
     return (
-        <div className="px-4 relative">
-            <div className="flex justify-between items-start mb-4">
+        <div className="px-4 flex flex-col space-y-3 relative">
+            <div className="flex justify-between items-start ">
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-4">
                         <Image
@@ -92,20 +99,20 @@ const JobDetail = ({ job }: JobDetailProps) => {
                         {job.title}
                     </h3>
                 </div>
-                {/* <Options menuOptions={menuOptions}/> */}
+                <Options menuOptions={menuOptions}/>
             </div>
 
-            <div className="mb-5">
+            <div className="space-y-2">
                 {details.map((detail, index) => (
-                    <div key={index} className="flex items-center gap-2 mb-2">
+                    <div key={index} className="flex items-center gap-2">
                         {detail.icon}
                         <span className="text-sm text-gray-700">{detail.label}</span>
                     </div>
                 ))}
             </div>
 
-            {job.skills && (
-                <div className="flex flex-wrap gap-2 mb-5">
+            {job.skills && job.skills.length > 0 && (
+                <div className="flex flex-wrap gap-1 ">
                     {job.skills.map((match, index) => (
                         <div
                             key={index}
@@ -121,15 +128,15 @@ const JobDetail = ({ job }: JobDetailProps) => {
                 </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4 mb-5">
+            <div className="grid grid-cols-2 gap-4 ">
                 {job.applyUrl ? 
                 <Link href={job.applyUrl} target="_blank" className="bg-accent text-center text-white py-2 rounded-full">
-                    Apply
+                    Apply from Link
                 </Link>
-                : <></>}
-                <button className={`border border-accent cursor-pointer text-accent py-2 rounded-full ${isBookmarkActive ? "bg-accent/80 text-white" : ""}`} onClick={handleBookmark}>
-                    Save
-                </button>
+                : <ApplyJob jobData={job}  />}
+                <Button className={`border h-full hover:border-accent/60 bg-white hover:bg-accent/60 hover:text-white border-accent cursor-pointer text-accent py-2 rounded-full ${isSaved && "bg-accent/80 text-white"}`} onClick={handleSave}>
+                    {isSaved ? "Saved" : "Save"}
+                </Button>
             </div>
 
             <ColoredDivider />
@@ -148,91 +155,53 @@ const JobDetail = ({ job }: JobDetailProps) => {
 
                 <section className="gap-2">
                     {/* <h3 className="font-medium mb-2">Overview</h3> */}
-                    <p className="text-sm leading-relaxed">
-                        {job.description || "No description provided."}
-                    </p>
+                    <div className="text-sm leading-relaxed space-y-4">
+                        {job.description.split('\n\n').map((section, index) => {
+                            const lines = section.split('\n');
+                            const heading = lines[0];
+                            const content = lines.slice(1);
+                            
+                            // Check if this is a heading (no specific formatting rules, just check if it's short and followed by content)
+                            const isHeading = heading && content.length > 0 && heading.length < 50 && !heading.includes('.');
+                            
+                            return (
+                                <div key={index}>
+                                    {isHeading ? (
+                                        <>
+                                            <h3 className="font-medium mb-2">{heading}</h3>
+                                            <div className="space-y-2">
+                                                {content.map((line, lineIndex) => {
+                                                    if (line.trim() === '') return null;
+                                                    
+                                                    // Check if line starts with a bullet point or seems like a list item
+                                                    const isBulletPoint = line.match(/^[•\-\*]/) || 
+                                                        (content.length > 1 && line.trim().length > 0 && !line.includes(':') && lineIndex > 0);
+                                                    
+                                                    return isBulletPoint ? (
+                                                        <ul key={lineIndex} className="list-disc list-outside ml-5">
+                                                            <li>{line.replace(/^[•\-\*]\s*/, '').trim()}</li>
+                                                        </ul>
+                                                    ) : (
+                                                        <p key={lineIndex}>{line}</p>
+                                                    );
+                                                })}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <p>{section}</p>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </section>
-
-                {/* <section className="gap-2">
-                    <h3 className="font-medium mb-2">Key Responsibilities</h3>
-                    <ul className="list-disc list-outside ml-5 text-sm space-y-1">
-                        <li>
-                            Develop and maintain high-quality mobile and web
-                            applications using Flutter and ReactJs.
-                        </li>
-                        <li>
-                            Collaborate with cross-functional teams to define,
-                            design, and ship new features.
-                        </li>
-                        <li>
-                            Optimize applications for maximum speed and
-                            scalability.
-                        </li>
-                        <li>
-                            Implement clean, modern, and smooth animations and
-                            transitions for an enhanced user experience.
-                        </li>
-                        <li>
-                            Ensure the technical feasibility of UI/UX designs.
-                        </li>
-                        <li>
-                            Integrate mobile and web applications with back-end
-                            services and databases.
-                        </li>
-                        <li>Monitor and improve front-end performance.</li>
-                        <li>
-                            Stay updated on emerging technologies in mobile and
-                            web development.
-                        </li>
-                        <li>Identify and correct bottlenecks and fix bugs.</li>
-                        <li>Conduct code reviews, testing, and debugging.</li>
-                        <li>
-                            Work on continuous improvement of development
-                            processes and tools.
-                        </li>
-                        <li>
-                            Provide technical guidance and support to other team
-                            members.
-                        </li>
-                        <li>
-                            Assure app quality, stability, and maintainability.
-                        </li>
-                        <li>
-                            Collaborate with designers to translate UI/UX design
-                            wireframes into code.
-                        </li>
-                    </ul>
-                </section>
-
-                <section className="gap-2">
-                    <h3 className="font-medium mb-2">
-                        Required Qualifications
-                    </h3>
-                    <ul className="list-disc list-outside ml-5 text-sm space-y-1">
-                        <li>
-                            Bachelor's degree in Computer Science, Engineering,
-                            or related field.
-                        </li>
-                        <li>
-                            Proven experience as a Flutter developer, ReactJs
-                            developer & AWS
-                        </li>
-                        <li>Proficient in Dart programming language.</li>
-                        <li>Familiarity with Git for version control.</li>
-                        <li>
-                            Strong understanding of UI/UX design principles.
-                        </li>
-                        <li>
-                            Experience with Firebase for mobile/web development.
-                        </li>
-                        <li>Knowledge of RESTful APIs and JSON.</li>
-                        <li>
-                            Experience with automated testing suites and CI/CD
-                            pipelines.
-                        </li>
-                    </ul>
-                </section> */}
             </div>
+            <ShareContent
+                open={shareContentOpen}
+                onOpenChange={setShareContentOpen}
+                contentUrl={`/${job.jobType === 'job' ? 'jobs' : 'internship'}/${job._id}`}
+                itemId={job._id}
+            />
         </div>
     );
 };

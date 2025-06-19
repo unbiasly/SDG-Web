@@ -287,7 +287,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
     }
 
     return (
-        <div className="w-full min-h-screen flex flex-1 flex-col border-gray-300 rounded-2xl border-1 pb-20">
+        <div className="w-full flex flex-1 flex-col border-gray-300 rounded-2xl border-1 mb-5">
             {/* Header with gray background */}
             {/* Standard Profile Background Banner Height = 201px */}
             <div className="h-full aspect-[4/1] rounded-t-xl relative overflow-hidden cursor-pointer" >
@@ -312,6 +312,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                         fill
                         className="object-cover"
                         priority
+                        onClick={() => setIsBackgroundImageViewOpen(true)}
                     />
                 )}
                 <div onClick={(e) => e.stopPropagation()}>{isOwnProfile && <BackgroundImageDialog />}</div>
@@ -345,37 +346,37 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             {/* Main content */}
             <div className="w-full mx-auto px-4 sm:px-6 relative z-5">
                 {/* Profile info */}
-                <div className="mt-6 animate-scale-in">
+                <div className="mt-6 space-y-1  animate-scale-in">
                     <div className="flex items-center gap-2">
-                        <h1 className="text-3xl font-bold">
+                        <h1 className="text-2xl lg:text-3xl font-bold">
                             {profileUser?.fName && profileUser?.lName
                                 ? `${profileUser.fName} ${profileUser.lName}`
-                                : profileUser?.username}
+                                : `@${profileUser?.username}`}
                         </h1>
                     </div>
-                    <p className="text-xl">{profileUser?.occupation || ""}</p>
-                    <p className="text-xl font-semibold">
+                    <p className="text-base lg:text-xl">{profileUser?.occupation || ""}</p>
+                    <p className="text-base lg:text-xl font-semibold">
                         {profileUser?.headline || ""}
                     </p>
 
-                    <div className="flex gap-6 my-3">
+                    <div className="flex gap-6 lg:my-2">
                         <Link
-                            href={`/profile/${profileUser?._id}/connections`}
-                            className="flex items-baseline gap-1 cursor-pointer "
+                            href={`/profile/${profileUser?._id}/connections?tab=followers`}
+                            className="flex items-baseline gap-1 cursor-pointer"
                         >
                             <span className="text-profile-text font-semibold hover:underline">
                                 {analytics?.data?.followCounts?.followerCount} Followers</span>
                         </Link>
                         <Link
-                            href={`/profile/${profileUser?._id}/connections`}
-                            className="flex items-baseline gap-1 cursor-pointer "
+                            href={`/profile/${profileUser?._id}/connections?tab=following`}
+                            className="flex items-baseline gap-1 cursor-pointer"
                         >
                             <span className="text-profile-text font-semibold hover:underline">
                                 {analytics?.data?.followCounts?.followingCount} Following</span>
                         </Link>
                     </div>
 
-                    <div className="mt-4 text-profile-secondary">
+                    <div className=" lg:mt-2 text-profile-secondary">
                         <p className="mb-1">
                             {profileUser?.experience?.[0]?.company || ""}
                         </p>
@@ -383,6 +384,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                         {profileUser?.portfolioLink && (
                             <Link
                                 href={profileUser?.portfolioLink || ""}
+                                target="_blank"
                                 className="flex items-center gap-1 mb-4"
                             >
                                 <LinkIcon size={16} />
@@ -408,17 +410,17 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                 />
 
                 {/* Tab content */}
-                <div className="mt-6">
+                <div className="mt-6 ">
                     {activeProfileTab === "about" && (
-                        <div className="space-y-8 animate-fade-in">
+                        <div className="space-y-8  animate-fade-in">
                             {/* Analytics section - only show for own profile */}
                             {isOwnProfile && (
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h2 className="text-2xl font-bold">
+                                <div className="border-b pb-2">
+                                    <div className="flex items-center  gap-2">
+                                        <h2 className="text-xl lg:text-2xl font-bold">
                                             Analytics
                                         </h2>
-                                        <div className="flex items-center gap-1 text-sm text-profile-secondary bg-gray-100 px-3 py-1 rounded-full">
+                                        <div className="flex items-center gap-1 text-sm text-profile-secondary bg-gray-100 px-2 py-1 rounded-full">
                                             <Eye size={14} />
                                             <span>Private to you</span>
                                         </div>
@@ -428,34 +430,18 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                                         {PROFILE_ANALYTICS.map(
                                             (analyticsItem) => {
                                                 let count = 0;
-                                                if (
-                                                    analyticsItem.type ===
-                                                    "views"
-                                                ) {
-                                                    count =
-                                                        analytics?.data
-                                                            ?.analytics
-                                                            ?.total_views || 0;
+                                                if (analyticsItem.type === "views") {
+                                                    count = analytics?.data?.analytics?.total_views || 0;
                                                 } else {
-                                                    count =
-                                                        analytics?.data
-                                                            ?.analytics
-                                                            ?.total_post_impressions ||
-                                                        0;
+                                                    count = analytics?.data?.analytics?.total_post_impressions || 0;
                                                 }
 
                                                 return (
                                                     <ProfileAnalyticsCard
                                                         key={analyticsItem.type}
-                                                        type={
-                                                            analyticsItem.type as
-                                                                | "views"
-                                                                | "impressions"
-                                                        }
+                                                        type={analyticsItem.type as | "views" | "impressions"}
                                                         count={count}
-                                                        description={
-                                                            analyticsItem.description
-                                                        }
+                                                        description={analyticsItem.description}
                                                     />
                                                 );
                                             }
@@ -604,7 +590,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             <BackgroundImageView
                 open={isBackgroundImageViewOpen}
                 onOpenChange={setIsBackgroundImageViewOpen}
-                imageUrl={profileUser?.profileBackgroundImage || ""}
+                imageUrl={profileUser?.profileBackgroundImage || "/Profile-BG.png"}
             />
 
         </div>

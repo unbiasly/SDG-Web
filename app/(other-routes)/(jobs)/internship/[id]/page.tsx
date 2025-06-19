@@ -1,11 +1,12 @@
 "use client";
+import NotFound from "@/app/not-found";
 import JobDetail from "@/components/jobs/JobDetail";
 import Loader from "@/components/Loader";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { JobListing } from "@/service/api.interface";
 import { AppApi } from "@/service/app.api";
 import { ArrowLeft } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { use, useEffect, useState } from "react";
 
 const Page = ({ params }: { params: Promise<{ id: string }> }) => {
@@ -16,6 +17,10 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
     const router = useRouter();
     const jobId = use(params).id;
     const isMobile = useMediaQuery("(max-width: 768px)");
+    const pathname = usePathname();
+    const isInternshipPage = pathname.includes('/internship/') || pathname.includes('/internship');
+
+
 
     const fetchJobById = async (id: string) => {
         try {
@@ -54,6 +59,11 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
             setIsLoading(false);
         }
     }, [jobId]);
+
+    // Check if job is not an internship after loading
+    if (job && job.jobType !== 'internship') {
+        return <NotFound />;
+    }
 
     const handleGoBack = () => {
         if (isMobile) {

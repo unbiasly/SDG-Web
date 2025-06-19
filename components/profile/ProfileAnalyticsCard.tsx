@@ -25,10 +25,10 @@ const ProfileAnalyticsCard: React.FC<ProfileAnalyticsCardProps> = ({
         )}
       </div>
       <div className="flex flex-col">
-        <h3 className="text-lg font-semibold flex items-center gap-1">
+        <h3 className="text-base md:text-lg font-semibold flex items-center gap-1">
           {count} {type === 'views' ? 'profile views' : 'post impressions'}
         </h3>
-        <p className="text-profile-secondary text-sm">{description}</p>
+        <p className="text-profile-secondary text-xs md:text-sm">{description}</p>
       </div>
     </div>
   );

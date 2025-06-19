@@ -28,22 +28,38 @@ interface ConnectionsPageProps {
 }
 
 export default function Page({ params }: ConnectionsPageProps) {
+    const searchQueryParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+    const tab = searchQueryParams.get("tab");
     const resolvedParams = use(params);
     const userId = resolvedParams.userId;
 
     
     const [profileUser, setProfileUser] = useState<UserType | null>(null);
 
+    // Check if we're on the client side
+    // if (typeof window !== 'undefined') {
+    //     const savedTab = localStorage.getItem(`activeFollowTab_${userId}`);
+    //     return (savedTab === "followers" || savedTab === "following") ? savedTab : "followers";
+    // }
+
+    useEffect(() => {
+        // Check if Tab is fetched from URL
+        if (tab && (tab === "followers" || tab === "following")) {
+            setActiveFollowTab(tab);
+        } else {
+            // Fallback to localStorage if no valid tab in URL
+            const savedTab = localStorage.getItem(`activeFollowTab_${userId}`);
+            if (savedTab === "followers" || savedTab === "following") {
+                setActiveFollowTab(savedTab);
+            } else {
+                setActiveFollowTab("followers"); // Default to followers
+            }
+        }
+        
+    }, [userId, tab]);
 
     // Initialize activeFollowTab with localStorage value or default to "followers"
-    const [activeFollowTab, setActiveFollowTab] = useState<"followers" | "following">(() => {
-        // Check if we're on the client side
-        if (typeof window !== 'undefined') {
-            const savedTab = localStorage.getItem(`activeFollowTab_${userId}`);
-            return (savedTab === "followers" || savedTab === "following") ? savedTab : "followers";
-        }
-        return "followers";
-    });
+    const [activeFollowTab, setActiveFollowTab] = useState<"followers" | "following">('followers');
 
     const [analytics, setAnalytics] = useState<AnalyticsResponseData | null>(
         null

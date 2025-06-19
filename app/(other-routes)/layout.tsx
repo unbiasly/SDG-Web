@@ -16,7 +16,6 @@ import {
 import { getRandomColor } from "@/lib/utilities/generateColor";
 import { setupAPIInterceptor } from "@/lib/utilities/interceptor";
 import SearchBar from "@/components/feed/SearchBar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function RootLayout({
     children,

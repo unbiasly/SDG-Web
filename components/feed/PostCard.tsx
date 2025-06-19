@@ -77,8 +77,13 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
     const formattedDate = useMemo(() => formatDate(post?.createdAt || ''), [post?.createdAt]);
     const postImages = useMemo(() => 
         post?.images ? (Array.isArray(post?.images) ? post?.images : [post?.images]) : [], 
-        [post?.images]
-    );
+        [post?.images]);
+
+    useEffect(() => {
+        if (!post?.images || !post?.images.length || post?.images.length === 0) {
+            setIsDialogOpen(false);
+        } 
+    }, [post?.images]);
 
     // Sync state with props changes
     useEffect(() => {
@@ -395,6 +400,8 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
         },
     ], [isLocalLiked, isDialogOpen, isCommentsOpen, isOwnPost, post?.isReposted, handleLike, toggleComments, handleRepost, isLikeLoading, isRepostLoading]);
 
+
+
     if (!post) {
         return null;
     }
@@ -514,7 +521,7 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
 
             {/* Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent showDialogClose={false} className="lg:min-w-6xl min-w-screen lg:rounded-lg lg:h-[80vh] flex flex-col lg:flex-row p-0 ">
+                <DialogContent showDialogClose={false} className="lg:min-w-6xl  min-w-screen lg:rounded-lg lg:h-[80vh] h-dvh flex flex-col lg:flex-row p-0 ">
                     <DialogClose className="absolute z-20 top-2 cursor-pointer right-2 p-1 rounded-full bg-black/20">
                         <X color="white" size={20}/>
                     </DialogClose>
@@ -525,12 +532,12 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
 
                     {/* Image Carousel */}
                     <div className="h-[40vh] lg:h-full w-full lg:w-2/3 rounded-b-lg lg:rounded-lg border-r-2 bg-[#1E1E1E] overflow-hidden flex-shrink-0">
-                        {postImages.length > 0 && (
+                        {postImages.length > 0 ? (
                             <ImageCarousel
                                 images={postImages}
                                 className="w-full h-full"
                             />
-                        )}
+                        ) : ''}
                     </div>
 
                     {/* Content */}

@@ -31,7 +31,8 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ className }) => {
                 }
             };
             checkSessionAndReload();
-        }, []);
+            setIsLoading(false); 
+        }, [isLoading]);
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();

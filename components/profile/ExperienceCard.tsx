@@ -22,7 +22,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     authUser = false,
 }) => {
   return (
-    <div className={cn('flex items-start gap-4 py-6', className)}>
+    <div className={cn('flex items-start gap-4 py-3 lg:py-6', className)}>
       
       {/* <div className="w-16 h-16 rounded overflow-hidden bg-gray-100 flex-shrink-0">
         <img 
@@ -33,11 +33,9 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
       </div> */}
       
       <div className="flex-1">
-        <h3 className="text-xl font-semibold mb-1">{position}</h3>
-        <div className="flex items-center gap-2 text-profile-secondary">
-          <span>{company}</span>
-          <span className="w-1 h-1 rounded-full bg-profile-secondary"></span>
-          <span>{type}</span>
+        <h3 className="text-lg lg:text-xl font-semibold mb-1">{position}</h3>
+        <div className="flex items-center gap-2 ">
+          <span className='text-profile-secondary text-sm lg:text-base'>{company} - {type}</span>
         </div>
       </div>
       {authUser && (

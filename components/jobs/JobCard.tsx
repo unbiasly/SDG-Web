@@ -16,13 +16,13 @@ const JobCard = ({ job, isSelected, onClick }: JobCardProps) => {
             onClick={onClick}
         >
             <div className="flex items-center gap-3">
-                <Image src={job.companyLogo || ''} alt="SDG Logo" width={50} height={50} />
+                {job.companyLogo ? <Image src={job.companyLogo} alt="Company Logo" width={50} height={50} /> : <Image src='/Logo.svg' alt="SDG Logo" width={50} height={50} />}
                 <div className="flex-1">
                     <h3 className="font-bold  text-accent">{job.title}</h3>
                     <p className="text-sm">{job.companyName}</p>
                     <p className="text-xs text-gray-500">{job.location}</p>
                     <p className="text-sm text-gray-500 mt-2">
-                        Posted {formatDate(job.postedAt)}
+                        Posted {formatDate(job.postedAt || new Date().toISOString())}
                     </p>
                 </div>
             </div>

@@ -53,7 +53,7 @@ export const UserSidebar = () => {
 
     // Navigation items for both desktop and mobile
     const renderNavItems = (isMobile = false) => (
-        <ul className="space-y-1">
+        <ul className="space-y-1 lg:max-h-[50vh] overflow-y-auto hidden-scrollbar">
             {PROFILE_OPTIONS.map((option, key) => {
                 let route = option.route;
 
@@ -152,7 +152,7 @@ export const UserSidebar = () => {
     return (
         <>
             {/* Desktop Sidebar - Hidden on mobile */}
-            <div className="w-fit bg-white border-1 border-gray-300 p-4 rounded-2xl md:flex flex-col h-full hidden">
+            <div className="w-fit flex-1 bg-white border-1 border-gray-300 p-4 rounded-2xl md:flex flex-col h-full hidden">
                 <Link
                     href="/"
                     className="justify-center items-center gap-2 pb-2 flex lg:hidden"
@@ -239,7 +239,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         <Link
             href={route}
             className={`flex w-full lg:w-full items-center justify-start space-x-2 py-2 p-2 rounded-xl hover:bg-accent/30 ${
-                isActive ? " font-bold text-accent" : ""
+                isActive ? "font-bold text-accent" : ""
             }`}
         >
             <Image
