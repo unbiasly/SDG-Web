@@ -53,63 +53,70 @@ export const UserSidebar = () => {
 
     // Navigation items for both desktop and mobile
     const renderNavItems = (isMobile = false) => (
-        <ul className="space-y-1 lg:max-h-[50vh] overflow-y-auto hidden-scrollbar">
-            {PROFILE_OPTIONS.map((option, key) => {
-                let route = option.route;
+        <div className={`
+            ${isMobile 
+                ? 'flex-1 overflow-y-auto' 
+                : 'flex-1 overflow-y-auto max-h-[calc(100vh-300px)] lg:max-h-[calc(100vh-280px)]'
+            } hidden-scrollbar
+        `}>
+            <ul className="space-y-1 pr-2">
+                {PROFILE_OPTIONS.map((option, key) => {
+                    let route = option.route;
 
-                if (option.routeGenerator && user?._id) {
-                    route = option.routeGenerator(user._id);
-                }
+                    if (option.routeGenerator && user?._id) {
+                        route = option.routeGenerator(user._id);
+                    }
 
-                const isActive =
-                    pathname === route ||
-                    (pathname.startsWith("/profile/") &&
-                        option.label === "Profile");
+                    const isActive =
+                        pathname === route ||
+                        (pathname.startsWith("/profile/") &&
+                            option.label === "Profile");
 
-                return (
-                    <SidebarItem
-                        key={key}
-                        isActive={isActive}
-                        route={route || "#"}
-                        icon={option.icon}
-                        label={option.label}
-                        isMobile={isMobile}
-                    />
-                );
-            })}
-            <li>
-                <div className="flex flex-col w-full">
-                    {isMobile ? (
-                        <SheetClose asChild>
+                    return (
+                        <SidebarItem
+                            key={key}
+                            isActive={isActive}
+                            route={route || "#"}
+                            icon={option.icon}
+                            label={option.label}
+                            isMobile={isMobile}
+                        />
+                    );
+                })}
+                <li>
+                    <div className="flex flex-col w-full">
+                        {isMobile ? (
+                            <SheetClose asChild>
+                                <button
+                                    onClick={handleLogout}
+                                    className="flex items-center justify-start cursor-pointer space-x-2 p-2 rounded-xl hover:bg-accent/30 w-full"
+                                >
+                                    <LogOut className="m-0" />
+                                    <span className="text-md font-regular ml-2">
+                                        Logout
+                                    </span>
+                                </button>
+                            </SheetClose>
+                        ) : (
                             <button
                                 onClick={handleLogout}
                                 className="flex items-center justify-start cursor-pointer space-x-2 p-2 rounded-xl hover:bg-accent/30 w-full"
                             >
                                 <LogOut className="m-0" />
-                                <span className="text-md font-regular ml-2">
+                                <span className="text-md font-regular ml-2 hidden lg:block">
                                     Logout
                                 </span>
                             </button>
-                        </SheetClose>
-                    ) : (
-                        <button
-                            onClick={handleLogout}
-                            className="flex items-center justify-start cursor-pointer space-x-2 p-2 rounded-xl hover:bg-accent/30 w-full"
-                        >
-                            <LogOut className="m-0" />
-                            <span className="text-md font-regular ml-2 hidden lg:block">
-                                Logout
-                            </span>
-                        </button>
-                    )}
-                </div>
-            </li>
-        </ul>
+                        )}
+                    </div>
+                </li>
+            </ul>
+        </div>
     );
 
     // User profile section for both desktop and mobile
     const renderUserProfile = () => (
-        <div className="flex-col w-full items-center md:items-start border-b py-2 border-gray-600 flex">
+        <div className="flex-col w-full items-center md:items-start border-b py-2 border-gray-600 flex flex-shrink-0">
             <div className="relative mb-2 w-20">
                 <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden">
                     {isDataLoaded ? (
@@ -155,7 +162,7 @@ export const UserSidebar = () => {
             <div className="w-fit flex-1 bg-white border-1 border-gray-300 p-4 rounded-2xl md:flex flex-col h-full hidden">
                 <Link
                     href="/"
-                    className="justify-center items-center gap-2 pb-2 flex lg:hidden"
+                    className="justify-center items-center gap-2 pb-2 flex lg:hidden flex-shrink-0"
                 >
                     <Image
                         src="/Logo.svg"
@@ -165,11 +172,11 @@ export const UserSidebar = () => {
                     />
                 </Link>
 
-                <div className="flex-col items-start py-2 hidden lg:flex">
+                <div className="flex-col items-start py-2 hidden lg:flex flex-shrink-0">
                     {renderUserProfile()}
                 </div>
 
-                <nav className="lg:pt-2 hidden md:block">
+                <nav className="lg:pt-2 hidden md:flex flex-col flex-1 min-h-0">
                     {renderNavItems()}
                 </nav>
             </div>
@@ -192,9 +199,9 @@ export const UserSidebar = () => {
                     </SheetTrigger>
                     <SheetContent
                         side="left"
-                        className="h-full p-4 rounded-r-xl w-fit  md:hidden"
+                        className="h-full p-4 rounded-r-xl w-fit md:hidden flex flex-col"
                     >
-                        <SheetHeader className="mb-4">
+                        <SheetHeader className="mb-4 flex-shrink-0">
                             <SheetTitle className="flex items-center justify-center">
                                 <Image
                                     src="/Logo.svg"
@@ -208,9 +215,13 @@ export const UserSidebar = () => {
                             </SheetTitle>
                         </SheetHeader>
 
-                        {renderUserProfile()}
+                        <div className="flex-shrink-0">
+                            {renderUserProfile()}
+                        </div>
 
-                        <nav className="mt-4 w-full">{renderNavItems(true)}</nav>
+                        <nav className="mt-4 w-full flex-1 min-h-0 flex flex-col">
+                            {renderNavItems(true)}
+                        </nav>
                     </SheetContent>
                 </Sheet>
             </div>

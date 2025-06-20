@@ -177,7 +177,7 @@ export default function RootLayout({
     return (
         <main className="flex flex-col md:flex-row md:gap-3 h-screen max-container">
             {/* Left Sidebar - Hidden on mobile, visible on desktop */}
-            <aside className="hidden md:block max-w-[250px] lg:flex-1 p-2 space-y-3 overflow-y-auto">
+            <aside className="hidden md:block max-w-[250px] lg:flex-1 p-2 space-y-3 overflow-y-auto hidden-scrollbar">
                 <Link
                     href="/"
                     className="justify-center items-center gap-2 px-2 hidden lg:flex"
