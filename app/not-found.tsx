@@ -38,7 +38,7 @@ export default function NotFound() {
             {/* Error Message */}
             <div className="text-center lg:mb-8 max-w-3xl">
                 <h1 className="text-lg lg:text-2xl md:text-4xl font-bold text-gray-900 mb-4">
-                    Oops! Sorry, somethings gone missing....
+                    Oops! Sorry, something's gone missing...
                 </h1>
                 <p className="text-gray-600 text-sm lg:text-xl leading-relaxed">
                     We apologize for the inconvenience. It looks like you are trying to

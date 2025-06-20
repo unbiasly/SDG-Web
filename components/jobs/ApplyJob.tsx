@@ -31,7 +31,9 @@ export const ApplyJob: React.FC<ApplyJobProps> = ({ jobData, onEdit, onPost }) =
     const handleNext = () => {
         // Validate questions before proceeding
         if (currentScreen === "questions") {
-            const unansweredQuestions = jobData.screeningQuestions.filter(
+            // Add safety check for screeningQuestions
+            const screeningQuestions = jobData.screeningQuestions || [];
+            const unansweredQuestions = screeningQuestions.filter(
                 (question) => question._id && !answers[question._id] && answers[question._id] !== 0
             );
             
@@ -60,7 +62,8 @@ export const ApplyJob: React.FC<ApplyJobProps> = ({ jobData, onEdit, onPost }) =
 
     const validateApplication = (): boolean => {
         // Check if all questions are answered
-        const unansweredQuestions = jobData.screeningQuestions.filter(
+        const screeningQuestions = jobData.screeningQuestions || [];
+        const unansweredQuestions = screeningQuestions.filter(
             (question) => question._id && !answers[question._id] && answers[question._id] !== 0
         );
         
@@ -168,7 +171,9 @@ export const ApplyJob: React.FC<ApplyJobProps> = ({ jobData, onEdit, onPost }) =
 
     const canProceedToNext = () => {
         if (currentScreen === "questions") {
-            const unansweredQuestions = jobData.screeningQuestions.filter(
+            // Add safety check for screeningQuestions
+            const screeningQuestions = jobData.screeningQuestions || [];
+            const unansweredQuestions = screeningQuestions.filter(
                 (question) => question._id && !answers[question._id] && answers[question._id] !== 0
             );
             return unansweredQuestions.length === 0;
@@ -179,6 +184,9 @@ export const ApplyJob: React.FC<ApplyJobProps> = ({ jobData, onEdit, onPost }) =
     const canSubmit = () => {
         return resumeFile !== null && canProceedToNext();
     };
+
+    // Add safety check before rendering questions screen
+    const hasScreeningQuestions = jobData.screeningQuestions && jobData.screeningQuestions.length > 0;
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -322,12 +330,25 @@ export const ApplyJob: React.FC<ApplyJobProps> = ({ jobData, onEdit, onPost }) =
                     </Card>
 
                     {/* Dynamic Content Based on Current Screen */}
-                    {currentScreen === "questions" && (
+                    {currentScreen === "questions" && hasScreeningQuestions && (
                         <QuestionScreen 
                             questions={jobData.screeningQuestions}
                             onAnswersChange={handleAnswersChange}
                             initialAnswers={answers}
                         />
+                    )}
+                    
+                    {/* Show message if no screening questions */}
+                    {currentScreen === "questions" && !hasScreeningQuestions && (
+                        <div className="text-center py-8">
+                            <p className="text-gray-500">No screening questions for this position.</p>
+                            <Button
+                                onClick={() => setCurrentScreen("resume")}
+                                className="bg-accent hover:bg-accent px-8 mt-4"
+                            >
+                                Continue to Resume Upload
+                            </Button>
+                        </div>
                     )}
                     
                     {currentScreen === "resume" && (
@@ -352,7 +373,7 @@ export const ApplyJob: React.FC<ApplyJobProps> = ({ jobData, onEdit, onPost }) =
                             <Button
                                 onClick={handleNext}
                                 className="bg-accent hover:bg-accent px-8"
-                                disabled={!canProceedToNext() || isSubmitting}
+                                disabled={(!hasScreeningQuestions ? false : !canProceedToNext()) || isSubmitting}
                             >
                                 Next
                             </Button>

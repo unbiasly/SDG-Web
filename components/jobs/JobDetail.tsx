@@ -129,7 +129,7 @@ const JobDetail =  ({ job, onSave }: JobDetailProps) => {
             )}
 
             <div className="grid grid-cols-2 gap-4 ">
-                {!job.applyUrl ? 
+                {job.applyUrl ? 
                 <Link href={job.applyUrl} target="_blank" className="bg-accent text-center text-white py-2 rounded-full">
                     Apply from Link
                 </Link>
