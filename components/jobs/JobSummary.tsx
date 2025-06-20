@@ -6,6 +6,7 @@ import { Edit2, Calendar, MapPin, Building, Users, IndianRupee } from "lucide-re
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { JobListing, ScreeningQuestion } from "@/service/api.interface";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface JobSummaryProps {
     jobData: JobListing;
@@ -15,19 +16,8 @@ interface JobSummaryProps {
 
 export const JobSummary: React.FC<JobSummaryProps> = ({ jobData, onEdit, onPost }) => {
     const [isPosting, setIsPosting] = useState(false);
+    const queryClient = useQueryClient();
 
-    const formatWorkplaceType = (type: string) => {
-        switch (type) {
-            case "onsite":
-                return "On-site";
-            case "remote":
-                return "Remote";
-            case "hybrid":
-                return "Hybrid";
-            default:
-                return type;
-        }
-    };
 
     const formatJobType = (type: string) => {
         switch (type) {
@@ -101,7 +91,7 @@ export const JobSummary: React.FC<JobSummaryProps> = ({ jobData, onEdit, onPost 
                 toast.error(data.error || 'Failed to create job');
                 return;
             }
-
+            queryClient.invalidateQueries({ queryKey: ['jobs'], exact: false });
             toast.success('Job posted successfully!');
             onPost(); // Close dialog and cleanup
         } catch (error) {

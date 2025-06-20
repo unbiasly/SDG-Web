@@ -76,11 +76,10 @@ export async function PATCH(req: NextRequest) {
     try {
 
         // Only process form data if action is 'applied'
-        if (action === 'applied') {
             const formData = await req.formData();
             
             const answers = formData.get('answers');
-            if (!answers) {
+            if (!answers && action === 'applied') {
                 return NextResponse.json(
                     { error: 'Answers are required' }, 
                     { status: 400 }
@@ -88,7 +87,7 @@ export async function PATCH(req: NextRequest) {
             }
 
             const resume = formData.get('resume');
-            if (!resume || !(resume instanceof File)) {
+            if ((!resume || !(resume instanceof File)) && action === 'applied') {
                 return NextResponse.json(
                     { error: 'Resume file is required' },
                     { status: 400 }
@@ -97,8 +96,8 @@ export async function PATCH(req: NextRequest) {
 
             // Create FormData for the request
             const requestBody = new FormData();
-            requestBody.append('answers', answers);
-            requestBody.append('file', resume);
+            requestBody.append('answers', answers as string);
+            requestBody.append('file', resume as File);
             
             const response = await fetch(`${baseURL}/job/${jobId}/${action}`, {
                 method: "PATCH",
@@ -107,32 +106,18 @@ export async function PATCH(req: NextRequest) {
                 },
                 body: requestBody
             });
-        }
-        const response = await fetch(`${baseURL}/job/${jobId}/${action}`, {
-                method: "PATCH",
-                headers: {
-                    'Authorization': `Bearer ${jwtToken}`,
-                },
-            });
-
-
-        const data = await response.json();
-        console.log("api/jobs/route.ts PATCH response:", data);
-
-        // Handle successful response
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.indexOf("application/json") !== -1) {
+            
+                if (!response.ok) {
+                    return NextResponse.json(
+                        { error: `Failed to ${action} job: ${response.status}` },
+                        { status: response.status }
+                    );
+                }
+        
+                const data = await response.json();
+                console.log("api/jobs/route.ts PATCH response:", data);
             return NextResponse.json(data, { status: response.status });
-        } else {
-            const text = await response.text();
-            console.error("Non-JSON response:", text);
-            return NextResponse.json(
-                { error: 'Server returned a non-JSON response' }, 
-                { status: response.status }
-            );
-        }
 
-        return NextResponse.json(data, { status: response.status });
 
     } catch (error) {
         console.error("api/jobs/route.ts PATCH error:", error);

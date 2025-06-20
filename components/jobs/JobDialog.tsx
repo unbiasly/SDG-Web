@@ -44,6 +44,7 @@ const JobDialog = () => {
     };
 
     const handleClose = () => {
+        setCurrentView("form");
         
         // Reset job data
         setJobData({
@@ -69,7 +70,7 @@ const JobDialog = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger className="flex items-center gap-2 py-2 px-3 rounded-xl text-white bg-accent hover:bg-accent/90 transition-colors">
+            <DialogTrigger className="flex cursor-pointer items-center gap-2 py-2 px-3 rounded-xl text-white bg-accent hover:bg-accent/90 transition-colors">
                 <Plus color="white" size={16} />
                 Create Job
             </DialogTrigger>

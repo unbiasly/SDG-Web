@@ -29,6 +29,10 @@ export default function JobsLayout({ children }: LayoutProps) {
     const mobileJobDetail = isMobile && selectedJob
     const router = useRouter();
 
+    // Add this helper to check if we're on a detail page
+    const isOnDetailPage = pathname.includes('/jobs/') || pathname.includes('/internship/');
+    const shouldShowDetailPage = isOnDetailPage || (!isMobile && isDetailPage);
+
     const tabs = JOB_TABS;
 
     // Extract job ID from pathname
@@ -159,7 +163,7 @@ export default function JobsLayout({ children }: LayoutProps) {
     return (
         <div className="flex w-full max-h-full">
             {/* Job Listings Panel */}
-            <div className={`w-full md:min-w-2/5 border-r border-gray-200 hidden-scrollbar  overflow-y-auto ${mobileJobDetail ? 'hidden' : 'block'}`}>
+            <div className={`w-full md:min-w-2/5 border-r border-gray-200 hidden-scrollbar  overflow-y-auto ${(mobileJobDetail || (isMobile && isOnDetailPage)) ? 'hidden' : 'block'}`}>
                 <div className="p-4">
                     <div className="mb-4 space-y-2">
                         <h1 className="text-2xl font-bold ">{isInternshipPage ? 'Internships' : 'Jobs'}</h1>
@@ -281,7 +285,7 @@ export default function JobsLayout({ children }: LayoutProps) {
             </div>
 
             {/* Job Detail Page */}
-            <div className={`flex-1 ${isDetailPage ? 'block' : 'hidden'} md:min-w-3/5 overflow-auto`}>
+            <div className={`flex-1 ${shouldShowDetailPage ? 'block' : 'hidden'} md:min-w-3/5 overflow-auto`}>
                 {children}
             </div>
         </div>

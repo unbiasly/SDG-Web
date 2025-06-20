@@ -10,6 +10,7 @@ import { JobListing, QuestionAnswer } from "@/service/api.interface";
 import QuestionScreen from "./QuestionScreen";
 import ResumeUploadCard from "./ResumeUpload";
 import { AppApi } from "@/service/app.api";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ApplyJobProps {
     jobData: JobListing;
@@ -21,6 +22,7 @@ export const ApplyJob: React.FC<ApplyJobProps> = ({ jobData, onEdit, onPost }) =
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [currentScreen, setCurrentScreen] = useState<"questions" | "resume">("questions");
     const [isOpen, setIsOpen] = useState(false);
+    const queryClient = useQueryClient();
     
     // Application data state
     const [answers, setAnswers] = useState<Record<string, string | number>>({});
@@ -116,6 +118,7 @@ export const ApplyJob: React.FC<ApplyJobProps> = ({ jobData, onEdit, onPost }) =
             }
 
             toast.success('Application submitted successfully!');
+            queryClient.invalidateQueries({ queryKey: ['jobs'], exact: false });
             
             // Reset form and close dialog
             handleClose();

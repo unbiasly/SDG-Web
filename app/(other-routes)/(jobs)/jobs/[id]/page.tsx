@@ -55,7 +55,7 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
             setError('No job ID provided');
             setIsLoading(false);
         }
-    }, [jobId, savePressed]);
+    }, [jobId, savePressed, job?.isApplied]);
 
     const handleGoBack = () => {
         if (isMobile) {

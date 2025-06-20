@@ -1,5 +1,4 @@
 "use client";
-import NotFound from "@/app/not-found";
 import JobDetail from "@/components/jobs/JobDetail";
 import Loader from "@/components/Loader";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -11,6 +10,7 @@ import React, { use, useEffect, useState } from "react";
 
 const Page = ({ params }: { params: Promise<{ id: string }> }) => {
     const [job, setJob] = useState<JobListing | null>(null);
+    const [savePressed, setSavePressed] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     
@@ -30,21 +30,22 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
             const response = await AppApi.fetchJobs(undefined, undefined, 'internship', id);
             
             if (!response.success) {
-                throw new Error('Failed to fetch job details');
+                throw new Error('Failed to fetch internship details');
             }
 
             const jobData = response.data?.data;
             
             if (jobData) {
                 setJob(jobData);
+                setSavePressed(jobData.isSaved);
             } else {
-                throw new Error('Job not found');
+                throw new Error('Internship not found');
             }
             
-            console.log("Job fetched:", jobData);
+            console.log("Internship fetched:", jobData);
         } catch (err) {
-            console.error("Error fetching job:", err);
-            setError(err instanceof Error ? err.message : 'Failed to load job');
+            console.error("Error fetching internship:", err);
+            setError(err instanceof Error ? err.message : 'Failed to load internship');
             setJob(null);
         } finally {
             setIsLoading(false);
@@ -55,15 +56,17 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
         if (jobId) {
             fetchJobById(jobId);
         } else {
-            setError('No job ID provided');
+            setError('No internship ID provided');
             setIsLoading(false);
         }
-    }, [jobId]);
+    }, [jobId, savePressed, job?.isApplied]);
 
     // Check if job is not an internship after loading
-    if (job && job.jobType !== 'internship') {
-        return <NotFound />;
-    }
+    useEffect(() => {
+        if (job && job.jobType !== 'internship') {
+            router.push('/not-found');
+        }
+    }, [job?.jobType, isInternshipPage]);
 
     const handleGoBack = () => {
         if (isMobile) {
@@ -80,7 +83,6 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
         );
     }
 
-
     // Error state
     if (error) {
         return (
@@ -96,7 +98,7 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
                                 {error}
                             </div>
                             <div className="text-gray-600 mb-4">
-                                The job you're looking for might have been removed or doesn't exist.
+                                The internship you're looking for might have been removed or doesn't exist.
                             </div>
                             <button
                                 onClick={() => jobId && fetchJobById(jobId)}
@@ -105,10 +107,10 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
                                 Try Again
                             </button>
                             <button
-                                onClick={() => router.push('/jobs')}
+                                onClick={() => router.push('/internship')}
                                 className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
                             >
-                                Back to Jobs
+                                Back to Internships
                             </button>
                         </div>
                     </div>
@@ -124,22 +126,26 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
                 <div className="flex-1 overflow-y-auto hidden-scrollbar relative">
                     {/* Mobile back button */}
                     {isMobile && (
-                        <div className="sticky top-0 bg-white z-10 p-4 ">
-                            <ArrowLeft className="w-5 h-5 mr-2 cursor-pointer" onClick={handleGoBack} />
+                        <div className=" bg-white z-10 ">
+                            {isMobile && (
+                                <div className=" bg-white z-10 p-4 ">
+                                    <ArrowLeft className="w-5 h-5 cursor-pointer" onClick={handleGoBack} />
+                                </div>
+                            )}
                         </div>
                     )}
                     
-                    <JobDetail job={job} />
+                    <JobDetail job={job} onSave={(jobId: string) => setSavePressed(!savePressed)}/>
                 </div>
             ) : (
                 <div className="flex-1 flex items-center justify-center">
                     <div className="text-center text-gray-500">
-                        <p className="text-lg mb-2">Job not found</p>
+                        <p className="text-lg mb-2">Internship not found</p>
                         <button
-                            onClick={() => router.push('/jobs')}
+                            onClick={() => router.push('/internship')}
                             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                         >
-                            Browse Jobs
+                            Browse Internships
                         </button>
                     </div>
                 </div>

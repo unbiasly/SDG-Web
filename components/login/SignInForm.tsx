@@ -41,8 +41,8 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
 
     const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
+        
         setIsLoading(true);
-
         try {
             const response = await fetch("/api/login", {
                 method: "POST",
