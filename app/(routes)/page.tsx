@@ -6,7 +6,7 @@ import { FEED_TABS, MOBILE_FEED_TABS } from "@/lib/constants/index-constants";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import Loading from "@/components/Loader";
+import Loader from "@/components/Loader";
 import { PostsFetchResponse } from "@/service/api.interface";
 import { PostWithImpressionTracking } from "@/components/feed/PostWithImpressionTracking";
 import { useMediaQuery } from "@/hooks/use-media-query"; // Import the useMediaQuery hook
@@ -92,7 +92,7 @@ export default function Home() {
                 tabs={feedTabs}
             >
                 {status === "pending" ? (
-                    <Loading />
+                    <Loader />
                 ) : (
                     <>
                         {feedTabs && (

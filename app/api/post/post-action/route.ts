@@ -57,7 +57,17 @@ export async function POST(req: NextRequest) {
     const url = new URL(req.url);
     const limit = url.searchParams.get('limit') || '30';
     const cursor = url.searchParams.get('cursor');
-    const { postId, actionType } = await req.json();
+    const requestBody = await req.json();
+    const { postId, actionType } = requestBody;
+    
+    // Validation
+    if (!postId || typeof postId !== 'string') {
+        return Response.json({ error: "postId is required and must be a string" }, { status: 400 });
+    }
+    
+    if (!actionType || typeof actionType !== 'string') {
+        return Response.json({ error: "actionType is required and must be a string" }, { status: 400 });
+    }
 
     try {
         const response = await fetch(`${baseURL}/post-action/${postId}/${actionType}?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`, {

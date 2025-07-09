@@ -181,7 +181,7 @@ const ProfileImageDialog = () => {
             </DialogTrigger>
             <DialogContent
                 showDialogClose={false}
-                className="bg-[#1e1e1e] text-white border-none w-full lg:min-w-2xl  mx-auto"
+                className="bg-[#1e1e1e] text-white border-none w-full lg:max-w-lg  mx-auto "
             >
                 <DialogTitle className="text-center text-lg font-semibold">
                     Profile Photo

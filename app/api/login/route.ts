@@ -1,5 +1,5 @@
 import { baseURL } from '@/service/app.api';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 
 export async function POST(request: NextRequest) {
@@ -15,8 +15,20 @@ export async function POST(request: NextRequest) {
         });
 
         const data = await response.json();
+        console.log('Login response:', data);
 
-        return Response.json(data, {status: response.status});
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Internal server error'
+            },
+            {
+                status: 500,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
     } catch (error) {
         console.error('Login error:', error);
         return Response.json(

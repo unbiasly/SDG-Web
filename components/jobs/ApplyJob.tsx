@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { MapPin, Building, Users, IndianRupee, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
 import { Dialog, DialogClose, DialogHeader, DialogContent, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { JobListing, QuestionAnswer } from "@/service/api.interface";
@@ -23,6 +23,8 @@ export const ApplyJob: React.FC<ApplyJobProps> = ({ jobData, onEdit, onPost }) =
     const [currentScreen, setCurrentScreen] = useState<"questions" | "resume">("questions");
     const [isOpen, setIsOpen] = useState(false);
     const queryClient = useQueryClient();
+    const [submissionState, setSubmissionState] = useState<'idle' | 'submitting' | 'submitted'>('idle');
+    const submissionRef = useRef<boolean>(false);
     
     // Application data state
     const [answers, setAnswers] = useState<Record<string, string | number>>({});
@@ -81,57 +83,52 @@ export const ApplyJob: React.FC<ApplyJobProps> = ({ jobData, onEdit, onPost }) =
         return true;
     };
 
-    const handleSubmitApplication = async () => {
-        if (!validateApplication()) {
+    const handleSubmitApplication = useCallback(async () => {
+        // Prevent multiple simultaneous submissions
+        if (submissionRef.current || submissionState !== 'idle') {
             return;
         }
-
+        
+        if (!validateApplication()) return;
+        
         if (!jobData._id) {
-            toast.error('Job ID is missing. Please try again.');
+            toast.error('Job ID is missing');
             return;
         }
-
-        setIsSubmitting(true);
+        
+        submissionRef.current = true;
+        setSubmissionState('submitting');
         
         try {
+            const response = await AppApi.jobAction(
+                jobData._id, 
+                'applied', 
+                Object.entries(answers).map(([questionId, answer]) => {
+                    const question = jobData.screeningQuestions?.find(q => q._id === questionId);
+                    return {
+                        question: question?.question || '',
+                        answer
+                    };
+                }), 
+                resumeFile || undefined
+            );
             
-            // Add answers as JSON string with question text
-            const answersArray: QuestionAnswer[] = Object.entries(answers).map(([questionId, answer]) => {
-                const questionObj = jobData.screeningQuestions.find(q => q._id === questionId);
-                return {
-                    question: questionObj?.question || '',
-                    answer
-                };
-            });
-
-            console.log('Submitting application with:', {
-                jobId: jobData._id,
-                answersCount: answersArray.length,
-                resumeFileName: resumeFile?.name,
-                resumeFileSize: resumeFile?.size
-            });
-
-            const response = await AppApi.jobAction(jobData._id, 'applied', answersArray, resumeFile || undefined);
-
-            const data = await response.data;
-
-            if (!response.success) {
-                toast.error(data.error);
-                return;
+            if (response.success) {
+                setSubmissionState('submitted');
+                toast.success('Application submitted successfully!');
+                queryClient.invalidateQueries({ queryKey: ['jobs'] });
+                setIsOpen(false);
+            } else {
+                throw new Error(response.error || 'Failed to submit application');
             }
-
-            toast.success('Application submitted successfully!');
-            queryClient.invalidateQueries({ queryKey: ['jobs'], exact: false });
-            
-            // Reset form and close dialog
-            handleClose();
-            
-        } catch  {
-            toast.error('Failed to submit application. Please try again later.');
+        } catch (error) {
+            setSubmissionState('idle');
+            console.error('Error submitting application:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to submit application');
         } finally {
-            setIsSubmitting(false);
+            submissionRef.current = false;
         }
-    };
+    }, [validateApplication, answers, resumeFile, jobData._id, queryClient]);
 
     const handleClose = () => {
         // Reset all form data

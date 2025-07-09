@@ -74,7 +74,6 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
     // Memoized values
     const currentUserId = useMemo(() => user?._id, [user?._id]);
     const isOwnPost = useMemo(() => post?.user_id?._id === currentUserId, [post?.user_id?._id, currentUserId]);
-    const formattedDate = useMemo(() => formatDate(post?.createdAt || ''), [post?.createdAt]);
     const postImages = useMemo(() => 
         post?.images ? (Array.isArray(post?.images) ? post?.images : [post?.images]) : [], 
         [post?.images]);
@@ -328,12 +327,12 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
             },
         ] : []),
         ...(isOwnPost ? [
-            {
+            ...(!post?.original_post_id ? [{
                 icon: <Pencil className="h-5 w-5 text-gray-500" />,
                 label: "Edit post",
                 onClick: () => setEditPostOpen(true),
                 disabled: false,
-            },
+            }] : []),
             {
                 icon: <Trash className="h-5 w-5 text-gray-500" />,
                 label: "Delete post",
@@ -414,6 +413,7 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
                     <Link href={`/profile/${post.user_id?._id}`}>
                         <ProfileAvatar
                             src={post.user_id?.profileImage || ''}
+                            userName={post.user_id?.name || post.user_id?.username}
                             alt={post.user_id?.name}
                             size="xs"
                         />
@@ -437,7 +437,7 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
                             </Link>
                             <div className="hidden md:block">
                                 <span className="mx-1.5">•</span>
-                                <span>{formattedDate}</span>
+                                <span>{formatDate(post?.createdAt)}</span>
                             </div>
                         </div>
                     </div>
@@ -547,6 +547,7 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
                             <div className="flex items-center">
                                 <ProfileAvatar
                                     src={post.user_id?.profileImage || ""}
+                                    userName={post.user_id?.name || post.user_id?.username}
                                     alt={post.user_id?.name}
                                     size="sm"
                                 />
@@ -563,7 +564,7 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
                                             <span className="hover:underline">@{post.user_id?.username}</span>
                                         </Link>
                                         <span className="flex">
-                                            {formattedDate}{isFollowedActive && ' • Following'}
+                                            {formatDate(post?.createdAt)}{isFollowedActive && ' • Following'}
                                         </span>
                                     </div>
                                 </div>

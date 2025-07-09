@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Camera } from "lucide-react";
 import Image from "next/image";
-import { useAppSelector } from '@/lib/redux/hooks';
-import { selectUser } from '@/lib/redux/features/user/selectors';
+import { useAppSelector } from "@/lib/redux/hooks";
 
 interface ProfileAvatarProps {
     src: string | File;
@@ -12,12 +11,13 @@ interface ProfileAvatarProps {
     editable?: boolean;
     className?: string;
     onClick?: () => void;
-    displayName?: string;
+    userName?: string;
     borderColor?: string;
 }
 
 interface UserFallbackProps {
-    size: 'xs' | 'sm' | 'md' | 'profile' | 'lg' | 'xl';
+    size: "xs" | "sm" | "md" | "profile" | "lg" | "xl";
+    userName?: string;
 }
 
 const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
@@ -26,8 +26,8 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
     size = "sm",
     editable = false,
     onClick,
-    className = "",
-    displayName = "",
+    className,
+    userName,
     borderColor = "black",
 }) => {
     const [imageLoaded, setImageLoaded] = useState(false);
@@ -43,7 +43,9 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
 
     return (
         <div className={`aspect-square ${sizeClasses[size]} ${className}`}>
-            <div className={`relative w-full h-full overflow-hidden rounded-full bg-gray-100 border-2 border-${borderColor} shadow-lg`}>
+            <div
+                className={`relative w-full h-full overflow-hidden rounded-full bg-gray-100 border-2 border-${borderColor} shadow-lg`}
+            >
                 {src ? (
                     <Image
                         src={typeof src === "string" ? src : ""}
@@ -57,7 +59,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
                         priority
                     />
                 ) : (
-                    <UserFallback size={size} />
+                    <UserFallback size={size} userName={userName} />
                 )}
 
                 {editable && (
@@ -70,29 +72,31 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
     );
 };
 
-const UserFallback: React.FC<UserFallbackProps> = ({ size = "sm" }) => {
-  const user = useAppSelector(selectUser);
-  const fallbackColor = useAppSelector((state) => state.user.fallbackColor);
+const UserFallback: React.FC<UserFallbackProps> = ({
+    size = "sm",
+    userName,
+}) => {
+    const fallbackColor = useAppSelector((state) => state.user.fallbackColor);
 
-  const sizeClasses = {
-    xs: 'text-xl',
-    sm: 'text-3xl',
-    profile: 'text-5xl',
-    md: 'text-5xl',
-    lg: 'text-6xl',
-    xl: 'text-7xl',
-  };
+    const sizeClasses = {
+        xs: "text-xl",
+        sm: "text-3xl",
+        profile: "text-5xl",
+        md: "text-5xl",
+        lg: "text-6xl",
+        xl: "text-7xl",
+    };
 
-  return (
-    <div
-      className="w-full h-full flex items-center justify-center rounded-full"
-      style={{ backgroundColor: fallbackColor }}
-    >
-      <span className={`${sizeClasses[size]} font-bold text-white`}>
-        {user?.username?.charAt(0).toUpperCase() || '?'}
-      </span>
-    </div>
-  );
+    return (
+        <div
+            className="w-full h-full flex items-center justify-center rounded-full"
+            style={{ backgroundColor: fallbackColor }}
+        >
+            <span className={`${sizeClasses[size]} font-bold text-white`}>
+                {userName?.charAt(0).toUpperCase() || "?"}
+            </span>
+        </div>
+    );
 };
 
 export default ProfileAvatar;

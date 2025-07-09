@@ -125,28 +125,37 @@ export async function POST(req: NextRequest) {
         }
         
     } catch (error) {
-        console.error("Job creation API error:", {
-            error: error instanceof Error ? error.message : error,
-            stack: error instanceof Error ? error.stack : undefined
-        });
+        const errorId = `job-create-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         
-        // Handle specific error types
-        if (error instanceof SyntaxError) {
-            return NextResponse.json(
-                { error: 'Invalid JSON in request body' },
-                { status: 400 }
-            );
-        }
+        console.error(`[${errorId}] Job creation error:`, {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined,
+            timestamp: new Date().toISOString(),
+            requestInfo: {
+                userAgent: req.headers.get('user-agent'),
+                ip: req.headers.get('x-forwarded-for') || 'unknown'
+            }
+        });
         
         if (error instanceof TypeError && error.message.includes('fetch')) {
             return NextResponse.json(
-                { error: 'Unable to connect to backend service' },
+                { 
+                    error: 'Unable to connect to backend service',
+                    errorId,
+                    retryable: true
+                },
                 { status: 503 }
             );
         }
         
         return NextResponse.json(
-            { error: 'Internal server error occurred while creating job' },
+            { 
+                error: 'Internal server error occurred while creating job',
+                errorId,
+                message: process.env.NODE_ENV === 'development' 
+                    ? (error instanceof Error ? error.message : 'Unknown error')
+                    : 'Something went wrong'
+            },
             { status: 500 }
         );
     }

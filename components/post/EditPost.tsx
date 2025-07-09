@@ -193,6 +193,7 @@ const EditPost = ({
                                 <div className="flex items-center gap-3">
                                     <ProfileAvatar
                                         src={user?.profileImage || ""}
+                                        userName={user?.name || user?.username}
                                         alt={`@${user?.username}`}
                                         size="sm"
                                     />

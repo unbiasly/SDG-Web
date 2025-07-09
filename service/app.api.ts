@@ -1,4 +1,5 @@
-import { QuestionAnswer } from "./api.interface";
+import { add } from "date-fns";
+import { AddMember, QuestionAnswer } from "./api.interface";
 
 export const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -6,7 +7,7 @@ export const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
 export const AppApi = {
 
-    getCookie: async (tokenName: string): Promise<string | null> => {
+    getCookie: async (tokenName?: string): Promise<string | Record<string, string> | null> => {
         try {
             const response = await fetch("/api/getCookie", {
                 method: "POST",
@@ -19,11 +20,17 @@ export const AppApi = {
 
             if (response.ok) {
                 const data = await response.json();
-                return data.value || null;
-            } else {
-                console.error("Failed to fetch cookie:", response.statusText);
+                // If specific cookie requested, return its value
+                if (tokenName && data.value) {
+                    return data.value;
+                }
+                // If no specific cookie requested, return all cookies object
+                if (!tokenName) {
+                    return data;
+                }
                 return null;
-            }
+            } 
+            return null;
         } catch (error) {
             console.error("Error fetching cookie:", error);
             return null;
@@ -238,14 +245,14 @@ export const AppApi = {
         }
     },
 
-    fetchUserPosts: async (userId:string) => {
+    fetchUserPosts: async (userId:string, cursor:string) => {
         try {
             const response = await fetch(`/api/post/user`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ userId }),
+                body: JSON.stringify({ userId, cursor }),
             });
 
             if (!response.ok) {
@@ -376,6 +383,367 @@ export const AppApi = {
                 error: error instanceof Error ? error.message : 'Unknown error'
             };
         }
+    },
+
+    getRole: async () => {
+        try {
+            const response = await fetch(`/api/login/onboarding`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            // Get updated data from API response
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    getEvents: async (type: string, event_id?: string, user_id?: string) => {
+        try {
+            const queryParams = new URLSearchParams();
+            if (type) queryParams.append('type', type);
+            if (event_id) queryParams.append('event_id', event_id);
+            if (user_id) queryParams.append('user_id', user_id);
+            const queryString = queryParams.toString();
+            
+            const response = await fetch(`/api/events${queryString ? `?${queryString}` : ''}`, {
+            method: 'GET',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            // Get updated data from API response
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+    
+    createEvent: async (formData: FormData) => {
+        try {
+            const response = await fetch(`/api/events`, {
+                method: 'POST',
+                body: formData, // Don't set Content-Type header for FormData
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    getReports: async (type?: string, cursor?: string | null) => {
+        try {
+            const queryParams = new URLSearchParams();
+            if (type) queryParams.append('type', type);
+            if (cursor) queryParams.append('cursor', cursor);
+            const queryString = queryParams.toString();
+
+            const response = await fetch(`/api/reports${queryString ? `?${queryString}` : ''}`, {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Return the API response directly since it already has the correct structure
+            const data = await response.json();
+            return data; // This is already { success: true, data: [...], pagination: {...} }
+            
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error',
+                data: [],
+                pagination: {
+                    limit: "0",
+                    cursor: null,
+                    nextCursor: null,
+                    hasMore: false,
+                    totalItems: 0
+                }
+            };
+        }
+    },
+
+    completeRole : async (formBody: any) => {
+        try {
+            const response = await fetch(`/api/login/onboarding`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formBody),
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            // Get updated data from API response
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    getSocietyMembers : async (limit = 30, cursor?: string | null) => {
+        try {
+            const queryParams = new URLSearchParams();
+            if (limit) queryParams.append('limit', limit.toString());
+            if (cursor) queryParams.append('cursor', cursor);
+            const queryString = queryParams.toString();
+
+            const response = await fetch(`/api/society/members${queryString ? `?${queryString}` : ''}`, {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            // Get updated data from API response
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    getSocietyRequests : async (limit = 30, cursor?: string | null) => {
+        try {
+            const queryParams = new URLSearchParams();
+            if (limit) queryParams.append('limit', limit.toString());
+            if (cursor) queryParams.append('cursor', cursor);
+            const queryString = queryParams.toString();
+
+            const response = await fetch(`/api/society/requests${queryString ? `?${queryString}` : ''}`, {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            // Get updated data from API response
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    addSocietyMember: async (members?: AddMember[], csvFile?: File) => {
+        try {
+            // Handle CSV file upload
+            if (csvFile) {
+                const formData = new FormData();
+                formData.append('csv', csvFile);
+                
+                const response = await fetch(`/api/society/members`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    return {
+                        success: false,
+                        error: response.statusText
+                    };
+                }
+
+                const data = await response.json();
+                return {
+                    success: true,
+                    data: data
+                };
+            }
+
+            // Handle JSON payload with members array
+            if (!members || members.length === 0) {
+                return {
+                    success: false,
+                    error: 'Members array is required when not uploading CSV'
+                };
+            }
+
+            const response = await fetch(`/api/society/members`, {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ 
+                    members: members
+                }),
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    editSocietyMember : async (memberId: string, name?:string, college?:string, designation?:string) => {
+        try {
+            const response = await fetch(`/api/society/members`, {
+                method: 'PATCH',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ 
+                    id: memberId, 
+                    ...(name && { name }),
+                    ...(college && { college }),
+                    ...(designation && { designation }),
+                }),
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    evaluateRequest : async (requestId: string, type: 'accept' | 'reject') => {
+        try {
+            const response = await fetch(`/api/society/requests`, {
+                method: 'PATCH',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ id: requestId , type }),
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
     }
 
-};
+}

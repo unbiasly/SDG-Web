@@ -23,17 +23,6 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ className }) => {
         setShowPassword(!showPassword);
     };
 
-    useEffect(() => {
-            const checkSessionAndReload = async () => {
-                const sessionId = await AppApi.getCookie("sessionId");
-                if (sessionId) {
-                    window.location.reload();
-                }
-            };
-            checkSessionAndReload();
-            setIsLoading(false); 
-        }, [isLoading]);
-
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true); // Set loading to true

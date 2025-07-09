@@ -143,7 +143,7 @@ export default function JobsLayout({ children }: LayoutProps) {
     // Error state
     if (isError) {
         return (
-            <div className="flex w-full min-h-screen items-center justify-center">
+            <div className="flex w-full h-screen items-center justify-center">
                 <div className="text-center">
                     <div className="text-red-500 text-lg font-semibold mb-2">
                         Error Loading Jobs
@@ -151,7 +151,7 @@ export default function JobsLayout({ children }: LayoutProps) {
                     <div className="text-gray-600 mb-4">{error?.message || 'Failed to load jobs'}</div>
                     <button
                         onClick={() => refetch()}
-                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        className="px-4 py-2 bg-accent text-white rounded-md"
                     >
                         Try Again
                     </button>

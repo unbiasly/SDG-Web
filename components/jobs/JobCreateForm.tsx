@@ -427,7 +427,7 @@ export const CreateJobForm: React.FC<CreateJobFormProps> = ({
             {/* Expiration Date (Optional) */}
             <div className="space-y-2">
                 <label htmlFor="expiresAt" className="text-sm font-medium text-gray-700">
-                    Expiration Date 
+                    Expiration Date *
                 </label>
                 <div className="relative">
                     <Button

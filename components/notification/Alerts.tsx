@@ -88,7 +88,7 @@ const Alerts = ({ _id, post, category, type, message, isRead, userProfile }: Not
         >
             <div className="flex-shrink-0">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center ${iconStyle} shadow-xs p-5`}>
-                    <ProfileAvatar src={userProfile || ''} size='xs' />
+                    <ProfileAvatar src={userProfile || ''} size='xs' userName={message}/>
                 </div>
             </div>
             <div className="ml-4 flex-grow pr-4 overflow-hidden">

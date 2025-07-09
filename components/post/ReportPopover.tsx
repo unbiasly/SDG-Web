@@ -1,5 +1,6 @@
+'use client';
 import { X, AlertTriangle, FileText, ChevronRight, ChevronLeft } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import {
     Dialog,
@@ -48,15 +49,23 @@ const ReportPopover = ({
     );
     const queryClient = useQueryClient();
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         onOpenChange(false);
-        // Reset state after animation finishes
-        setTimeout(() => {
+    }, [onOpenChange]);
+
+    useEffect(() => {
+    if (!open) {
+        // Reset state immediately when dialog closes
+        const timer = setTimeout(() => {
             setStep("choice");
             setSelectedPolicies([]);
             setSelectedFeedback(null);
-        }, 300);
-    };
+            setIsSubmitting(false);
+        }, 300); // Allow for animation to complete
+        
+        return () => clearTimeout(timer);
+    }
+}, [open]);
 
     // Handle feedback submission
     const handleFeedbackSubmit = async () => {

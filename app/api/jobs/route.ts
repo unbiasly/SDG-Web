@@ -72,6 +72,23 @@ export async function PATCH(req: NextRequest) {
             { status: 400 }
         );
     }
+    // Validate jobId format (MongoDB ObjectId)
+    const jobIdRegex = /^[a-fA-F0-9]{24}$/;
+    if (!jobIdRegex.test(jobId)) {
+        return NextResponse.json(
+            { error: 'Invalid job ID format' }, 
+            { status: 400 }
+        );
+    }
+
+    // Validate action type
+    const validActions = ['applied', 'saved', 'unsave'];
+    if (!validActions.includes(action)) {
+        return NextResponse.json(
+            { error: 'Invalid action type' }, 
+            { status: 400 }
+        );
+    }
 
     try {
 

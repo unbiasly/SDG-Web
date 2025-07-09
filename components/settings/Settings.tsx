@@ -1,14 +1,12 @@
 "use client";
 import React, { useState } from "react";
-import { Search, ChevronRight, ChevronLeft, ArrowLeft } from "lucide-react";
+import { ChevronRight,  ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SETTINGS_OPTIONS } from "@/lib/constants/settings-constants";
 import ChangePassword from "./ChangePassword";
 import Deactivate from "./Deactivate";
 import Sessions from "./Sessions";
 import { Switch } from "../ui/switch";
-import { UserSidebar } from "../feed/UserProfile";
-import SearchBar from "../feed/SearchBar";
 
 interface SettingsProps {
     className?: string;
@@ -47,9 +45,7 @@ const Settings: React.FC<SettingsProps> = ({ className }) => {
                 }}
             >
                 <div className="p-2 border-b flex items-center space-x-2 mb-2">
-                    <div className="flex items-center justify-center md:hidden">
-                        <UserSidebar />
-                    </div>
+                    
                     <h1 className="text-xl font-semibold ">
                         Settings & Help Center
                     </h1>

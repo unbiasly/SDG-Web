@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 interface TabProps {
@@ -38,9 +38,11 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
         }
     }, [activeTab]);
 
+    const tabLength = useMemo(() => tabs.length, [tabs]);
+
     return (
         <div className={cn("relative border-b border-gray-300", className)}>
-            <div className="flex w-1/2 justify-start ">
+            <div className={`flex justify-evenly ${tabLength >= 3 ? "w-full" : "w-1/3"}`}>
                 {tabs.map((tab, index) => (
                     <React.Fragment key={tab.id}>
                         <div

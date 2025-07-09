@@ -79,7 +79,7 @@ export default function RootLayout({
                     <UserSidebar />
                     <SearchBar className="w-fit" />
                 </div>
-                <div className="flex-1 pt-2 lg:gap-0 gap-2 relative flex flex-col"
+                <div className="flex-1 pt-1 lg:gap-0 gap-2 relative flex flex-col"
                     style={{
                             height: '100%',
                             overflowY: 'auto',

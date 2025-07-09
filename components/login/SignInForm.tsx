@@ -26,18 +26,6 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
 
     
 
-    useEffect(() => {
-        const checkSessionAndReload = async () => {
-            const sessionId = await AppApi.getCookie("sessionId");
-            if (sessionId) {
-                // Force hard reload with cache busting
-                window.location.href = `/?t=${Date.now()}`;
-            }
-        };
-        checkSessionAndReload();
-
-        setIsLoading(false);
-    }, [isLoading]);
 
     const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -61,6 +49,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
                 }),
             });
             const data = await response.json();
+            console.log("Login response:", data);
 
             if (!response.ok) {
                 toast.error(data?.error || data?.message);
@@ -82,6 +71,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
                         refreshToken: data.refreshToken,
                         sessionId: data.sessionId,
                         userId: data.userId,
+                        ...(data.role_type && {role_type: data.role_type,})
                     }),
                     credentials: "include",
                 });

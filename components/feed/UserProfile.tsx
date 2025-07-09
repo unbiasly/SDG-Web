@@ -56,7 +56,7 @@ export const UserSidebar = () => {
         <div className={`
             ${isMobile 
                 ? 'flex-1 overflow-y-auto' 
-                : 'flex-1 overflow-y-auto max-h-[calc(100vh-300px)] lg:max-h-[calc(100vh-280px)]'
+                : 'flex-1 overflow-y-auto max-h-[calc(100vh-300px)] lg:min-h-0'
             } hidden-scrollbar
         `}>
             <ul className="space-y-1 pr-2">
@@ -116,7 +116,7 @@ export const UserSidebar = () => {
 
     // User profile section for both desktop and mobile
     const renderUserProfile = () => (
-        <div className="flex-col w-full items-center md:items-start border-b py-2 border-gray-600 flex flex-shrink-0">
+        <div className="flex-col w-full py-2 items-center md:items-start border-b border-gray-600 flex flex-shrink-0">
             <div className="relative mb-2 w-20">
                 <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden">
                     {isDataLoaded ? (
@@ -124,7 +124,7 @@ export const UserSidebar = () => {
                             src={user?.profileImage || ""}
                             className="object-contain"
                             size="profile"
-                            displayName={user?.username}
+                            userName={user?.name || user?.username}
                         />
                     ) : (
                         <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
@@ -159,7 +159,7 @@ export const UserSidebar = () => {
     return (
         <>
             {/* Desktop Sidebar - Hidden on mobile */}
-            <div className="w-fit flex-1 bg-white border-1 border-gray-300 p-4 rounded-2xl md:flex flex-col h-full hidden">
+            <div className="w-full flex-1 bg-white border-1 border-gray-300 p-4 rounded-2xl md:flex flex-col max-h-full hidden">
                 <Link
                     href="/"
                     className="justify-center items-center gap-2 pb-2 flex lg:hidden flex-shrink-0"
@@ -172,7 +172,7 @@ export const UserSidebar = () => {
                     />
                 </Link>
 
-                <div className="flex-col items-start py-2 hidden lg:flex flex-shrink-0">
+                <div className="flex-col items-start  hidden lg:flex flex-shrink-0">
                     {renderUserProfile()}
                 </div>
 

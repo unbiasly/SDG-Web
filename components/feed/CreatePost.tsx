@@ -137,6 +137,7 @@ const CreatePost = () => {
             <div className="flex items-center gap-3">
                 <ProfileAvatar
                     src={user?.profileImage || ""}
+                    userName={user?.name || user?.username}
                     alt={`@${user?.username}`}
                     size="sm"
                 />
@@ -228,6 +229,7 @@ const CreatePost = () => {
                 <div className="flex w-full items-center gap-2">
                     <ProfileAvatar
                         src={user?.profileImage || ""}
+                        userName={user?.name || user?.username}
                         alt="User Avatar"
                         size="xs"
                     />

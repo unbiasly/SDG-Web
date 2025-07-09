@@ -32,14 +32,14 @@ export interface SocialAuthRequest {
 export interface UserDetails {
     success: boolean;
     data?: {
-        "_id": string;
-        "email": string;
-        "username": string;
-    }
+        _id: string;
+        email: string;
+        username: string;
+    };
 }
 
 export interface RefreshRequest {
-    "refresh_token": string;
+    refresh_token: string;
 }
 
 export interface RefreshResponse {
@@ -48,7 +48,7 @@ export interface RefreshResponse {
 }
 
 export interface PostCreateRequest {
-    "content" : string;
+    content: string;
 }
 
 export interface PostCreateResponse {
@@ -87,23 +87,27 @@ export interface Education {
 
 export interface UserData {
     _id: string;
+    email: string;
     username: string;
     name?: string;
-    location?: string;
-    gender?: string;
+    fName?: string;
+    lName?: string;
+    pronouns?: string;
     experience?: Experience[];
     education?: Education[];
-    dob?: Date;
-    bio?: string;
-    isFollowing?: boolean | null;
+    location?: string;
+    gender?: string;
+    dob?: string;
     portfolioLink?: string;
-    profileImage?: File;
-    profileBackgroundImage?: File;
-    fName?: string; // Added from UserDetailsRequest
-    lName?: string; // Added from UserDetailsRequest
-    occupation?: string; // Added from UserDetailsRequest
-    pronouns?: string; // Added from UserDetailsRequest
-    headline?: string; // Added from UserDetailsRequest
+    profileImage?: string;
+    profileBackgroundImage?: string;
+    isFollowing?: boolean | null;
+    role_id?: string;
+    role_slug?: string;
+    roleRequested?: boolean;
+    bio?: string;
+    occupation?: string;
+    headline?: string;
 }
 
 export interface UserResponse {
@@ -120,8 +124,8 @@ export interface UserDetailsRequest {
     bio?: string;
     fName?: string;
     lName?: string;
-    occupation?: string; 
-    pronouns?: string; 
+    occupation?: string;
+    pronouns?: string;
     headline?: string;
     portfolioLink?: string;
     profileImage?: File | string;
@@ -226,7 +230,6 @@ export interface SDGArticleData {
     isBookmarked?: boolean;
 }
 
-
 export interface BookmarksFetchResponse {
     success: boolean;
     data?: PostBookmarkData[] | SDGArticleData[];
@@ -272,7 +275,7 @@ export interface SDGVideoData {
     isLiked?: boolean;
 }
 
-export interface SDGVideoDetails{
+export interface SDGVideoDetails {
     _id: string;
     title: string;
     thumbnail_url: string;
@@ -293,7 +296,6 @@ export interface SDGVideoDetails{
     isLiked: boolean;
 }
 
-
 export interface SDGVideoResponse {
     success: boolean;
     data: SDGVideoData[];
@@ -306,33 +308,31 @@ export interface SDGVideoResponse {
     };
 }
 
-
 export interface AnalyticsResponseData {
-  success: boolean;
-  message: string;
-  data: {
-    analytics: {
-      total_post_impressions: number;
-      total_unique_post_impressions: number;
-      total_views: number;
-      unique_profiles: number;
+    success: boolean;
+    message: string;
+    data: {
+        analytics: {
+            total_post_impressions: number;
+            total_unique_post_impressions: number;
+            total_views: number;
+            unique_profiles: number;
+        };
+        followCounts: {
+            followerCount: number;
+            followingCount: number;
+        };
     };
-    followCounts: {
-      followerCount: number;
-      followingCount: number;
-    };
-  };
-  total_views?: number; // For backward compatibility
+    total_views?: number; // For backward compatibility
 }
 
 export interface AnalyticsData {
-  _id: string;
-  userId: string;
-  startDate: string;
-  endDate: string;
-  views: number;
+    _id: string;
+    userId: string;
+    startDate: string;
+    endDate: string;
+    views: number;
 }
-
 
 export interface SchemeAnalyticsResponse {
     success: boolean;
@@ -349,31 +349,31 @@ export interface SchemeCardProps {
     icon: string;
     type: string;
     // onClick?: () => void;
-};
+}
 export interface AnalyticsResponseData {
-  success: boolean;
-  message: string;
-  data: {
-    analytics: {
-      total_post_impressions: number;
-      total_unique_post_impressions: number;
-      total_views: number;
-      unique_profiles: number;
+    success: boolean;
+    message: string;
+    data: {
+        analytics: {
+            total_post_impressions: number;
+            total_unique_post_impressions: number;
+            total_views: number;
+            unique_profiles: number;
+        };
+        followCounts: {
+            followerCount: number;
+            followingCount: number;
+        };
     };
-    followCounts: {
-      followerCount: number;
-      followingCount: number;
-    };
-  };
-  total_views?: number; // For backward compatibility
+    total_views?: number; // For backward compatibility
 }
 
 export interface AnalyticsData {
-  _id: string;
-  userId: string;
-  startDate: string;
-  endDate: string;
-  views: number;
+    _id: string;
+    userId: string;
+    startDate: string;
+    endDate: string;
+    views: number;
 }
 export interface SearchResultResponse {
     success: boolean;
@@ -402,7 +402,7 @@ export interface SessionsResponse {
     data: {
         currentSession: {
             _id: string;
-            userId: string; 
+            userId: string;
             deviceId?: string;
             ipAddress: string;
             userAgent: string;
@@ -417,9 +417,8 @@ export interface SessionsResponse {
             userAgent: string;
             loginTime: string;
         }[];
-    }
+    };
 }
-
 
 export interface JobListing {
     _id?: string;
@@ -432,7 +431,7 @@ export interface JobListing {
     experienceLevel: string;
     description: string;
     applyUrl: string;
-    postedBy?: string; 
+    postedBy?: string;
     expiresAt: string;
     skills?: string[];
     tags?: string[];
@@ -447,11 +446,129 @@ export interface JobListing {
 
 export interface ScreeningQuestion {
     question?: string;
-    type?: 'numeric' | 'yes/no';
+    type?: "numeric" | "yes/no";
     _id?: string;
 }
 
 export interface QuestionAnswer {
     question: string;
     answer: string | number;
+}
+
+export interface UserRole {
+    _id: string;
+    name: string;
+    slug: string;
+    thumbnail_url: string;
+}
+
+export interface SDG_Report {
+    _id: string;
+    title: string;
+    thumbnail_url: string;
+    category: string;
+    report_url: string;
+    createdAt: string;
+    updatedAt: string;
+    status: boolean;
+}
+
+export interface Society {
+    _id: string;
+    user_id: string;
+    name: string;
+    phone: string;
+    college: string;
+    is_verified: boolean;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+}
+
+export interface SocietyResponse {
+    success: boolean;
+    data: Society[];
+    pagination: {
+        limit: number;
+        cursor: string | null;
+        nextCursor: string | null;
+        hasMore: boolean;
+    };
+}
+
+export interface SocietyMember {
+    _id: string;
+    user_id: {
+        _id: string;
+        profileImage?: string;
+    };
+    name: string;
+    email: string;
+    college: string;
+    designation: string;
+    profileImage?: string;
+}
+
+export interface SocietyMemberResponse {
+    success: boolean;
+    data: SocietyMember[];
+    pagination: {
+        limit: number;
+        cursor: string | null;
+        nextCursor: string | null;
+        hasMore: boolean;
+    };
+}
+
+
+export interface SocietyRequest {
+    _id: string;
+    user_id: {
+        _id: string;
+        profileImage?: string;
+    };
+    name: string;
+    email: string;
+    college: string;
+    designation: string;
+    profileImage?: string;
+}
+
+export interface SocietyRequestResponse {
+    success: boolean;
+    data: SocietyRequest[];
+    pagination: {
+        limit: number;
+        cursor: string | null;
+        nextCursor: string | null;
+        hasMore: boolean;
+    };
+}
+
+export interface Event {
+    _id: string;
+    user_id: string;
+    title: string;
+    banners: string[];
+    time: string;
+    description: string;
+    location: string;
+    type: string;
+    host: string[];
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+}
+
+export interface EventResponse {
+    success: boolean;
+    data: Event[];
+}
+
+export interface AddMember {
+    name: string;
+    email: string;
+    designation: string;
+    college: string;
 }

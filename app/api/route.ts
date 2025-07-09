@@ -43,6 +43,7 @@ export async function PUT(req: NextRequest) {
         if (contentType.includes("application/json")) {
             const requestBody = await req.json();
             
+
             // Handle "present" values in experience array when submitted as JSON
             if (requestBody.experience && Array.isArray(requestBody.experience)) {
                 requestBody.experience = requestBody.experience.map((exp: any) => {
@@ -61,6 +62,11 @@ export async function PUT(req: NextRequest) {
                     }
                     return edu;
                 });
+            }
+
+            // Only log in development
+            if (process.env.NODE_ENV === 'development') {
+                console.log("Request body for PUT /userDetails:", requestBody);
             }
             
             const response = await fetch(`${baseURL}/userDetails`, {
@@ -87,28 +93,39 @@ export async function PUT(req: NextRequest) {
         } else if (contentType.includes("multipart/form-data")) {
             const formData = await req.formData();
             const backendFormData = new FormData();
-            
+    
             const textFields = [
                 'name', 'username', 'location', 'gender', 'dob', 
                 'portfolioLink', 'bio', 'fName', 'lName', 
                 'occupation', 'pronouns', 'headline'
             ];
-            
+    
+            // Always append ALL text fields, even if they are empty or null
             textFields.forEach(field => {
                 const value = formData.get(field);
-                if (value !== null) { // Check if the field exists
-                    backendFormData.append(field, value.toString());
-                }
+                // Explicitly handle null/undefined values as empty strings
+                const finalValue = value === null || value === undefined ? '' : value.toString();
+                backendFormData.append(field, finalValue);
+                console.log(`Appending ${field}: "${finalValue}"`); // Debug log
             });
-            
+    
+            // Handle image files
             const profileImageFile = formData.get('profileImage') as File | null;
             if (profileImageFile instanceof File && profileImageFile.size > 0) {
                 backendFormData.append('profileImage', profileImageFile);
+            } else {
+                // Always append profileImage field, even if empty
+                const profileImageValue = formData.get('profileImage');
+                backendFormData.append('profileImage', profileImageValue?.toString() || '');
             }
-            
+    
             const backgroundImageFile = formData.get('profileBackgroundImage') as File | null;
             if (backgroundImageFile instanceof File && backgroundImageFile.size > 0) {
                 backendFormData.append('profileBackgroundImage', backgroundImageFile);
+            } else {
+                // Always append profileBackgroundImage field, even if empty
+                const backgroundImageValue = formData.get('profileBackgroundImage');
+                backendFormData.append('profileBackgroundImage', backgroundImageValue?.toString() || '');
             }
             
             // Handle education and experience arrays

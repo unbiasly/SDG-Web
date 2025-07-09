@@ -9,6 +9,7 @@ export const MOBILE_FEED_TABS = [
     "For You",
     "The SDG News"
 ];
+
 export const NOTIFICATION_TABS = [
     "Posts", // - post
     //"Job Alerts", // - job
@@ -25,18 +26,38 @@ export const SCHEME_TABS = [
 
 export const VIDEO_TABS = ["The SDG Talks", "The SDG Podcast"];
 
-export const PROFILE_TABS = [
+export const SDG_SOCIETY_TABS = [
+    "Feed",
+    "Updates",
+];
+
+export const USER_PROFILE_TABS = [
     { id: "about", label: "About" },
     { id: "posts", label: "Posts" },
 ];
+
+export const SOCIETY_PROFILE_TABS = [
+    { id: "about", label: "About" },
+    { id: "posts", label: "Posts" },
+    { id: "events", label: "Events" },
+];
+
+export const SOCIETY_ADMIN_PROFILE_TABS = [
+    { id: "about", label: "About" },
+    { id: "posts", label: "Posts" },
+    { id: "events", label: "Events" },
+    { id: "members", label: "Members" },
+    { id: "requests", label: "Requests" },
+];
+
+export const REPORT_TABS = ["All", "UNDP", "NITI Aayog", "State", "Ministry"];
 
 export const BOOKMARKS_TABS = [
     "All",
     "Posts",
     "News",
     "Videos",
-    // "Jobs",
-    // "Schemes"
+    "Jobs",
 ];
 
 export const SEARCH_RESULT_CATEGORIES = [
@@ -64,23 +85,20 @@ export const PROFILE_OPTIONS = [
         route: "/",
     },
     {
-        icon: "/icons/circle-user-round.svg",
+        icon: "/icons/Profile.svg",
         label: "Profile",
         routeGenerator: (userId: string) => `/profile/${userId}`,
     },
-    { route: "/bookmarks", label: "Bookmarks", icon: "/icons/bookmark.svg" },
+    { route: "/bookmarks", label: "Bookmarks", icon: "/icons/Bookmarks.svg" },
     { route: "/goals", label: "The 17 Goals", icon: "/icons/Target.svg" },
-    { route: "/videos", label: "Videos", icon: "/icons/tv-minimal-play.svg" },
-    // {route: "/society", label: "The SDG Society", icon: "/icons/society.png"},
+    { route: "/videos", label: "Videos", icon: "/icons/Videos.svg" },
+    { route: "/society", label: "The SDG Society", icon: "/icons/society.png" },
     // {route: "/mentorship", label: "Mentorship", icon: "/icons/leadership-development.png"},
-    {route: "/internship", label: "Internship", icon: "/icons/id-card.svg"},
-    {route: "/jobs", label: "Job", icon: "/icons/briefcase-business.svg"},
-    {
-        route: "/scheme",
-        label: "Scheme Search",
-        icon: "/icons/Scheme.svg",
-    },
-    {route: "/notifications", label: "Notifications", icon: "/icons/bell-ring.svg"},
+    { route: "/internship", label: "Internship", icon: "/icons/Internship.svg" },
+    { route: "/jobs", label: "Job", icon: "/icons/Job.svg" },
+    { route: "/scheme", label: "Scheme Search", icon: "/icons/Scheme.svg", },
+    { route: "/reports", label: "Reports", icon: "/icons/chart-no-axes-gantt.svg", },
+    { route: "/notifications", label: "Notifications", icon: "/icons/Notification.svg" },
     { route: "/settings", label: "Settings", icon: "/icons/settings.svg" },
 ];
 

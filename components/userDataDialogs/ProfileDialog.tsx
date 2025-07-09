@@ -140,6 +140,44 @@ export const UserProfileDialog = ({}) => {
                 ? value.toISOString()
                 : "";
 
+        // Get the original value for this field
+        const getOriginalValue = (fieldName: string): string => {
+            if (!originalData) return "";
+            
+            switch (fieldName) {
+                case "fName":
+                    return originalData.fName || "";
+                case "lName":
+                    return originalData.lName || "";
+                case "occupation":
+                    return originalData.occupation || "";
+                case "pronouns":
+                    return originalData.pronouns || "";
+                case "headline":
+                    return originalData.headline || "";
+                case "location":
+                    return originalData.location || "";
+                case "bio":
+                    return originalData.bio || "";
+                case "portfolioLink":
+                    return originalData.portfolioLink || "";
+                case "gender":
+                    return originalData.gender || "";
+                default:
+                    return "";
+            }
+        };
+
+        const originalValue = getOriginalValue(name);
+        const hasOriginalValue = originalValue.trim() !== "";
+        const isCurrentValueEmpty = strValue.trim() === "";
+
+        // Prevent clearing fields that previously had values
+        if (hasOriginalValue && isCurrentValueEmpty) {
+            return `This field cannot be left empty as it already contains data.`;
+        }
+
+        // Existing validations
         switch (name) {
             case "fName":
                 if (strValue.length > 20)
@@ -153,7 +191,7 @@ export const UserProfileDialog = ({}) => {
                 if (strValue.length > 20)
                     return "Occupation must not exceed 20 characters.";
                 break;
-            case "pronouns": // Backend validates length, select options are short.
+            case "pronouns":
                 if (strValue.length > 20)
                     return "Pronouns must not exceed 20 characters.";
                 break;
@@ -174,8 +212,6 @@ export const UserProfileDialog = ({}) => {
                     return "Portfolio link must be a valid URL.";
                 break;
             case "gender":
-                // Backend rule: gender && !["male", "female", "other"].includes(gender)
-                // This means if gender is "prefer-not-to-say", backend will reject it.
                 if (
                     strValue &&
                     strValue !== "" &&
@@ -200,10 +236,10 @@ export const UserProfileDialog = ({}) => {
     };
 
     const handleDateChange = (date: Date | undefined) => {
+        setProfileData((prev) => ({ ...prev, dob: date }));
+        
         if (date) {
-            setProfileData((prev) => ({ ...prev, dob: date }));
-            // setDobError(null); // Clear error when date is manually selected // Removed
-            setErrors((prev) => ({ ...prev, dob: null })); // Clear any generic dob error
+            setCalendarOpen(false);
         }
     };
 
@@ -245,11 +281,11 @@ export const UserProfileDialog = ({}) => {
             newErrors[field.name] = error;
         });
 
-        setErrors(newErrors); // Update state for inline messages
-        return newErrors; // Return errors for immediate use
+        setErrors(newErrors);
+        return newErrors;
     };
 
-    // Fix the handleProfileUpdate function to only send non-empty values
+    // Fix the handleProfileUpdate function to send all fields, including empty strings
     const handleProfileUpdate = async () => {
         const validationIssues = runAllValidationsAndGetErrors();
         const hasValidationErrors = Object.values(validationIssues).some(
@@ -257,66 +293,85 @@ export const UserProfileDialog = ({}) => {
         );
 
         if (hasValidationErrors) {
-            Object.values(validationIssues).forEach((errMsg) => {
-                if (errMsg) {
-                    toast(`Validation Error: ${errMsg}`);
-                }
-            });
-            return; // Stop submission
+            // Show the first validation error
+            const firstError = Object.values(validationIssues).find((e) => e !== null);
+            if (firstError) {
+                toast.error(`Validation Error: ${firstError}`);
+            }
+            return;
         }
 
         try {
             const formData = new FormData();
 
-            // Only append fields that have actual values - don't send empty strings
-            if (profileData.fName && profileData.fName.trim())
-                formData.append("fName", profileData.fName);
-            if (profileData.lName && profileData.lName.trim())
-                formData.append("lName", profileData.lName);
+            // Helper function to get the value to send (original if current is empty and original exists)
+            const getValueToSend = (currentValue: string | undefined, fieldName: string): string => {
+                if (!originalData) return currentValue || "";
+                
+                const originalValue = (() => {
+                    switch (fieldName) {
+                        case "fName": return originalData.fName || "";
+                        case "lName": return originalData.lName || "";
+                        case "location": return originalData.location || "";
+                        case "portfolioLink": return originalData.portfolioLink || "";
+                        case "bio": return originalData.bio || "";
+                        case "occupation": return originalData.occupation || "";
+                        case "headline": return originalData.headline || "";
+                        case "gender": return originalData.gender || "";
+                        case "pronouns": return originalData.pronouns || "";
+                        default: return "";
+                    }
+                })();
 
-            // Only create name if both first and last name exist
-            if (profileData.fName && profileData.lName) {
-                formData.append(
-                    "name",
-                    `${profileData.fName} ${profileData.lName}`.trim()
-                );
+                // If current value is empty but original had value, keep original
+                if ((currentValue || "").trim() === "" && originalValue.trim() !== "") {
+                    return originalValue;
+                }
+                
+                return currentValue || "";
+            };
+
+            // Append fields with validation-aware values
+            formData.append("fName", getValueToSend(profileData.fName, "fName"));
+            formData.append("lName", getValueToSend(profileData.lName, "lName"));
+            formData.append("location", getValueToSend(profileData.location, "location"));
+            formData.append("portfolioLink", getValueToSend(profileData.portfolioLink, "portfolioLink"));
+            formData.append("bio", getValueToSend(profileData.bio, "bio"));
+            formData.append("occupation", getValueToSend(profileData.occupation, "occupation"));
+            formData.append("headline", getValueToSend(profileData.headline, "headline"));
+            formData.append("gender", getValueToSend(profileData.gender, "gender"));
+            formData.append("pronouns", getValueToSend(profileData.pronouns, "pronouns"));
+
+            // Create name field based on first and last name
+            const fNameToSend = getValueToSend(profileData.fName, "fName");
+            const lNameToSend = getValueToSend(profileData.lName, "lName");
+            const fullName = fNameToSend && lNameToSend 
+                ? `${fNameToSend} ${lNameToSend}`.trim()
+                : "";
+            formData.append("name", fullName);
+
+            // Handle date field normally - no special validation
+            if (profileData.dob) {
+                formData.append("dob", profileData.dob.toISOString());
+            } else {
+                formData.append("dob", "");
             }
 
-            // Only append fields with actual values
-            if (profileData.location && profileData.location.trim())
-                formData.append("location", profileData.location);
-            if (profileData.gender)
-                formData.append("gender", profileData.gender);
-            if (profileData.dob)
-                formData.append("dob", profileData.dob.toISOString());
-            if (profileData.portfolioLink && profileData.portfolioLink.trim())
-                formData.append("portfolioLink", profileData.portfolioLink);
-            if (profileData.bio && profileData.bio.trim())
-                formData.append("bio", profileData.bio);
-            if (profileData.occupation && profileData.occupation.trim())
-                formData.append("occupation", profileData.occupation);
-            if (profileData.pronouns)
-                formData.append("pronouns", profileData.pronouns);
-            if (profileData.headline && profileData.headline.trim())
-                formData.append("headline", profileData.headline);
-
-            // Handle file uploads properly
+            // Handle file uploads
             if (profileImageFile) {
                 formData.append("profileImage", profileImageFile);
             } else if (profileData.profileImage) {
-                formData.append(
-                    "profileImage",
-                    profileData.profileImage.toString()
-                );
+                formData.append("profileImage", profileData.profileImage.toString());
+            } else {
+                formData.append("profileImage", "");
             }
 
             if (backgroundImageFile) {
                 formData.append("profileBackgroundImage", backgroundImageFile);
             } else if (profileData.profileBackgroundImage) {
-                formData.append(
-                    "profileBackgroundImage",
-                    profileData.profileBackgroundImage.toString()
-                );
+                formData.append("profileBackgroundImage", profileData.profileBackgroundImage.toString());
+            } else {
+                formData.append("profileBackgroundImage", "");
             }
 
             const response = await fetch("/api", {
@@ -327,7 +382,7 @@ export const UserProfileDialog = ({}) => {
             if (response.ok) {
                 // Handle successful update
                 console.log("Profile updated successfully");
-                // TODO: Optionally show a success toast here
+                toast.success("Profile updated successfully!");
                 // Refresh the page to show updated profile
                 window.location.reload();
             } else {
@@ -342,7 +397,6 @@ export const UserProfileDialog = ({}) => {
             toast.error(
                 `An error occurred while updating your profile. Please try again later.`
             );
-            // Handle error appropriately
         }
     };
 
@@ -351,7 +405,7 @@ export const UserProfileDialog = ({}) => {
             <DialogTrigger className="rounded-full cursor-pointer px-6 py-2 bg-accent hover:bg-accent/80 text-white border-none backdrop-blur-sm transition-all duration-300 font-medium text-sm md:text-base">
                 Edit Profile
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white">
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto hidden-scrollbar bg-white">
                 <DialogHeader className="border-b border-gray-300 pb-4">
                     <div className="flex justify-between items-center w-full">
                         <DialogTitle className="text-xl font-bold">
@@ -363,7 +417,7 @@ export const UserProfileDialog = ({}) => {
                     </p>
                 </DialogHeader>
 
-                <div className="space-y-6">
+                <div className="space-y-6 ">
                     {/* First Name */}
                     <div className="space-y-2">
                         <label htmlFor="fName" className="text-sm font-medium">
@@ -580,7 +634,6 @@ export const UserProfileDialog = ({}) => {
                                 className={cn(
                                     "w-full justify-start text-left font-normal",
                                     !profileData.dob && "text-muted-foreground"
-                                    // errors.dob && "border-red-500" // dobError removed, specific error for dob format/range not typical here
                                 )}
                                 onClick={() => setCalendarOpen(!calendarOpen)}
                             >
@@ -595,19 +648,10 @@ export const UserProfileDialog = ({}) => {
                                 <div className="absolute z-50 right-1 bottom-1 mb-1 bg-white rounded-2xl shadow-md">
                                     <Calendar
                                         mode="single"
-                                        selected={
-                                            profileData.dob &&
-                                            new Date(profileData.dob)
-                                        }
-                                        onSelect={(date) => {
-                                            handleDateChange(date);
-                                            setCalendarOpen(false);
-                                        }}
+                                        selected={profileData.dob && new Date(profileData.dob)}
+                                        onSelect={handleDateChange}
                                         disabled={(date) => {
-                                            // Disable future dates
                                             if (date > new Date()) return true;
-
-                                            // Disable dates for users under minimum age (13)
                                             const minAge = 13;
                                             const today = new Date();
                                             const minAgeDate = new Date(
@@ -616,8 +660,6 @@ export const UserProfileDialog = ({}) => {
                                                 today.getDate()
                                             );
                                             if (date > minAgeDate) return true;
-
-                                            // Disable unreasonably old dates
                                             const maxAge = 120;
                                             const maxAgeDate = new Date(
                                                 today.getFullYear() - maxAge,
@@ -625,17 +667,12 @@ export const UserProfileDialog = ({}) => {
                                                 today.getDate()
                                             );
                                             if (date < maxAgeDate) return true;
-
                                             return false;
                                         }}
                                         className="p-3 pointer-events-auto"
                                     />
                                 </div>
                             )}
-                            {/* {dobError && ( // Removed
-      <p className="text-red-500 text-xs mt-1">{dobError}</p>
-    )} */}
-                            {/* errors.dob could be used if specific dob validation is added to validateField */}
                         </div>
                     </div>
                     {/* Pronouns */}

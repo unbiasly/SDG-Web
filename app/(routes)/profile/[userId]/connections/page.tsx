@@ -416,59 +416,75 @@ export default function Page({ params }: ConnectionsPageProps) {
                         {(activeFollowTab === "followers"
                             ? followers
                             : following
-                        ).map((user) => (
-                            <div
-                                key={user._id}
-                                className="flex items-center justify-between p-4"
-                            >
-                                <Link
-                                    href={`/profile/${user._id}`}
-                                    className="flex items-center flex-1"
-                                >
-                                    <ProfileAvatar
-                                        src={user.profileImage}
-                                        alt={user.name || user.username}
-                                        size="sm"
-                                        className="rounded-full mr-3 object-cover"
-                                    />
-                                    <div>
-                                        <h3 className="font-bold hover:underline">
-                                            {user.name || user.email}
-                                        </h3>
-                                        <p className="text-gray-600 hover:underline">
-                                            @{user.username}
-                                        </p>
-                                    </div>
-                                </Link>
-                                {/* <button
-                                    onClick={() => handleFollowToggle(user)}
-                                    className={`font-medium py-2 px-6 rounded-full transition-colors ${
-                                        user.following 
-                                        ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                                        : 'bg-blue-700 text-white hover:bg-blue-800'
-                                    }`}
-                                    disabled={followMutation.isPending}
+                        ).length === 0 ? (
+                            <div className="p-8 text-center text-gray-500">
+                                <p className="text-lg">
+                                    {activeFollowTab === "followers" 
+                                        ? "No followers yet" 
+                                        : "Not following anyone yet"}
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                {(activeFollowTab === "followers"
+                                    ? followers
+                                    : following
+                                ).map((user) => (
+                                    <div
+                                        key={user._id}
+                                        className="flex items-center justify-between p-4"
                                     >
-                                    {followMutation.isPending && followMutation.variables?.targetUserId === user._id
-                                        ? 'Unfollow...'
-                                        : user.following ? 'Following' : 'Follow'}
-                                    </button> */}
-                            </div>
-                        ))}
+                                        <Link
+                                            href={`/profile/${user._id}`}
+                                            className="flex items-center flex-1"
+                                        >
+                                            <ProfileAvatar
+                                                src={user.profileImage}
+                                                alt={user.name || user.username}
+                                                userName={user.name || user.username}
+                                                size="sm"
+                                                className="rounded-full mr-3 object-cover"
+                                            />
+                                            <div>
+                                                <h3 className="font-bold hover:underline">
+                                                    {user.name || user.email}
+                                                </h3>
+                                                <p className="text-gray-600 hover:underline">
+                                                    @{user.username}
+                                                </p>
+                                            </div>
+                                        </Link>
+                                        {/* <button
+                                            onClick={() => handleFollowToggle(user)}
+                                            className={`font-medium py-2 px-6 rounded-full transition-colors ${
+                                                user.following 
+                                                ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                                                : 'bg-blue-700 text-white hover:bg-blue-800'
+                                            }`}
+                                            disabled={followMutation.isPending}
+                                            >
+                                            {followMutation.isPending && followMutation.variables?.targetUserId === user._id
+                                                ? 'Unfollow...'
+                                                : user.following ? 'Following' : 'Follow'}
+                                            </button> */}
+                                    </div>
+                                ))}
 
-                        {/* Load more button */}
-                        {((activeFollowTab === "followers" && hasMoreFollowers) ||
-                            (activeFollowTab === "following" &&
-                                hasMoreFollowing)) && (
-                            <div className="p-4">
-                                <button
-                                    onClick={loadMore}
-                                    disabled={isLoadingMore}
-                                    className="w-full py-3 border border-gray-300 rounded-lg text-blue-600 font-medium hover:bg-gray-50 transition-colors"
-                                >
-                                    {isLoadingMore ? "Loading..." : "Load More"}
-                                </button>
-                            </div>
+                                {/* Load more button */}
+                                {((activeFollowTab === "followers" && hasMoreFollowers) ||
+                                    (activeFollowTab === "following" &&
+                                        hasMoreFollowing)) && (
+                                    <div className="p-4">
+                                        <button
+                                            onClick={loadMore}
+                                            disabled={isLoadingMore}
+                                            className="w-full py-3 border border-gray-300 rounded-lg text-blue-600 font-medium hover:bg-gray-50 transition-colors"
+                                        >
+                                            {isLoadingMore ? "Loading..." : "Load More"}
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 )}

@@ -36,6 +36,7 @@ const PersonCard = ({
             >
                 <ProfileAvatar
                     src={user?.profileImage || ""}
+                    userName={user.name || user.username}
                     size="xs"
                     className="mr-4"
                     borderColor="gray-400"

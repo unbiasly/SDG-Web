@@ -88,6 +88,7 @@ const SocialSignIn: React.FC<SocialSignInProps> = ({
                             refreshToken: data.refreshToken,
                             sessionId: data.sessionId,
                             userId: data.userId,
+                            ...(data.role_type && { role_type: data.role_type }),
                         }),
                         credentials: "include",
                     });
@@ -96,7 +97,7 @@ const SocialSignIn: React.FC<SocialSignInProps> = ({
 
                     if (cookieResponse.ok) {
                         // toast.success("You are now logged in.");
-                        router.push("/");
+                        router.push("/onboarding");
                     } else {
                         toast.error(cookieData?.error || cookieData?.message);
                     }

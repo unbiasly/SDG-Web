@@ -26,6 +26,7 @@ import { useQueryClient } from "@tanstack/react-query";
 const VideoPageClient = ({ videoId }: { videoId: string }) => {
     const { user } = useUser();
     const [data, setData] = useState<SDGVideoDetails | null>(null);
+    const [mounted, setMounted] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLiked, setIsLiked] = useState(data?.isLiked);
@@ -34,6 +35,7 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
     const [commentText, setCommentText] = useState("");
     const [shareOpen, setShareOpen] = useState(false);
     const [commentSubmitted, setCommentSubmitted] = useState(false);
+    const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
     // Detect mobile for better touch handling
     const isMobile = useMediaQuery("(max-width: 768px)");
@@ -56,9 +58,12 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
         },
     };
 
-    const fetchVideoById = async () => {
+    const fetchVideoById = async (showLoading = true) => {
         try {
-            setIsLoading(true);
+            // Only show loading state if requested and not mounted yet
+            if (showLoading && !mounted) {
+                setIsLoading(true);
+            }
             const response = await fetch("/api/video/single", {
                 method: "POST",
                 headers: {
@@ -83,7 +88,10 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
         } catch (error) {
             console.error("Error fetching video:", error);
         } finally {
-            setIsLoading(false);
+            // Only update loading state if requested and not mounted yet
+            if (showLoading && !mounted) {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -152,7 +160,9 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
     };
 
     const handleCommentSubmit = async () => {
-        if (!commentText.trim()) return;
+        if (!commentText.trim() || isSubmittingComment) return;
+
+        setIsSubmittingComment(true);
 
         try {
             const response = await fetch(`/api/video`, {
@@ -170,14 +180,20 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
             if (response.ok) {
                 setCommentText("");
                 setCommentSubmitted(prev => !prev);
+                
+                // Fetch updated data without showing loading
+                await fetchVideoById(false);
+                
             }
         } catch (error) {
             console.error("Error submitting comment:", error);
+        } finally {
+            setIsSubmittingComment(false);
         }
     };
 
     const handleCommentKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter" && !e.shiftKey) {
+        if (e.key === "Enter" && !e.shiftKey && !isSubmittingComment) {
             e.preventDefault();
             handleCommentSubmit();
         }
@@ -196,11 +212,35 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
         setShareOpen(true);
     };
 
-    useEffect(() => {
+    const [error, setError] = useState<string | null>(null);
+// At top of your component, add an error state
+
+useEffect(() => {
+    try {
         if (videoId) {
             fetchVideoById();
         }
-    }, [videoId, user?._id, commentSubmitted]);
+    } catch (error) {
+        console.error("Error fetching video by ID:", error);
+        setError("Failed to load video. Please try again.");
+        setIsLoading(false);
+    } finally {
+        setMounted(true);
+    }
+}, [videoId, user?._id]);
+
+// Before your loading/UI logic, handle the error
+if (error) {
+    return (
+        <div className="w-full min-h-screen flex justify-center items-center">
+            <div className="text-xl text-red-500">{error}</div>
+        </div>
+    );
+}
+
+if (isLoading) {
+    // ...existing loading indicator...
+}
 
     if (isLoading) {
         return (
@@ -214,7 +254,7 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
 
     return (
         <div 
-            className="w-full max-h-screen"
+            className="w-full max-h-screen hidden-scrollbar"
             style={{
                 // Ensure proper touch scrolling on iOS
                 WebkitOverflowScrolling: 'touch',
@@ -420,6 +460,7 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                         <div className="flex items-start gap-2 sm:gap-3 mb-4 sm:mb-6">
                             <ProfileAvatar
                                 src={user?.profileImage || ""}
+                                userName={user?.name || user?.username}
                                 size="xs"
                             />
                             <div className="flex-1 flex flex-row sm:items-center gap-2">
@@ -430,6 +471,7 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                                     value={commentText}
                                     onChange={(e) => setCommentText(e.target.value)}
                                     onKeyPress={handleCommentKeyPress}
+                                    disabled={isSubmittingComment}
                                     style={{ 
                                         touchAction: 'manipulation',
                                         fontSize: isMobile ? '16px' : 'inherit' // Prevent zoom on iOS
@@ -438,10 +480,10 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                                 <Button
                                     className="ml-auto sm:ml-2 text-sm sm:text-base py-2 px-3 sm:px-4 hover:bg-accent rounded-full touch-manipulation"
                                     onClick={handleCommentSubmit}
-                                    disabled={!commentText.trim()}
+                                    disabled={!commentText.trim() || isSubmittingComment}
                                     style={{ touchAction: 'manipulation' }}
                                 >
-                                    Post
+                                    {isSubmittingComment ? "Posting..." : "Post"}
                                 </Button>
                             </div>
                         </div>
@@ -453,6 +495,7 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                                     <div key={index} className="flex gap-3 mb-4">
                                         <ProfileAvatar
                                             src={comment.user_id.profileImage || ""}
+                                            userName={comment.user_id.name || comment.user_id.username}
                                             size="xs"
                                         />
                                         <div className="flex flex-col">
@@ -463,7 +506,7 @@ const VideoPageClient = ({ videoId }: { videoId: string }) => {
                                                     style={{ touchAction: 'manipulation' }}
                                                 >
                                                     <span className="font-semibold hover:underline">
-                                                        {comment.user_id.name}
+                                                        {comment.user_id.name || `@${comment.user_id.username}`}
                                                     </span>
                                                 </Link>
                                             </div>

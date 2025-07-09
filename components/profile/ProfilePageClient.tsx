@@ -1,12 +1,15 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Camera, Eye, LinkIcon } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Camera, Eye, FileUp, LinkIcon, Plus, X } from "lucide-react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import ProfileAnalyticsCard from "@/components/profile/ProfileAnalyticsCard";
 import {
     PROFILE_ANALYTICS,
-    PROFILE_TABS,
+    USER_PROFILE_TABS,
+    SOCIETY_PROFILE_TABS,
+    SOCIETY_ADMIN_PROFILE_TABS,
 } from "@/lib/constants/index-constants";
 import { useUser } from "@/lib/redux/features/user/hooks";
 import {
@@ -15,6 +18,7 @@ import {
     PostsFetchResponse,
     UserData,
     Experience,
+    Event,
 } from "@/service/api.interface";
 import { PostCard } from "@/components/feed/PostCard";
 import { UserProfileDialog } from "@/components/userDataDialogs/ProfileDialog";
@@ -34,24 +38,34 @@ import ProfileImageView from "./ProfileImageView";
 import BackgroundImageView from "./BackgroundImageView";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { AppApi } from "@/service/app.api";
+import { CreateEvent } from "../events/EventCreateForm";
+import CompleteProfileForm from "./CompleteProfileForm";
+import SocietyMemberCard from "../society/SocietyMemberCard";
+import SocietyRequestCard from "../society/SocietyRequestCard";
+import ProfileEventCard from "../events/ProfileEventCard";
+import { Button } from "../ui/button";
+import { toast } from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { AddMemberForm } from "../society/AddMemberForm";
 
 const ProfilePageClient = ({ userId }: { userId: string }) => {
     // Initialize activeProfileTab from localStorage or default to "about"
     const [activeProfileTab, setActiveProfileTab] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('activeProfileTab') || "about";
+        if (typeof window !== "undefined") {
+            return localStorage.getItem("activeProfileTab") || "about";
         }
         return "about";
     });
-    const [posts, setPosts] = useState<PostsFetchResponse>();
+
+    const [events, setEvents] = useState<Event[]>([]);
     const [profileUser, setProfileUser] = useState<UserData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
     const [analytics, setAnalytics] = useState<AnalyticsResponseData | null>(
         null
     );
     const [isFollowingActive, setIsFollowingActive] = useState(false);
-    const [isProfileImageViewOpen, setIsProfileImageViewOpen] =
-        useState(false);
+    const [isProfileImageViewOpen, setIsProfileImageViewOpen] = useState(false);
     const [isBackgroundImageViewOpen, setIsBackgroundImageViewOpen] =
         useState(false);
 
@@ -71,11 +85,115 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
     const [selectedExperienceIndex, setSelectedExperienceIndex] = useState<
         number | undefined
     >(undefined);
+    const [isUploadingCSV, setIsUploadingCSV] = useState(false);
+
+    const queryClient = useQueryClient();
 
     const { user } = useUser();
-    const isOwnProfile = user?._id === profileUser?._id; // Strict equality for ID comparison
-    const isSmallScreen = useMediaQuery("(max-width: 768px)"); // md breakpoint
-    const avatarSize = isSmallScreen ? "lg" : "xl"; // Adjust avatar size based on screen width
+    const isOwnProfile = user?._id === profileUser?._id;
+    const isSmallScreen = useMediaQuery("(max-width: 768px)");
+    const avatarSize = isSmallScreen ? "lg" : "xl";
+    const isSocietyProfile = useMemo(
+        () => profileUser?.role_slug === "sdg-society",
+        [profileUser]
+    );
+
+    // Infinite query for user posts
+    const {
+        data: postsData,
+        fetchNextPage: fetchNextPostsPage,
+        hasNextPage: hasNextPostsPage,
+        isFetchingNextPage: isFetchingNextPostsPage,
+        isLoading: isLoadingPosts,
+        isError: isPostsError,
+        refetch: refetchPosts,
+    } = useInfiniteQuery({
+        queryKey: ["userPosts", userId],
+        queryFn: async ({ pageParam = "" }) => {
+            const response = await AppApi.fetchUserPosts(userId, pageParam);
+            return response.data;
+        },
+        getNextPageParam: (lastPage: any) => {
+            // Return the cursor for the next page, or undefined if no more pages
+            return lastPage?.nextCursor || undefined;
+        },
+        initialPageParam: "",
+        enabled: !!userId,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
+    // Infinite query for society members
+    const {
+        data: membersData,
+        fetchNextPage: fetchNextMembersPage,
+        hasNextPage: hasNextMembersPage,
+        isFetchingNextPage: isFetchingNextMembersPage,
+        isLoading: isLoadingMembers,
+        isError: isMembersError,
+    } = useInfiniteQuery({
+        queryKey: ["societyMembers", userId],
+        queryFn: async ({ pageParam = null }) => {
+            const response = await AppApi.getSocietyMembers(
+                30,
+                pageParam as string | null
+            );
+            if (!response.success) {
+                throw new Error(response.error || "Failed to fetch society members");
+            }
+            return response.data;
+        },
+        getNextPageParam: (lastPage: any) => {
+            // Check if there are more pages using the hasMore flag and return nextCursor
+            if (lastPage?.pagination?.hasMore && lastPage?.pagination?.nextCursor) {
+                return lastPage.pagination.nextCursor;
+            }
+            return undefined;
+        },
+        initialPageParam: null,
+        enabled: !!userId && isSocietyProfile && isOwnProfile,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
+    // Infinite Query for Society Requests
+    const {
+        data: requestsData,
+        fetchNextPage: fetchNextRequestsPage,
+        hasNextPage: hasNextRequestsPage,
+        isFetchingNextPage: isFetchingNextRequestsPage,
+    } = useInfiniteQuery({
+        queryKey: ["societyRequests", userId],
+        queryFn: async ({ pageParam = "" }) => {
+            const response = await AppApi.getSocietyRequests(
+                30,
+                pageParam as string
+            );
+            return response.data;
+        },
+        getNextPageParam: (lastPage: any) => {
+            // Return the cursor for the next page, or undefined if no more pages
+            return lastPage?.nextCursor || undefined;
+        },
+        initialPageParam: "",
+        enabled: !!userId && isSocietyProfile && isOwnProfile,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
+    // Flatten the paginated data
+    const allPosts = useMemo(() => {
+        return postsData?.pages.flatMap((page: any) => page?.data || []) || [];
+    }, [postsData]);
+
+    const allMembers = useMemo(() => {
+        return (
+            membersData?.pages.flatMap((page: any) => page?.data || []) || []
+        );
+    }, [membersData]);
+
+    const allRequests = useMemo(() => {
+        return (
+            requestsData?.pages.flatMap((page: any) => page?.data || []) || []
+        );
+    }, [requestsData]);
 
     // Fetch user data by userId
     const fetchUserById = async (id: string) => {
@@ -99,18 +217,6 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             return null;
         } finally {
             setIsLoading(false);
-        }
-    };
-
-    const getUserPosts = async (userId: string) => {
-        try {
-            const postsResponse = await AppApi.fetchUserPosts(userId);
-            const postsData = await postsResponse.data;
-            setPosts(postsData);
-            return postsData;
-        } catch (error) {
-            console.error("Post Fetch Error \n", error);
-            return null;
         }
     };
 
@@ -162,36 +268,49 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
         }
     };
 
+    const getSocietyEvents = async () => {
+        try {
+            const response = await AppApi.getEvents("event", undefined, userId);
+            const eventsData = await response.data;
+            setEvents(eventsData.data);
+            return eventsData;
+        } catch (error) {
+            console.error("Failed to fetch society events:", error);
+            return null;
+        }
+    };
+
     // Effect for fetching core user data and tracking profile view
     useEffect(() => {
-        if (user?._id && user._id !== userId) {
-            // Ensure user exists and it's not own profile
-            trackProfileView(userId);
-        }
-        // Only run initialization once
-        fetchUserById(userId);
-        getUserPosts(userId);
-        window.scrollTo(0, 0); // Scroll to top on profile load
-        {
-            !isOwnProfile && trackProfileView(userId);
-        }
-    }, [profileUser?._id]); // Add userId to dependencies to reset state when it changes
-    
+        const fetchData = async () => {
+            // Track profile view if not own profile
+            if (user?._id && user._id !== userId) {
+                trackProfileView(userId);
+            }
+
+            // Fetch user data
+            const userData = await fetchUserById(userId);
+
+            getSocietyEvents();
+        };
+
+        fetchData();
+        window.scrollTo(0, 0);
+    }, [userId, user?._id]);
+
     // Save activeProfileTab to localStorage whenever it changes
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('activeProfileTab', activeProfileTab);
+        if (typeof window !== "undefined" && !isSocietyProfile) {
+            localStorage.setItem("activeProfileTab", activeProfileTab);
         }
-    }, [activeProfileTab]);
-    
+    }, [activeProfileTab, isSocietyProfile]);
+
     useEffect(() => {
         getAnalytics();
-    }
-    , [isFollowingActive]);
+    }, [isFollowingActive]);
 
     useEffect(() => {
         const handleUserUpdate = (event: CustomEvent) => {
-            // Update local state with the new user data
             setProfileUser(event.detail);
         };
 
@@ -206,8 +325,12 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                 handleUserUpdate as EventListener
             );
         };
-    }, []); // This listener is for global updates, keep it simple.
- 
+    }, []);
+
+    // Function to refresh posts after update
+    const handlePostUpdate = () => {
+        refetchPosts();
+    };
 
     // Function to open dialog for adding new education
     const handleAddEducation = () => {
@@ -220,23 +343,6 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
         setSelectedEducation(education);
         setSelectedEducationIndex(index);
         setEducationDialogOpen(true);
-    };
-
-    // Function to handle saving education data
-    const handleSaveEducation = async (
-        education: Education,
-        id?: string,
-        isDeleted?: boolean
-    ) => {
-        // This function is called AFTER the dialog has successfully updated the backend
-        // AND dispatched 'user-profile-updated' event.
-        // 'profileUser' state is already (or about to be) updated by the event listener.
-        // No need to call fetchUserById or manually update profileUser here.
-        console.log("EducationDialog onSave callback in ProfilePageClient:", {
-            education,
-            id,
-            isDeleted,
-        });
     };
 
     // Function to open dialog for adding new experience
@@ -252,20 +358,58 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
         setExperienceDialogOpen(true);
     };
 
-    // Function to handle saving experience data
-    const handleSaveExperience = async (
-        experience: Experience,
-        id?: string,
-        isDeleted?: boolean
-    ) => {
-        // This function is called AFTER the dialog has successfully updated the backend
-        // AND dispatched 'user-profile-updated' event.
-        // 'profileUser' state is already (or about to be) updated by the event listener.
-        // No need to call fetchUserById or manually update profileUser here.
-        console.log(
-            "ExperienceDialog onSuccess callback in ProfilePageClient:",
-            { experience, id, isDeleted }
-        );
+    // Handle CSV file upload
+    const handleCSVUpload = async (file: File) => {
+        if (!file) return;
+
+        // Validate file type
+        if (!file.name.endsWith(".csv")) {
+            toast.error("Please select a valid CSV file");
+            return;
+        }
+
+        // Validate file size (e.g., max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("File size should be less than 5MB");
+            return;
+        }
+
+        setIsUploadingCSV(true);
+
+        try {
+            // Call the API to upload CSV
+            const response = await AppApi.addSocietyMember(
+                undefined,
+                file
+            );
+
+            if (response.success) {
+                toast.success(
+                    "CSV uploaded successfully! Members have been added."
+                );
+
+                // Invalidate and refetch the society members query
+                queryClient.invalidateQueries({
+                    queryKey: ["societyMembers"],
+                    exact: false,
+                });
+
+                // Clear the file input
+                const fileInput = document.getElementById(
+                    "csv-upload"
+                ) as HTMLInputElement;
+                if (fileInput) {
+                    fileInput.value = "";
+                }
+            } else {
+                toast.error(response.error || "Failed to upload CSV file");
+            }
+        } catch (error) {
+            console.error("Error uploading CSV:", error);
+            toast.error("An error occurred while uploading the CSV file");
+        } finally {
+            setIsUploadingCSV(false);
+        }
     };
 
     // Show loading state while fetching profile data
@@ -289,8 +433,7 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
     return (
         <div className="w-full flex flex-1 flex-col border-gray-300 rounded-2xl border-1 mb-5">
             {/* Header with gray background */}
-            {/* Standard Profile Background Banner Height = 201px */}
-            <div className="h-full aspect-[4/1] rounded-t-xl relative overflow-hidden cursor-pointer" >
+            <div className="h-full aspect-[4/1] rounded-t-xl relative overflow-hidden cursor-pointer">
                 {profileUser?.profileBackgroundImage ? (
                     <Image
                         src={
@@ -315,20 +458,24 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                         onClick={() => setIsBackgroundImageViewOpen(true)}
                     />
                 )}
-                <div onClick={(e) => e.stopPropagation()}>{isOwnProfile && <BackgroundImageDialog />}</div>
+                <div onClick={(e) => e.stopPropagation()}>
+                    {isOwnProfile && <BackgroundImageDialog />}
+                </div>
             </div>
+
             {/* Profile header */}
             <div className="flex justify-between -mt-15 md:-mt-20 items-end px-6">
-                <div
-                    className="relative cursor-pointer"
-                >
+                <div className="relative cursor-pointer">
                     <ProfileAvatar
                         size={avatarSize}
                         src={profileUser?.profileImage || ""}
+                        userName={profileUser?.name || profileUser?.username}
                         alt="Profile"
                         onClick={() => setIsProfileImageViewOpen(true)}
                     />
-                    <div onClick={(e) => e.stopPropagation()}>{isOwnProfile && <ProfileImageDialog />}</div>
+                    <div onClick={(e) => e.stopPropagation()}>
+                        {isOwnProfile && <ProfileImageDialog />}
+                    </div>
                 </div>
                 {isOwnProfile ? (
                     <UserProfileDialog />
@@ -343,10 +490,11 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                     />
                 )}
             </div>
+
             {/* Main content */}
-            <div className="w-full mx-auto px-4 sm:px-6 relative z-5">
+            <div className="w-full  relative z-5">
                 {/* Profile info */}
-                <div className="mt-6 space-y-1  animate-scale-in">
+                <div className="mt-6 space-y-1 px-6  animate-scale-in">
                     <div className="flex items-center gap-2">
                         <h1 className="text-2xl lg:text-3xl font-bold">
                             {profileUser?.fName && profileUser?.lName
@@ -354,7 +502,9 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                                 : `@${profileUser?.username}`}
                         </h1>
                     </div>
-                    <p className="text-base lg:text-xl">{profileUser?.occupation || ""}</p>
+                    <p className="text-base lg:text-xl">
+                        {profileUser?.occupation || ""}
+                    </p>
                     <p className="text-base lg:text-xl font-semibold">
                         {profileUser?.headline || ""}
                     </p>
@@ -365,14 +515,18 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                             className="flex items-baseline gap-1 cursor-pointer"
                         >
                             <span className="text-profile-text font-semibold hover:underline">
-                                {analytics?.data?.followCounts?.followerCount} Followers</span>
+                                {analytics?.data?.followCounts?.followerCount}{" "}
+                                Followers
+                            </span>
                         </Link>
                         <Link
                             href={`/profile/${profileUser?._id}/connections?tab=following`}
                             className="flex items-baseline gap-1 cursor-pointer"
                         >
                             <span className="text-profile-text font-semibold hover:underline">
-                                {analytics?.data?.followCounts?.followingCount} Following</span>
+                                {analytics?.data?.followCounts?.followingCount}{" "}
+                                Following
+                            </span>
                         </Link>
                     </div>
 
@@ -400,17 +554,36 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                         )}
                     </div>
                 </div>
+                <div className="flex  mt-4">
+                    {/* <div 
+                        className="flex-1 p-4 border-y-1 border-r border-gray-400 cursor-pointer hover:bg-gray-50 transition-colors relative"
+                        onClick={() => console.log("First partition clicked")}
+                    >
+                        <X className="absolute top-2 right-2 h-4 w-4 text-gray-400 hover:text-gray-600" />
+                        <h3 className="font-semibold text-accent">Get Verified!</h3>
+                        <p className="text-sm text-gray-600">Go Official: Verify Your Account Now</p>
+                    </div> */}
+                    {!profileUser?.roleRequested && (
+                        <CompleteProfileForm role={profileUser.role_slug} />
+                    )}
+                </div>
 
                 {/* Tabs */}
                 <ProfileTabs
-                    tabs={PROFILE_TABS}
+                    tabs={
+                        isSocietyProfile
+                            ? isOwnProfile
+                                ? SOCIETY_ADMIN_PROFILE_TABS
+                                : SOCIETY_PROFILE_TABS
+                            : USER_PROFILE_TABS
+                    }
                     activeTab={activeProfileTab}
                     onChange={setActiveProfileTab}
                     className="mt-4"
                 />
 
                 {/* Tab content */}
-                <div className="mt-6 ">
+                <div className="mt-6 px-4">
                     {activeProfileTab === "about" && (
                         <div className="space-y-8  animate-fade-in">
                             {/* Analytics section - only show for own profile */}
@@ -430,18 +603,34 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                                         {PROFILE_ANALYTICS.map(
                                             (analyticsItem) => {
                                                 let count = 0;
-                                                if (analyticsItem.type === "views") {
-                                                    count = analytics?.data?.analytics?.total_views || 0;
+                                                if (
+                                                    analyticsItem.type ===
+                                                    "views"
+                                                ) {
+                                                    count =
+                                                        analytics?.data
+                                                            ?.analytics
+                                                            ?.total_views || 0;
                                                 } else {
-                                                    count = analytics?.data?.analytics?.total_post_impressions || 0;
+                                                    count =
+                                                        analytics?.data
+                                                            ?.analytics
+                                                            ?.total_post_impressions ||
+                                                        0;
                                                 }
 
                                                 return (
                                                     <ProfileAnalyticsCard
                                                         key={analyticsItem.type}
-                                                        type={analyticsItem.type as | "views" | "impressions"}
+                                                        type={
+                                                            analyticsItem.type as
+                                                                | "views"
+                                                                | "impressions"
+                                                        }
                                                         count={count}
-                                                        description={analyticsItem.description}
+                                                        description={
+                                                            analyticsItem.description
+                                                        }
                                                     />
                                                 );
                                             }
@@ -468,7 +657,6 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                                             className="relative"
                                         >
                                             <ExperienceCard
-                                                // id={exp._id}
                                                 position={exp.role}
                                                 company={exp.company}
                                                 handleEditClick={
@@ -514,10 +702,10 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                                                 handleEditClick={
                                                     isOwnProfile
                                                         ? () =>
-                                                                handleEditEducation(
-                                                                    edu,
-                                                                    index
-                                                                )
+                                                              handleEditEducation(
+                                                                  edu,
+                                                                  index
+                                                              )
                                                         : undefined
                                                 }
                                                 authUser={isOwnProfile}
@@ -535,17 +723,44 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
 
                     {activeProfileTab === "posts" && (
                         <div className="">
-                            {posts?.data && posts.data.length > 0 ? (
-                                posts.data.map((post) => (
-                                    <div key={post._id}>
-                                        <PostCard
-                                            post={post}
-                                            onPostUpdate={() =>
-                                                getUserPosts(userId)
-                                            }
-                                        />
-                                    </div>
-                                ))
+                            {isLoadingPosts ? (
+                                <div className="flex justify-center py-8">
+                                    <Loader />
+                                </div>
+                            ) : isPostsError ? (
+                                <div className="text-center py-12 text-red-500">
+                                    <h3 className="text-xl">
+                                        Error loading posts
+                                    </h3>
+                                </div>
+                            ) : allPosts.length > 0 ? (
+                                <>
+                                    {allPosts.map((post) => (
+                                        <div key={post._id}>
+                                            <PostCard
+                                                post={post}
+                                                onPostUpdate={handlePostUpdate}
+                                            />
+                                        </div>
+                                    ))}
+                                    {hasNextPostsPage && (
+                                        <div className="flex justify-center py-4">
+                                            <button
+                                                onClick={() =>
+                                                    fetchNextPostsPage()
+                                                }
+                                                disabled={
+                                                    isFetchingNextPostsPage
+                                                }
+                                                className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 disabled:opacity-50"
+                                            >
+                                                {isFetchingNextPostsPage
+                                                    ? "Loading..."
+                                                    : "Load More"}
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
                             ) : (
                                 <div className="text-center py-12">
                                     <h3 className="text-xl text-profile-secondary">
@@ -555,6 +770,203 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                             )}
                         </div>
                     )}
+
+                    {isSocietyProfile && activeProfileTab === "events" && (
+                        <div>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-bold">Events</h2>
+                                {isOwnProfile && <CreateEvent />}
+                            </div>
+                            <div>
+                                {events.length > 0 ? (
+                                    events.map((event) => (
+                                        <ProfileEventCard
+                                            event={event}
+                                            key={event._id}
+                                        />
+                                    ))
+                                ) : (
+                                    <div className="text-center py-12">
+                                        <h3 className="text-xl text-profile-secondary">
+                                            No events found
+                                        </h3>
+                                        <p className="text-sm text-gray-500 mt-2">
+                                            Events created by this society will
+                                            appear here
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {isSocietyProfile &&
+                        isOwnProfile &&
+                        activeProfileTab === "members" && (
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-lg font-bold">
+                                        Members
+                                    </h2>
+                                    {isOwnProfile && (
+                                        <AddMemberForm
+                                            onSuccess={() => {
+                                                // Refresh the members list
+                                                queryClient.invalidateQueries({
+                                                    queryKey: [
+                                                        "societyMembers",
+                                                    ],
+                                                    exact: false,
+                                                });
+                                            }}
+                                        />
+                                    )}
+                                </div>
+                                <div>
+                                    {isLoadingMembers ? (
+                                        <div className="flex justify-center py-8">
+                                            <Loader />
+                                        </div>
+                                    ) : isMembersError ? (
+                                        <div className="text-center py-12 text-red-500">
+                                            <h3 className="text-xl">
+                                                Error loading members
+                                            </h3>
+                                        </div>
+                                    ) : allMembers.length > 0 ? (
+                                        <>
+                                            {allMembers.map((member) => (
+                                                <SocietyMemberCard
+                                                    member={member}
+                                                    key={member._id}
+                                                />
+                                            ))}
+                                            {hasNextMembersPage && (
+                                                <div className="flex justify-center py-4">
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => fetchNextMembersPage()}
+                                                        disabled={isFetchingNextMembersPage}
+                                                        className="px-6 py-2"
+                                                    >
+                                                        {isFetchingNextMembersPage ? (
+                                                            <>
+                                                                Loading...
+                                                            </>
+                                                        ) : (
+                                                            "View More Members"
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="text-center py-12">
+                                            <h3 className="text-xl text-profile-secondary">
+                                                No members found
+                                            </h3>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                    {isSocietyProfile &&
+                        isOwnProfile &&
+                        activeProfileTab === "requests" && (
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-lg font-bold">
+                                        Membership Requests
+                                    </h2>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="file"
+                                            accept=".csv"
+                                            onChange={(e) => {
+                                                const file =
+                                                    e.target.files?.[0];
+                                                if (file) {
+                                                    handleCSVUpload(file);
+                                                }
+                                            }}
+                                            className="hidden"
+                                            id="csv-upload"
+                                            disabled={isUploadingCSV}
+                                        />
+                                        <Button
+                                            variant="outline"
+                                            className="flex items-center gap-2"
+                                            onClick={() => {
+                                                if (!isUploadingCSV) {
+                                                    document
+                                                        .getElementById(
+                                                            "csv-upload"
+                                                        )
+                                                        ?.click();
+                                                }
+                                            }}
+                                            disabled={isUploadingCSV}
+                                        >
+                                            <FileUp
+                                                className={
+                                                    isUploadingCSV
+                                                        ? "animate-spin"
+                                                        : ""
+                                                }
+                                            />
+                                            {isUploadingCSV
+                                                ? "Uploading..."
+                                                : "Upload CSV"}
+                                        </Button>
+                                    </div>
+                                </div>
+                                <div>
+                                    {isFetchingNextRequestsPage &&
+                                    allRequests.length === 0 ? (
+                                        <div className="flex justify-center py-8">
+                                            <Loader />
+                                        </div>
+                                    ) : allRequests.length > 0 ? (
+                                        <>
+                                            {allRequests.map((request) => (
+                                                <SocietyRequestCard
+                                                    key={request._id}
+                                                    request={request}
+                                                />
+                                            ))}
+                                            {hasNextRequestsPage && (
+                                                <div className="flex justify-center py-4">
+                                                    <button
+                                                        onClick={() =>
+                                                            fetchNextRequestsPage()
+                                                        }
+                                                        disabled={
+                                                            isFetchingNextRequestsPage
+                                                        }
+                                                        className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 disabled:opacity-50"
+                                                    >
+                                                        {isFetchingNextRequestsPage
+                                                            ? "Loading..."
+                                                            : "Load More"}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="text-center py-12">
+                                            <h3 className="text-xl text-profile-secondary">
+                                                No pending requests
+                                            </h3>
+                                            <p className="text-sm text-gray-500 mt-2">
+                                                All membership requests will
+                                                appear here
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                 </div>
             </div>
 
@@ -563,10 +975,9 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                 <EducationDialog
                     open={educationDialogOpen}
                     onOpenChange={setEducationDialogOpen}
-                    onSave={handleSaveEducation}
+                    onSave={() => console.log("Education saved")}
                     education={selectedEducation}
-                    currentEducations={profileUser?.education} // Pass current educations
-                    //   id={selectedEducation?._id}
+                    currentEducations={profileUser?.education}
                 />
             )}
 
@@ -575,10 +986,9 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
                 <ExperienceDialog
                     open={experienceDialogOpen}
                     onOpenChange={setExperienceDialogOpen}
-                    onSuccess={handleSaveExperience}
+                    onSuccess={() => console.log("Experience saved")}
                     experience={selectedExperience}
-                    currentExperiences={profileUser?.experience} // Pass current experiences
-                    //   index={selectedExperienceIndex}
+                    currentExperiences={profileUser?.experience}
                 />
             )}
 
@@ -590,9 +1000,10 @@ const ProfilePageClient = ({ userId }: { userId: string }) => {
             <BackgroundImageView
                 open={isBackgroundImageViewOpen}
                 onOpenChange={setIsBackgroundImageViewOpen}
-                imageUrl={profileUser?.profileBackgroundImage || "/Profile-BG.png"}
+                imageUrl={
+                    profileUser?.profileBackgroundImage || "/Profile-BG.png"
+                }
             />
-
         </div>
     );
 };

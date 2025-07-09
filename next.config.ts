@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-
   images: {
     remotePatterns: [
       {
@@ -46,14 +45,24 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  webpack(config) {
-    // Configure webpack to handle SVG files
+  webpack(config, { isServer }) {
+    // Configure webpack to handle SVG files as React components
     config.module.rules.push({
       test: /\.svg$/,
       use: ['@svgr/webpack'],
     });
 
     return config;
+  },
+  experimental: {
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
   },
 };
 

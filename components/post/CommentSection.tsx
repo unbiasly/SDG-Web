@@ -143,7 +143,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         <div className={cn("border-t border-gray-200 pt-3", className)}>
             {/* Comment input area */}
             <div className="flex gap-3 mb-4">
-                <ProfileAvatar src={user?.profileImage || ""} size="xs" />
+                <ProfileAvatar src={user?.profileImage || ""} size="xs" userName={user?.name || user?.username} />
                 <div className="flex-1 flex items-center relative">
                     <input
                         type="text"
@@ -225,8 +225,8 @@ const Comment: React.FC<CommentProps> = ({
 }) => {
     return (
         <div className={cn("flex gap-3 py-4", className)}>
-            
-            <ProfileAvatar src={userAvatar} size="xs" />
+
+            <ProfileAvatar src={userAvatar} size="xs" userName={userName} />
 
             <div className="flex-1">
                 <div className="flex justify-between items-start">
