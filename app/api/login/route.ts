@@ -15,15 +15,11 @@ export async function POST(request: NextRequest) {
         });
 
         const data = await response.json();
-        console.log('Login response:', data);
 
         return NextResponse.json(
+            data,
             {
-                success: false,
-                message: 'Internal server error'
-            },
-            {
-                status: 500,
+                status: response.status,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -31,7 +27,7 @@ export async function POST(request: NextRequest) {
         );
     } catch (error) {
         console.error('Login error:', error);
-        return Response.json(
+        return NextResponse.json(
             {
                 success: false,
                 message: 'Internal server error'
@@ -43,7 +39,6 @@ export async function POST(request: NextRequest) {
                 }
             }
         );
-        
     }
 }
 
