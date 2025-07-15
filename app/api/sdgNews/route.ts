@@ -48,11 +48,6 @@ export async function PATCH(req: NextRequest) {
             body: JSON.stringify(body), // Pass body only if it's defined
         });
         
-        // if (!response.ok) {
-        //     const errorText = await response.text(); // Get the response text for better error handling
-        //     throw new Error(`Failed to fetch newss: ${response.status} ${response.statusText} - ${errorText}`);
-        // }
-        
         const data = await response.json();
         console.log('Newss data:', data);
         

@@ -4,11 +4,19 @@
  * Also prevents navigation to auth pages when user is logged in
  */
 export const setupAPIInterceptor = () => {
+    // Prevent multiple interceptor setups
+    if (window.fetch !== fetch) {
+        console.warn("API interceptor already set up");
+        return;
+    }
+
     const originalFetch = window.fetch;
 
     // Interface for queued requests
     interface QueuedRequest {
         request: () => Promise<Response>;
+        resolve: (response: Response) => void;
+        reject: (error: any) => void;
     }
     
     // Request queue for handling 401 responses
@@ -47,16 +55,21 @@ export const setupAPIInterceptor = () => {
 
     // Function to process queued requests after token refresh
     const processQueue = async (success: boolean) => {
-        if (success) {
-            await Promise.all(
-                requestQueue.map(({ request }) =>
-                    request().catch((error) => {
-                        console.error("Error processing queued request:", error);
-                    })
-                )
-            );
+        while (requestQueue.length > 0) {
+            const { request, resolve, reject } = requestQueue.shift()!;
+            
+            if (success) {
+                try {
+                    const response = await request();
+                    resolve(response);
+                } catch (error) {
+                    reject(error);
+                }
+            } else {
+                // If token refresh failed, reject all queued requests
+                reject(new Error('Token refresh failed'));
+            }
         }
-        requestQueue.length = 0;
     };
 
     // Function to prevent navigation to auth pages
@@ -152,19 +165,14 @@ export const setupAPIInterceptor = () => {
     }
 
     // Original fetch interceptor logic
-    window.fetch = async function (input: URL | RequestInfo, init?: RequestInit) {
+    window.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
         const executeRequest = () => originalFetch(input, init);
 
         try {
             const response = await executeRequest();
-            const clonedResponse = response.clone();
-
-            // Enhanced session validation on response
-            if (
-                clonedResponse.status === 403 ||
-                clonedResponse.status === 401
-            ) {
-                // Clear all authentication data immediately
+            
+            // Don't clone response unnecessarily - causes issues
+            if (response.status === 403) {
                 try {
                     await originalFetch("/api/logout", { method: "POST" });
                 } catch (error) {
@@ -176,47 +184,21 @@ export const setupAPIInterceptor = () => {
                 return response;
             }
 
-            // Additional check for expired sessions in response body
-            if (clonedResponse.ok) {
-                try {
-                    const responseData = await clonedResponse.clone().json();
-                    if (
-                        responseData &&
-                        (responseData.code === "SESSION_EXPIRED" ||
-                            responseData.message?.includes("session"))
-                    ) {
-                        try {
-                            await originalFetch("/api/logout", {
-                                method: "POST",
-                            });
-                        } catch (error) {
-                            console.error("Error during logout:", error);
-                        }
-                        window.location.href = "/login";
-                        return response;
-                    }
-                } catch (error) {
-                    // Not JSON response, continue normally
-                    console.debug("Failed to parse response as JSON:", error);
+            // Handle 401 responses with token refresh - PREVENT LOOPS
+            if (response.status === 401) {
+                // IMPORTANT: Don't intercept refresh token requests
+                const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+                if (url.includes('/api/refreshToken') || url.includes('/api/logout')) {
+                    return response;
                 }
-            }
 
-            // Handle 401 responses with token refresh
-            if (clonedResponse.status === 401) {
                 // If we're already refreshing, queue this request
                 if (refreshState.isRefreshing) {
-                    return new Promise((resolve, reject) => {
+                    return new Promise<Response>((resolve, reject) => {
                         requestQueue.push({
-                            request: () =>
-                                executeRequest()
-                                    .then((response) => {
-                                        resolve(response);
-                                        return response;
-                                    })
-                                    .catch((error) => {
-                                        reject(error);
-                                        throw error;
-                                    }),
+                            request: executeRequest,
+                            resolve,
+                            reject
                         });
                     });
                 }
@@ -243,29 +225,29 @@ export const setupAPIInterceptor = () => {
                     });
 
                     if (res.ok) {
-                        // Token refresh successful, retry the original request and process queue
                         refreshState.isRefreshing = false;
                         await processQueue(true);
-                        return executeRequest();
-                    } else if (res.status === 401) {
-                        console.warn("Session expired or refresh failed");
+                        return await executeRequest();
+                    } else {
                         refreshState.isRefreshing = false;
                         await processQueue(false);
+                        
                         try {
-                            await originalFetch("/api/logout", {
-                                method: "POST",
-                            });
+                            await originalFetch("/api/logout", { method: "POST" });
                             window.location.href = "/login";
                         } catch (error) {
                             console.error("Error during logout:", error);
                         }
-                    } else {
-                        refreshState.isRefreshing = false;
-                        await processQueue(false); // Still try to process queue on other errors
+                        
+                        return response;
                     }
                 } catch (err) {
                     console.error("Token refresh error:", err);
                     refreshState.isRefreshing = false;
+                    await processQueue(false);
+                    
+                    // Return original response on refresh error
+                    return response;
                 }
             }
 

@@ -26,14 +26,6 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: "Failed to fetch post details" }));
-            return NextResponse.json(
-                { error: errorData.message || "Failed to fetch post details" },
-                { status: response.status }
-            );
-        }
-
         const data = await response.json();
         return NextResponse.json(data);
 

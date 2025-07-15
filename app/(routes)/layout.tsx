@@ -74,12 +74,12 @@ export default function RootLayout({
 
 
     return (
-        <main className="flex flex-col md:flex-row md:gap-3 h-screen max-container">
+        <main className="flex flex-col md:flex-row md:gap-1 h-screen max-container">
             {/* Left Sidebar - Hidden on mobile, visible on desktop */}
-            <aside className="hidden md:block max-w-[250px] lg:flex-1 p-2 space-y-3 overflow-y-auto hidden-scrollbar">
+            <aside className="hidden md:flex max-w-[250px] lg:flex-1 p-2 space-y-3 h-full flex-col">
                 <Link
                     href="/"
-                    className="justify-center items-center gap-2 px-2 hidden lg:flex"
+                    className="justify-start w-full items-center gap-2 px-2 hidden lg:flex flex-shrink-0"
                 >
                     <Image
                         src="/Logo.svg"
@@ -89,7 +89,9 @@ export default function RootLayout({
                     />
                     <h1 className="text-xl font-bold">The SDG Story</h1>
                 </Link>
-                <div className="flex-1"><UserSidebar /></div>
+                <div className="flex-1 min-h-0">
+                    <UserSidebar />
+                </div>
             </aside>
 
             {/* Main Content Area */}
@@ -101,20 +103,18 @@ export default function RootLayout({
                 </header>
 
                 {/* Content */}
-                <div className="flex-1 hidden-scrollbar md:overflow-y-auto p-2 md:pt-2">
+                <div className="flex-1 hidden-scrollbar md:overflow-y-auto md:pt-2">
                     {children}
                 </div>
             </div>
-
-            {/* Right Sidebar - Hidden on mobile and tablet, visible on large screens */}
-            <aside className="hidden max-w-[250px] flex-1 p-2 space-y-3 overflow-hidden lg:flex flex-col">
+            <aside className="hidden max-w-[250px] flex-1 p-2 space-y-3 h-full lg:flex flex-col">
                 <div className="lg:block hidden flex-shrink-0">
                     <SearchBar />
                 </div>
                 <div className="flex-1 min-h-0">
                     <TrendingSection />
                 </div>
-            </aside>
+            </aside>          
         </main>
     );
 }

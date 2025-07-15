@@ -1,9 +1,6 @@
-import { add } from "date-fns";
-import { AddMember, QuestionAnswer } from "./api.interface";
+import { AddMember, MentorRequestData, QuestionAnswer } from "./api.interface";
 
 export const baseURL = process.env.NEXT_PUBLIC_API_URL;
-
-
 
 export const AppApi = {
 
@@ -68,6 +65,46 @@ export const AppApi = {
             }
 
             // Get updated data from API response
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    // Add a separate function for fetching comments
+    fetchComments: async (
+        postId: string,
+        cursor?: string | null,
+        limit: number = 30
+    ) => {
+        try {
+            const response = await fetch(`/api/post/post-action`, {
+                method: "POST", // Keep POST but for fetching comments
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    actionType: "comment",
+                    postId: postId,
+                    ...(cursor && { cursor }),
+                    limit: limit,
+                }),
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
             const data = await response.json();
             return {
                 success: true,
@@ -224,7 +261,7 @@ export const AppApi = {
                 }),
             });
 
-            if (!response.ok) {
+            if (!response.ok && response.status != 401) {
                 return {
                     success: false,
                     error: response.statusText
@@ -744,6 +781,245 @@ export const AppApi = {
                 error: error instanceof Error ? error.message : 'Unknown error'
             };
         }
-    }
+    },
 
+    getMentorshipCategories: async () => {
+        try {
+            const response = await fetch(`/api/mentorship`, {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            // Get updated data from API response
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    getMentors: async (categoryId?: string, mentorId?: string) => {
+        let queryParam;
+        if (categoryId) {
+            queryParam = `categoryId=${categoryId}`;
+        } else if (mentorId) {
+            queryParam = `mentorId=${mentorId}`;
+        }
+        try {
+            const response = await fetch(`/api/mentorship/mentor${queryParam && `?${queryParam}`}`, {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    createMentor: async (payload: MentorRequestData) => {
+        try {
+            const response = await fetch(`/api/mentorship/mentor`, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    getMentorReviews: async (mentorId: string) => {
+        try {
+            const response = await fetch(`/api/mentorship/reviews?mentorId=${mentorId}`, {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    addMentorReview: async (mentorId: string, text: string) => {
+        try {
+            const response = await fetch(`/api/mentorship/reviews`, {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ mentorId, text }),
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    getMentorSlots: async (mentorId: string) => {
+        try {
+            const response = await fetch(`/api/mentorship/slots?mentorId=${mentorId}`, {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    createSlot: async (mentor_id: string, time: Date, duration: number) => {
+        try {
+            const response = await fetch(`/api/mentorship/slots`, {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ mentor_id, time, duration }),
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    bookSlot: async (category_id: string, slot_id: string) => {
+        try {
+            const response = await fetch(`/api/mentorship/slots`, {
+                method: 'PUT',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ category_id, slot_id }),
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
 }

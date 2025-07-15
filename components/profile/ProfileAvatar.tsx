@@ -13,11 +13,13 @@ interface ProfileAvatarProps {
     onClick?: () => void;
     userName?: string;
     borderColor?: string;
+    roundedBorder?: string;
 }
 
 interface UserFallbackProps {
     size: "xs" | "sm" | "md" | "profile" | "lg" | "xl";
     userName?: string;
+    roundedBorder?: string;
 }
 
 const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
@@ -28,7 +30,8 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
     onClick,
     className,
     userName,
-    borderColor = "black",
+    borderColor = "gray-200",
+    roundedBorder = "rounded-full",
 }) => {
     const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -44,7 +47,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
     return (
         <div className={`aspect-square ${sizeClasses[size]} ${className}`}>
             <div
-                className={`relative w-full h-full overflow-hidden rounded-full bg-gray-100 border-2 border-${borderColor} shadow-lg`}
+                className={`relative w-full h-full overflow-hidden ${roundedBorder} bg-gray-100 border-${size === 'lg' || size === 'xl' ? '4' : '2'} border-${borderColor} ${size ==='lg' || size === 'xl' ?  'shadow-xl' : 'shadow-lg'}`}
             >
                 {src ? (
                     <Image
@@ -59,7 +62,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
                         priority
                     />
                 ) : (
-                    <UserFallback size={size} userName={userName} />
+                    <UserFallback size={size} userName={userName} roundedBorder={roundedBorder} />
                 )}
 
                 {editable && (
@@ -75,6 +78,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
 const UserFallback: React.FC<UserFallbackProps> = ({
     size = "sm",
     userName,
+    roundedBorder = "rounded-full",
 }) => {
     const fallbackColor = useAppSelector((state) => state.user.fallbackColor);
 
@@ -89,7 +93,7 @@ const UserFallback: React.FC<UserFallbackProps> = ({
 
     return (
         <div
-            className="w-full h-full flex items-center justify-center rounded-full"
+            className={`w-full h-full flex items-center justify-center ${roundedBorder}`}
             style={{ backgroundColor: fallbackColor }}
         >
             <span className={`${sizeClasses[size]} font-bold text-white`}>

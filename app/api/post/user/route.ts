@@ -12,9 +12,7 @@ export async function POST(req: NextRequest) {
     
 
     try {
-        const response = await fetch(
-          `${baseURL}/post/?user_id=${userId}&limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`,
-          {
+        const response = await fetch(`${baseURL}/post/?user_id=${userId}&limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`,{
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
                 'Content-Type': 'application/json'

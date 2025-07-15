@@ -282,15 +282,15 @@ const EducationFooterContent: React.FC<EducationFooterContentProps> = ({
 interface EducationDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onSave: (education: Education, id?: string, isDeleted?: boolean) => void;
+    onSuccess: () => void; // Changed from onSave with complex parameters
     education?: Education;
-    currentEducations?: Education[]; // Add prop for current educations
+    currentEducations?: Education[];
 }
 
 export const EducationDialog: React.FC<EducationDialogProps> = ({
     open,
     onOpenChange,
-    onSave,
+    onSuccess, // Changed from onSave
     education,
     currentEducations, // Destructure new prop
 }) => {
@@ -566,39 +566,14 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
 
         setIsSubmitting(true);
         try {
-            const updatedUserData = await updateUserWithEducation(false);
+            await updateUserWithEducation(false);
 
-            // Use the custom event to notify the parent component
-            window.dispatchEvent(
-                new CustomEvent("user-profile-updated", {
-                    detail: updatedUserData.data || updatedUserData,
-                })
-            );
-
-            // Prepare the education data with proper "present" handling for the callback
-            const resultEducationData = {
-                ...educationData,
-                endDate: currentlyStudying ? "present" : educationData.endDate,
-            };
-
-            // Call onSave to maintain component's expected behavior
-            if (education?._id) {
-                onSave(resultEducationData, education._id, false);
-            } else {
-                // Try to find the newly added education in the response
-                const newEducation = (
-                    updatedUserData.data?.education || updatedUserData.education
-                )?.find(
-                    (edu: Education) =>
-                        edu.school === educationData.school &&
-                        edu.degree === educationData.degree &&
-                        (!education || education._id !== edu._id)
-                );
-                onSave(resultEducationData, newEducation?._id || "", false);
-            }
-
+            // Close dialog first for immediate feedback
             onOpenChange(false);
             toast.success("Education saved successfully!");
+            
+            // Trigger parent refresh
+            onSuccess();
         } catch (error) {
             console.error("Error saving education:", error);
             toast.error(
@@ -619,20 +594,14 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
 
         setIsSubmitting(true);
         try {
-            const updatedUserData = await updateUserWithEducation(true);
+            await updateUserWithEducation(true);
 
-            // Use the custom event to notify the parent component
-            window.dispatchEvent(
-                new CustomEvent("user-profile-updated", {
-                    detail: updatedUserData.data || updatedUserData,
-                })
-            );
-
-            // Call onSave to maintain component's expected behavior
-            onSave(educationData, education._id, true);
-
+            // Close dialog first for immediate feedback
             onOpenChange(false);
             toast.success("Education deleted successfully!");
+            
+            // Trigger parent refresh
+            onSuccess();
         } catch (error) {
             console.error("Error deleting education:", error);
             toast.error(

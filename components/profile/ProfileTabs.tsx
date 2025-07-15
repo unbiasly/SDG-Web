@@ -20,50 +20,38 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
     onChange,
     className,
 }) => {
-    const [indicatorStyle, setIndicatorStyle] = useState({
-        left: "0px",
-        width: "0px",
-    });
-
-    const tabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
-
-    // Update indicator position when activeTab changes
-    useEffect(() => {
-        const activeTabElement = tabRefs.current[activeTab];
-        if (activeTabElement) {
-            setIndicatorStyle({
-                left: `${activeTabElement.offsetLeft}px`,
-                width: `${activeTabElement.offsetWidth}px`,
-            });
-        }
-    }, [activeTab]);
-
     const tabLength = useMemo(() => tabs.length, [tabs]);
 
     return (
         <div className={cn("relative border-b border-gray-300", className)}>
-            <div className={`flex justify-evenly ${tabLength >= 3 ? "w-full" : "w-1/3"}`}>
-                {tabs.map((tab, index) => (
-                    <React.Fragment key={tab.id}>
-                        <div
-                            className={` py-2  ${
-                                activeTab === tab.id
-                                    ? "border-b-2 font-bold text-accent border-b-accent active"
-                                    : "border-b-2 border-b-transparent"
-                            }`}
-                        >
-                            <button
-                                className="flex justify-start text-base md:text-xl  cursor-pointer"
-                                onClick={() => onChange(tab.id)}
+            <div className="flex w-full overflow-x-auto hidden-scrollbar ">
+                <div className="flex w-full ">
+                    {tabs.map((tab, index) => (
+                        <React.Fragment key={tab.id}>
+                            <div
+                                className={`flex-shrink-0 py-2 ${
+                                    activeTab === tab.id
+                                        ? "border-b-2 fonts-semibold lg:font-bold text-accent border-b-accent active"
+                                        : ""
+                                }`}
+                                // style={{
+                                //     minWidth: `${100 / Math.min(tabLength, 4)}%`,
+                                //     maxWidth: tabLength > 4 ? 'auto' : `${100 / tabLength}%`
+                                // }}
                             >
-                                {tab.label}
-                            </button>
-                        </div>
-                        {index < tabs.length - 1 && (
-                            <div className=" my-1.5 border-r border-l mx-4 border-gray-300 rounded-full"/>
-                        )}
-                    </React.Fragment>
-                ))}
+                                <button
+                                    className="flex justify-center items-center text-base lg:text-xl cursor-pointer w-full px-1 md:px-2 py-1 whitespace-nowrap"
+                                    onClick={() => onChange(tab.id)}
+                                >
+                                    {tab.label}
+                                </button>
+                            </div>
+                            {index < tabs.length - 1 && (
+                                <div className="flex-shrink-0 my-1.5 border-r border-l mx-2 md:mx-4 border-gray-300 rounded-full"/>
+                            )}
+                        </React.Fragment>
+                    ))}
+                </div>
             </div>
         </div>
     );

@@ -46,7 +46,6 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
 }) => {
     // State management
     const [isCommentsOpen, setIsCommentsOpen] = useState(isCommentOpen);
-    const [comments, setComments] = useState<CommentData[]>([]);
     const [localCommentsCount, setLocalCommentsCount] = useState(post?.poststat_id?.comments || 0);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [localLikesCount, setLocalLikesCount] = useState(post?.poststat_id?.likes || 0);
@@ -217,6 +216,8 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
                 queryKey: ["bookmarkedPosts"],
                 exact: false 
             });
+            queryClient.invalidateQueries({ queryKey: ["userPosts", post.user_id._id] });
+            onPostUpdate?.();
 
         } catch (error) {
             console.error("Error updating follow status:", error);
@@ -247,37 +248,14 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
     }, [post?._id, onPostUpdate]);
 
     const toggleComments = useCallback(() => {
-        setIsCommentsOpen(prev => {
-            if (!prev) {
-                getComments();
-            }
-            return !prev;
-        });
-    }, []);
+        setIsCommentsOpen(!isCommentsOpen);
+    }, [isCommentsOpen]);
 
-    const getComments = useCallback(async () => {
-        if (!post?._id) return;
-
-        try {
-            const response = await AppApi.postAction(post._id, "comment", "POST");
-
-            if (!response.success) {
-                throw new Error("Failed to fetch comments");
-            }
-
-            const { data } = await response.data;
-            setComments(data || []);
-        } catch (error) {
-            console.error("Error fetching comments:", error);
-            toast.error("Failed to load comments");
-        }
-    }, [post?._id]);
 
     const handleCommentAdded = useCallback(() => {
-        setLocalCommentsCount(prev => prev + 1);
-        getComments();
+        // getComments();
         onPostUpdate?.();
-    }, [getComments, onPostUpdate]);
+    }, [ onPostUpdate]);
 
     const handleReportSubmitted = useCallback(() => {
         onPostUpdate?.();
@@ -285,8 +263,8 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
 
     const handleImageClick = useCallback(() => {
         setIsDialogOpen(true);
-        getComments();
-    }, [getComments]);
+        // getComments();
+    }, [ isDialogOpen]);
 
     // Memoized menu options
     const menuOptions = useMemo(() => [
@@ -422,7 +400,7 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
                         <div className="flex items-center">
                             <Link href={`/profile/${post.user_id?._id}`}>
                                 <h4 className="font-semibold text-sm hover:underline">
-                                    {post.user_id?.name}
+                                    {post.user_id?.name || `@${post.user_id?.username}`}
                                 </h4>
                             </Link>
                             {isFollowedActive && (
@@ -433,10 +411,10 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
                         </div>
                         <div className="flex items-center text-xs text-gray-500">
                             <Link href={`/profile/${post.user_id?._id}`}>
-                                <span className="hover:underline">@{post.user_id?.username}</span>
+                                <span className="hover:underline">{ post.user_id?.name && `@${post.user_id?.username}`}</span>
                             </Link>
                             <div className="hidden md:block">
-                                <span className="mx-1.5">•</span>
+                                <span className="mx-1.5">-</span>
                                 <span>{formatDate(post?.createdAt)}</span>
                             </div>
                         </div>
@@ -513,7 +491,6 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
                     <CommentSection
                         post_id={post._id}
                         isOpen={isCommentsOpen}
-                        comments={comments}
                         onCommentAdded={handleCommentAdded}
                     />
                 </div>
@@ -619,7 +596,6 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
                                     <CommentSection
                                         post_id={post._id}
                                         isOpen={true}
-                                        comments={comments}
                                         onCommentAdded={handleCommentAdded}
                                     />
                                 </div>

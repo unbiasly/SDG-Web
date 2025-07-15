@@ -23,10 +23,6 @@ export async function POST(req: NextRequest) {
             },
         });
         
-        if (!response.ok) {
-            throw new Error(`Failed to fetch notifications: ${response.status} ${response.statusText}`);
-        }
-        
         const data = await response.json();
         return NextResponse.json(data);
     } catch (error) {

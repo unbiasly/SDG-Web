@@ -572,3 +572,78 @@ export interface AddMember {
     designation: string;
     college: string;
 }
+
+export interface MentorshipCategory {
+    _id: string;
+    name: string;
+    description: string;
+    icon: string;
+}
+
+export interface CategoryMentor{
+    _id: string;
+    user: {
+        _id: string;
+        username: string;
+        name: string;
+        profileImage?: string;
+    };
+    category: string[];
+    shortDesc: string;
+    title: string;
+    name: string;
+    gender: string;
+    slot_duration_in_min: number;
+    slot_per_day: number;
+    availability: string;
+    experience: string;
+    specialization: string;
+    reviewsCount: number;
+    is_verified: boolean;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+}
+
+export interface MentorReview {
+    _id: string;
+    user: {
+        _id: string;
+        username: string;
+        name: string;
+        profileImage?: string;
+    };
+    mentor: string;
+    comment: string;
+    createdAt?: string;
+    updatedAt?: string;
+    __v?: number;
+}
+
+export interface MentorRequestData {
+    user_id: string;
+    category_id?: string;
+    title: string;
+    name: string;
+    shortDesc: string;
+    gender: string;
+    slot_duration_in_min: number;
+    experience: string;
+    slot_per_day: number;
+    availability: Date;
+    specialization: string;    
+}
+
+export interface MentorSlot {
+    _id: string;
+    mentor: string;
+    startTime: string;
+    isBooked: boolean;
+    duration_in_min: number;
+    endTime: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+}

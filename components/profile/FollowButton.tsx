@@ -26,6 +26,8 @@ const FollowButton = ({ targetId, userId, followed, onFollowChange }: FollowButt
                 onFollowChange(true);
             }
             queryClient.invalidateQueries({ queryKey: ["following", userId] });
+            queryClient.invalidateQueries({ queryKey: ["userPosts", targetId] });
+
         }
     }
 
@@ -38,6 +40,7 @@ const FollowButton = ({ targetId, userId, followed, onFollowChange }: FollowButt
                 onFollowChange(false);
             }
             queryClient.invalidateQueries({ queryKey: ["following", userId] });
+            queryClient.invalidateQueries({ queryKey: ["userPosts", targetId] });
         }
     }
 

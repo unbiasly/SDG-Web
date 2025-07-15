@@ -57,13 +57,6 @@ export async function GET(req: NextRequest) {
             },
         });
         
-        if (!response.ok) {
-            return NextResponse.json(
-                { error: `Failed to fetch events: ${response.status}` },
-                { status: response.status }
-            );
-        }
-        
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
@@ -289,12 +282,6 @@ export async function PUT(req: NextRequest) {
             body: requestData
         });
         
-        // Better error logging with await
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Server error response:", errorText);
-            throw new Error(`Failed to update event: ${response.status} ${response.statusText}`);
-        }
         
         // Handle non-JSON responses
         const contentType = response.headers.get("content-type");
@@ -340,13 +327,9 @@ export async function DELETE(req: NextRequest) {
             }
         });
         
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Delete error response:", errorText);
-            return NextResponse.json({ error: `Failed to delete event: ${response.status}` }, { status: response.status });
-        }
-        
-        return NextResponse.json({ message: "Event deleted successfully" });
+        const data = await response.json();
+
+        return NextResponse.json({ message: "Event deleted successfully", data });
     } catch (error) {
         console.error("Error deleting event:", error);
         return NextResponse.json({ error: "Failed to delete event" });

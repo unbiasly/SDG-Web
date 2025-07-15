@@ -9,22 +9,16 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const limit = 30;
     const cursor = searchParams.get('cursor') || '';
+    const type = searchParams.get('type');
     
     try {
         
-        const response = await fetch(`${baseURL}/post/?limit=${limit}&cursor=${cursor}`, {
+        const response = await fetch(`${baseURL}/post/?limit=${limit}&cursor=${cursor}${type === 'sdg-society' ? '&type=sdg-society' : ''}`, {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
                 'Content-Type': 'application/json'
             },
         });
-        
-        if (!response.ok) {
-            return NextResponse.json(
-                { error: `Failed to fetch posts: ${response.status}` },
-                { status: response.status }
-            );
-        }
         
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });
@@ -156,12 +150,6 @@ export async function PUT(req: NextRequest) {
             body: requestData // Removed unnecessary parentheses
         });
         
-        // Better error logging with await
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Server error response:", errorText);
-            throw new Error(`Failed to update post: ${response.status} ${response.statusText}`);
-        }
         
         // Handle non-JSON responses
         const contentType = response.headers.get("content-type");
@@ -209,13 +197,9 @@ export async function DELETE(req: NextRequest) {
             }
         });
         
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Delete error response:", errorText);
-            return NextResponse.json({ error: `Failed to delete post: ${response.status}` }, { status: response.status });
-        }
+        const data = await response.json();
         
-        return NextResponse.json({ message: "Post deleted successfully" });
+        return NextResponse.json({ message: "Post deleted successfully", data }, { status: response.status });
     } catch (error) {
         console.error("Error deleting post:", error);
         return NextResponse.json({ error: "Failed to delete post" });

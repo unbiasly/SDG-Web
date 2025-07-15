@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
     Dialog,
     DialogContent,
@@ -9,10 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
 import {
     Select,
     SelectContent,
@@ -20,9 +16,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { UserDetailsRequest } from "@/service/api.interface";
+import { UserData, UserDetailsRequest } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
 import { toast } from "react-hot-toast";
+import { DatePicker } from "../ui/date-picker";
 
 // Helper function for URL validation
 const isValidURL = (urlString: string): boolean => {
@@ -35,32 +32,40 @@ const isValidURL = (urlString: string): boolean => {
     }
 };
 
-export const UserProfileDialog = ({}) => {
+export const UserProfileDialog = ({ user, onSuccess }: { user: UserData, onSuccess: () => void }) => {
     const [calendarOpen, setCalendarOpen] = useState<boolean>(false);
-    const { user } = useUser();
     // Store the original user data for comparison
     const [originalData, setOriginalData] = useState<UserDetailsRequest | null>(
         null
     );
-    const [profileData, setProfileData] = useState<UserDetailsRequest>({
-        name:
-            user?.fName && user?.lName
-                ? `${user.fName} ${user.lName}`
-                : undefined,
-        location: user?.location,
-        gender: user?.gender || undefined,
-        dob: user?.dob ? new Date(user.dob) : undefined,
-        portfolioLink: user?.portfolioLink || undefined,
-        bio: user?.bio || undefined,
-        education: user?.education || [],
-        experience: user?.experience || [],
-        fName: user?.fName || undefined,
-        lName: user?.lName || undefined,
-        occupation: user?.occupation || undefined,
-        pronouns: user?.pronouns || undefined,
-        headline: user?.headline || undefined,
-        profileImage: user?.profileImage || undefined,
-        profileBackgroundImage: user?.profileBackgroundImage || undefined,
+    const [profileData, setProfileData] = useState<UserDetailsRequest>(() => {
+        const today = new Date();
+        const thirteenYearsAgo = new Date(
+            today.getFullYear() - 13,
+            today.getMonth(),
+            today.getDate()
+        );
+        
+        return {
+            name:
+                user?.fName && user?.lName
+                    ? `${user.fName} ${user.lName}`
+                    : undefined,
+            location: user?.location,
+            gender: user?.gender || undefined,
+            dob: user?.dob ? new Date(user.dob) : thirteenYearsAgo,
+            portfolioLink: user?.portfolioLink || undefined,
+            bio: user?.bio || undefined,
+            education: user?.education || [],
+            experience: user?.experience || [],
+            fName: user?.fName || undefined,
+            lName: user?.lName || undefined,
+            occupation: user?.occupation || undefined,
+            pronouns: user?.pronouns || undefined,
+            headline: user?.headline || undefined,
+            profileImage: user?.profileImage || undefined,
+            profileBackgroundImage: user?.profileBackgroundImage || undefined,
+        };
     });
 
     // Add file state for image uploads
@@ -98,6 +103,7 @@ export const UserProfileDialog = ({}) => {
                     user.profileBackgroundImage || undefined,
             };
             setOriginalData(initialData);
+            setProfileData(initialData); // Initialize profileData with the same data
         }
     }, [user]);
 
@@ -143,7 +149,7 @@ export const UserProfileDialog = ({}) => {
         // Get the original value for this field
         const getOriginalValue = (fieldName: string): string => {
             if (!originalData) return "";
-            
+
             switch (fieldName) {
                 case "fName":
                     return originalData.fName || "";
@@ -175,6 +181,40 @@ export const UserProfileDialog = ({}) => {
         // Prevent clearing fields that previously had values
         if (hasOriginalValue && isCurrentValueEmpty) {
             return `This field cannot be left empty as it already contains data.`;
+        }
+
+        // DOB validation
+        if (name === "dob" && value instanceof Date) {
+            const today = new Date();
+            const minAge = 13;
+            const maxAge = 120;
+            
+            // Check if user is at least 13 years old
+            const minAgeDate = new Date(
+                today.getFullYear() - minAge,
+                today.getMonth(),
+                today.getDate()
+            );
+            
+            if (value > minAgeDate) {
+                return "You must be at least 13 years old.";
+            }
+            
+            // Check if date is not in future
+            if (value > today) {
+                return "Date of birth cannot be in the future.";
+            }
+            
+            // Check maximum age limit
+            const maxAgeDate = new Date(
+                today.getFullYear() - maxAge,
+                today.getMonth(),
+                today.getDate()
+            );
+            
+            if (value < maxAgeDate) {
+                return "Please enter a valid date of birth.";
+            }
         }
 
         // Existing validations
@@ -226,6 +266,91 @@ export const UserProfileDialog = ({}) => {
         return null;
     };
 
+    // Function to determine if a date should be disabled
+    const isDateDisabled = (date: Date): boolean => {
+        const today = new Date();
+        const minAge = 0;
+        const maxAge = 120;
+
+        // Disable future dates
+        if (date > today) return true;
+
+        // Disable dates that would make user less than 13 years old
+        const minAgeDate = new Date(
+            today.getFullYear() - minAge,
+            today.getMonth(),
+            today.getDate()
+        );
+        if (date > minAgeDate) return true;
+
+        // Disable dates that would make user more than 120 years old
+        const maxAgeDate = new Date(
+            today.getFullYear() - maxAge,
+            today.getMonth(),
+            today.getDate()
+        );
+        if (date < maxAgeDate) return true;
+
+        return false;
+    };
+
+    // Initialize original data when component mounts
+    useEffect(() => {
+        if (user) {
+            const initialData = {
+                name:
+                    user?.fName && user?.lName
+                        ? `${user.fName} ${user.lName}`
+                        : undefined,
+                location: user.location || undefined,
+                gender: user.gender || undefined,
+                dob: user.dob ? new Date(user.dob) : undefined,
+                portfolioLink: user.portfolioLink || undefined,
+                bio: user.bio || undefined,
+                education: user.education || [],
+                experience: user.experience || [],
+                fName: user.fName || undefined,
+                lName: user.lName || undefined,
+                occupation: user.occupation || undefined,
+                pronouns: user.pronouns || undefined,
+                headline: user.headline || undefined,
+                profileImage: user.profileImage || undefined,
+                profileBackgroundImage:
+                    user.profileBackgroundImage || undefined,
+            };
+            setOriginalData(initialData);
+            setProfileData(initialData); // Initialize profileData with the same data
+        }
+    }, [user]);
+
+    // Check for modifications whenever profileData, profileImageFile, or backgroundImageFile changes
+    useEffect(() => {
+        if (!originalData) return;
+
+        // Compare fields between current form data and original data
+        const isTextDataChanged =
+            originalData.fName !== profileData.fName ||
+            originalData.lName !== profileData.lName ||
+            originalData.location !== profileData.location ||
+            originalData.gender !== profileData.gender ||
+            originalData.portfolioLink !== profileData.portfolioLink ||
+            originalData.bio !== profileData.bio ||
+            originalData.occupation !== profileData.occupation ||
+            originalData.pronouns !== profileData.pronouns ||
+            originalData.headline !== profileData.headline;
+
+        // Compare dates (accounting for potential timezone differences)
+        const isDateChanged =
+            originalData.dob?.toDateString() !==
+            profileData.dob?.toDateString();
+
+        // Check if any file was selected
+        const isFileChanged =
+            profileImageFile !== null || backgroundImageFile !== null;
+
+        setIsDataModified(isTextDataChanged || isDateChanged || isFileChanged);
+    }, [profileData, profileImageFile, backgroundImageFile, originalData]);
+
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
@@ -238,6 +363,14 @@ export const UserProfileDialog = ({}) => {
     const handleDateChange = (date: Date | undefined) => {
         setProfileData((prev) => ({ ...prev, dob: date }));
         
+        // Validate the date
+        if (date) {
+            const error = validateField("dob", date);
+            setErrors((prev) => ({ ...prev, dob: error }));
+        } else {
+            setErrors((prev) => ({ ...prev, dob: null }));
+        }
+
         if (date) {
             setCalendarOpen(false);
         }
@@ -285,16 +418,46 @@ export const UserProfileDialog = ({}) => {
         return newErrors;
     };
 
+    // Move the validation logic inside useMemo to prevent infinite re-renders
+    const validationIssues = useMemo(() => {
+        const newErrors: Record<string, string | null> = {};
+
+        const fieldsToValidate = [
+            { name: "fName", value: profileData.fName },
+            { name: "lName", value: profileData.lName },
+            { name: "occupation", value: profileData.occupation },
+            { name: "headline", value: profileData.headline },
+            { name: "location", value: profileData.location },
+            { name: "bio", value: profileData.bio },
+            { name: "portfolioLink", value: profileData.portfolioLink },
+            { name: "gender", value: profileData.gender },
+            { name: "pronouns", value: profileData.pronouns },
+            { name: "dob", value: profileData.dob },
+        ];
+
+        fieldsToValidate.forEach((field) => {
+            const error = validateField(field.name, field.value);
+            newErrors[field.name] = error;
+        });
+
+        return newErrors;
+    }, [profileData, originalData]);
+
+    const hasValidationErrors = useMemo(() => {
+        return Object.values(validationIssues).some((e) => e !== null);
+    }, [validationIssues]);
+
     // Fix the handleProfileUpdate function to send all fields, including empty strings
     const handleProfileUpdate = async () => {
-        const validationIssues = runAllValidationsAndGetErrors();
-        const hasValidationErrors = Object.values(validationIssues).some(
-            (e) => e !== null
-        );
+        // Run validation and update errors state
+        const currentErrors = runAllValidationsAndGetErrors();
+        const hasErrors = Object.values(currentErrors).some((e) => e !== null);
 
-        if (hasValidationErrors) {
+        if (hasErrors) {
             // Show the first validation error
-            const firstError = Object.values(validationIssues).find((e) => e !== null);
+            const firstError = Object.values(currentErrors).find(
+                (e) => e !== null
+            );
             if (firstError) {
                 toast.error(`Validation Error: ${firstError}`);
             }
@@ -305,49 +468,90 @@ export const UserProfileDialog = ({}) => {
             const formData = new FormData();
 
             // Helper function to get the value to send (original if current is empty and original exists)
-            const getValueToSend = (currentValue: string | undefined, fieldName: string): string => {
+            const getValueToSend = (
+                currentValue: string | undefined,
+                fieldName: string
+            ): string => {
                 if (!originalData) return currentValue || "";
-                
+
                 const originalValue = (() => {
                     switch (fieldName) {
-                        case "fName": return originalData.fName || "";
-                        case "lName": return originalData.lName || "";
-                        case "location": return originalData.location || "";
-                        case "portfolioLink": return originalData.portfolioLink || "";
-                        case "bio": return originalData.bio || "";
-                        case "occupation": return originalData.occupation || "";
-                        case "headline": return originalData.headline || "";
-                        case "gender": return originalData.gender || "";
-                        case "pronouns": return originalData.pronouns || "";
-                        default: return "";
+                        case "fName":
+                            return originalData.fName || "";
+                        case "lName":
+                            return originalData.lName || "";
+                        case "location":
+                            return originalData.location || "";
+                        case "portfolioLink":
+                            return originalData.portfolioLink || "";
+                        case "bio":
+                            return originalData.bio || "";
+                        case "occupation":
+                            return originalData.occupation || "";
+                        case "headline":
+                            return originalData.headline || "";
+                        case "gender":
+                            return originalData.gender || "";
+                        case "pronouns":
+                            return originalData.pronouns || "";
+                        default:
+                            return "";
                     }
                 })();
 
                 // If current value is empty but original had value, keep original
-                if ((currentValue || "").trim() === "" && originalValue.trim() !== "") {
+                if (
+                    (currentValue || "").trim() === "" &&
+                    originalValue.trim() !== ""
+                ) {
                     return originalValue;
                 }
-                
+
                 return currentValue || "";
             };
 
             // Append fields with validation-aware values
-            formData.append("fName", getValueToSend(profileData.fName, "fName"));
-            formData.append("lName", getValueToSend(profileData.lName, "lName"));
-            formData.append("location", getValueToSend(profileData.location, "location"));
-            formData.append("portfolioLink", getValueToSend(profileData.portfolioLink, "portfolioLink"));
+            formData.append(
+                "fName",
+                getValueToSend(profileData.fName, "fName")
+            );
+            formData.append(
+                "lName",
+                getValueToSend(profileData.lName, "lName")
+            );
+            formData.append(
+                "location",
+                getValueToSend(profileData.location, "location")
+            );
+            formData.append(
+                "portfolioLink",
+                getValueToSend(profileData.portfolioLink, "portfolioLink")
+            );
             formData.append("bio", getValueToSend(profileData.bio, "bio"));
-            formData.append("occupation", getValueToSend(profileData.occupation, "occupation"));
-            formData.append("headline", getValueToSend(profileData.headline, "headline"));
-            formData.append("gender", getValueToSend(profileData.gender, "gender"));
-            formData.append("pronouns", getValueToSend(profileData.pronouns, "pronouns"));
+            formData.append(
+                "occupation",
+                getValueToSend(profileData.occupation, "occupation")
+            );
+            formData.append(
+                "headline",
+                getValueToSend(profileData.headline, "headline")
+            );
+            formData.append(
+                "gender",
+                getValueToSend(profileData.gender, "gender")
+            );
+            formData.append(
+                "pronouns",
+                getValueToSend(profileData.pronouns, "pronouns")
+            );
 
             // Create name field based on first and last name
             const fNameToSend = getValueToSend(profileData.fName, "fName");
             const lNameToSend = getValueToSend(profileData.lName, "lName");
-            const fullName = fNameToSend && lNameToSend 
-                ? `${fNameToSend} ${lNameToSend}`.trim()
-                : "";
+            const fullName =
+                fNameToSend && lNameToSend
+                    ? `${fNameToSend} ${lNameToSend}`.trim()
+                    : "";
             formData.append("name", fullName);
 
             // Handle date field normally - no special validation
@@ -361,7 +565,10 @@ export const UserProfileDialog = ({}) => {
             if (profileImageFile) {
                 formData.append("profileImage", profileImageFile);
             } else if (profileData.profileImage) {
-                formData.append("profileImage", profileData.profileImage.toString());
+                formData.append(
+                    "profileImage",
+                    profileData.profileImage.toString()
+                );
             } else {
                 formData.append("profileImage", "");
             }
@@ -369,7 +576,10 @@ export const UserProfileDialog = ({}) => {
             if (backgroundImageFile) {
                 formData.append("profileBackgroundImage", backgroundImageFile);
             } else if (profileData.profileBackgroundImage) {
-                formData.append("profileBackgroundImage", profileData.profileBackgroundImage.toString());
+                formData.append(
+                    "profileBackgroundImage",
+                    profileData.profileBackgroundImage.toString()
+                );
             } else {
                 formData.append("profileBackgroundImage", "");
             }
@@ -384,12 +594,14 @@ export const UserProfileDialog = ({}) => {
                 console.log("Profile updated successfully");
                 toast.success("Profile updated successfully!");
                 // Refresh the page to show updated profile
-                window.location.reload();
+                onSuccess();
             } else {
                 const errorText = await response.json();
                 console.log("Error response:", errorText);
                 toast.error(
-                    `Failed to update profile: ${errorText.message || errorText.error || "Unknown error"}`
+                    `Failed to update profile: ${
+                        errorText.message || errorText.error || "Unknown error"
+                    }`
                 );
             }
         } catch (error) {
@@ -437,7 +649,6 @@ export const UserProfileDialog = ({}) => {
                             </p>
                         )}
                     </div>
-
                     {/* Last Name */}
                     <div className="space-y-2">
                         <label htmlFor="lName" className="text-sm font-medium">
@@ -459,18 +670,21 @@ export const UserProfileDialog = ({}) => {
                     </div>
                     {/* Username */}
                     {/* <div className="space-y-2">
-            <label htmlFor="username" className="text-sm font-medium">
-              Username<span className="text-red-500">*</span>
-            </label>
-            <Input
-              id="username"
-              name="username"
-              placeholder="Your username"
-              value={profileData.username || ""}
-              onChange={handleInputChange}
-              required
-            />
-          </div> */}
+                        <label
+                            htmlFor="username"
+                            className="text-sm font-medium"
+                        >
+                            Username<span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                            id="username"
+                            name="username"
+                            placeholder="Your username"
+                            value={profileData.username || ""}
+                            onChange={handleInputChange}
+                            required
+                        />
+                    </div> */}
                     {/* Headline */}
                     <div className="space-y-2">
                         <label
@@ -493,7 +707,6 @@ export const UserProfileDialog = ({}) => {
                             </p>
                         )}
                     </div>
-
                     {/* Profile Image */}
                     <div className="space-y-2">
                         <label
@@ -521,7 +734,6 @@ export const UserProfileDialog = ({}) => {
                             </div>
                         )}
                     </div>
-
                     {/* Background Image */}
                     <div className="space-y-2">
                         <label
@@ -550,22 +762,20 @@ export const UserProfileDialog = ({}) => {
                                 </div>
                             )}
                     </div>
-
-                    {/* //!Name
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium">
-              Name<span className="text-red-500">*</span>
-            </label>
-            <Input
-              id="name"
-              name="name"
-              placeholder="Your full name"
-              value={profileData.name || ""}
-              onChange={handleInputChange}
-              required
-            />
-          </div> */}
-
+                    {/* Name */}
+                    {/* <div className="space-y-2">
+                        <label htmlFor="name" className="text-sm font-medium">
+                            Name<span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                            id="name"
+                            name="name"
+                            placeholder="Your full name"
+                            value={profileData.name || ""}
+                            onChange={handleInputChange}
+                            required
+                        />
+                    </div> */}
                     {/* Location */}
                     <div className="space-y-2">
                         <label
@@ -588,7 +798,6 @@ export const UserProfileDialog = ({}) => {
                             </p>
                         )}
                     </div>
-
                     {/* Gender */}
                     <div className="space-y-2">
                         <label htmlFor="gender" className="text-sm font-medium">
@@ -622,58 +831,23 @@ export const UserProfileDialog = ({}) => {
                             </p>
                         )}
                     </div>
-
                     {/* Date of Birth */}
                     <div className="space-y-2">
                         <label htmlFor="dob" className="text-sm font-medium">
                             Date of Birth
                         </label>
-                        <div className="relative">
-                            <Button
-                                variant="outline"
-                                className={cn(
-                                    "w-full justify-start text-left font-normal",
-                                    !profileData.dob && "text-muted-foreground"
-                                )}
-                                onClick={() => setCalendarOpen(!calendarOpen)}
-                            >
-                                {profileData.dob ? (
-                                    format(profileData.dob, "PPP")
-                                ) : (
-                                    <span>Select date of birth</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4" />
-                            </Button>
-                            {calendarOpen && (
-                                <div className="absolute z-50 right-1 bottom-1 mb-1 bg-white rounded-2xl shadow-md">
-                                    <Calendar
-                                        mode="single"
-                                        selected={profileData.dob && new Date(profileData.dob)}
-                                        onSelect={handleDateChange}
-                                        disabled={(date) => {
-                                            if (date > new Date()) return true;
-                                            const minAge = 13;
-                                            const today = new Date();
-                                            const minAgeDate = new Date(
-                                                today.getFullYear() - minAge,
-                                                today.getMonth(),
-                                                today.getDate()
-                                            );
-                                            if (date > minAgeDate) return true;
-                                            const maxAge = 120;
-                                            const maxAgeDate = new Date(
-                                                today.getFullYear() - maxAge,
-                                                today.getMonth(),
-                                                today.getDate()
-                                            );
-                                            if (date < maxAgeDate) return true;
-                                            return false;
-                                        }}
-                                        className="p-3 pointer-events-auto"
-                                    />
-                                </div>
-                            )}
-                        </div>
+                        <DatePicker
+                            selected={profileData.dob}
+                            onSelect={handleDateChange}
+                            placeholder="Select date of birth"
+                            disabled={isDateDisabled}
+                            className={errors.dob ? "border-red-500" : ""}
+                        />
+                        {errors.dob && (
+                            <p className="text-red-500 text-xs mt-1">
+                                {errors.dob}
+                            </p>
+                        )}
                     </div>
                     {/* Pronouns */}
                     <div className="space-y-2">
@@ -714,7 +888,6 @@ export const UserProfileDialog = ({}) => {
                             </p>
                         )}
                     </div>
-
                     {/* Occupation */}
                     <div className="space-y-2">
                         <label
@@ -739,7 +912,6 @@ export const UserProfileDialog = ({}) => {
                             </p>
                         )}
                     </div>
-
                     {/* Portfolio Link */}
                     <div className="space-y-2">
                         <label
@@ -764,7 +936,6 @@ export const UserProfileDialog = ({}) => {
                             </p>
                         )}
                     </div>
-
                     {/* Bio */}
                     <div className="space-y-2">
                         <label htmlFor="bio" className="text-sm font-medium">
@@ -790,7 +961,7 @@ export const UserProfileDialog = ({}) => {
                     <Button
                         onClick={handleProfileUpdate}
                         className="bg-accent hover:bg-accent text-white cursor-pointer px-8"
-                        disabled={!isDataModified} // Or: !isDataModified || Object.values(errors).some(e => e !== null)
+                        disabled={!isDataModified || hasValidationErrors } 
                     >
                         Save
                     </Button>

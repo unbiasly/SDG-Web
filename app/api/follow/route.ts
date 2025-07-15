@@ -22,7 +22,6 @@ try {
         body: JSON.stringify({ userId, followingId, })
     });
     
-    console.log('response\n', response);
 
     const data = await response.json();
     return NextResponse.json(data);

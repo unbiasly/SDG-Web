@@ -33,14 +33,6 @@ export async function PATCH(req: NextRequest) {
             body: Object.keys(bodyToSend).length > 0 ? JSON.stringify(bodyToSend) : undefined,
         });
         
-        if (!response.ok) {
-            const errorText = await response.text();
-            return Response.json(
-                { error: `Server responded with ${response.status}: ${errorText}` }, 
-                { status: response.status }
-            );
-        }
-        
         const data = await response.json();
         console.log('Action response:', data);
         
@@ -77,14 +69,6 @@ export async function POST(req: NextRequest) {
                 'Content-Type': 'application/json'
             },
         });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            return Response.json(
-                { error: `Server responded with ${response.status}: ${errorText}` }, 
-                { status: response.status }
-            );
-        }
         
         const data = await response.json();
         console.log('Comments data:', data);
