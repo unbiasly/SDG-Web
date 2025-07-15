@@ -224,7 +224,7 @@ export const AppApi = {
                 }),
             });
 
-            if (!response.ok) {
+            if (!response.ok && response.status != 401) {
                 return {
                     success: false,
                     error: response.statusText
@@ -744,6 +744,101 @@ export const AppApi = {
                 error: error instanceof Error ? error.message : 'Unknown error'
             };
         }
-    }
+    },
+
+    getMentorshipCategories: async () => {
+        try {
+            const response = await fetch(`/api/mentorship`, {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            // Get updated data from API response
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    getMentors: async (categoryId?: string, mentorId?: string) => {
+        let queryParam;
+        if (categoryId) {
+            queryParam = `categoryId=${categoryId}`;
+        } else if (mentorId) {
+            queryParam = `mentorId=${mentorId}`;
+        }
+        try {
+            const response = await fetch(`/api/mentorship/mentor${queryParam && `?${queryParam}`}`, {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    getMentorReviews: async (mentorId: string) => {
+        try {
+            const response = await fetch(`/api/mentorship/reviews?mentorId=${mentorId}`, {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
 
 }

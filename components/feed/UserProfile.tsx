@@ -56,10 +56,10 @@ export const UserSidebar = () => {
         <div className={`
             ${isMobile 
                 ? 'flex-1 overflow-y-auto' 
-                : 'flex-1 overflow-y-auto max-h-[calc(100vh-300px)] lg:min-h-0'
+                : 'flex-1 overflow-y-auto'
             } hidden-scrollbar
         `}>
-            <ul className="space-y-1 pr-2">
+            <ul className="space-y-1 lg:pr-2">
                 {PROFILE_OPTIONS.map((option, key) => {
                     let route = option.route;
 
@@ -139,7 +139,7 @@ export const UserSidebar = () => {
             </div>
 
             {isDataLoaded ? (
-                <div >
+                <div>
                     <h3 className="font-semibold text-lg ">
                         {user?.name}
                     </h3>
@@ -159,7 +159,7 @@ export const UserSidebar = () => {
     return (
         <>
             {/* Desktop Sidebar - Hidden on mobile */}
-            <div className="w-full flex-1 bg-white border-1 border-gray-300 p-4 rounded-2xl md:flex flex-col max-h-full hidden">
+            <div className="w-full max-h-full bg-white border-1 border-gray-300 p-4 rounded-2xl md:flex flex-col hidden">
                 <Link
                     href="/"
                     className="justify-center items-center gap-2 pb-2 flex lg:hidden flex-shrink-0"
@@ -172,7 +172,7 @@ export const UserSidebar = () => {
                     />
                 </Link>
 
-                <div className="flex-col items-start  hidden lg:flex flex-shrink-0">
+                <div className="flex-col items-start hidden lg:flex flex-shrink-0">
                     {renderUserProfile()}
                 </div>
 
@@ -219,7 +219,7 @@ export const UserSidebar = () => {
                             {renderUserProfile()}
                         </div>
 
-                        <nav className="mt-4 w-full flex-1 min-h-0 flex flex-col">
+                        <nav className="w-full flex-1 min-h-0 flex flex-col">
                             {renderNavItems(true)}
                         </nav>
                     </SheetContent>

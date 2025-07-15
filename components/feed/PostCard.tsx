@@ -217,6 +217,8 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
                 queryKey: ["bookmarkedPosts"],
                 exact: false 
             });
+            queryClient.invalidateQueries({ queryKey: ["userPosts", post.user_id._id] });
+            onPostUpdate?.();
 
         } catch (error) {
             console.error("Error updating follow status:", error);

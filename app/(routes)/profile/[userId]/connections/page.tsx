@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronDown, Search } from "lucide-react";
 import {
     useInfiniteQuery,
     useMutation,
@@ -28,12 +28,14 @@ interface ConnectionsPageProps {
 }
 
 export default function Page({ params }: ConnectionsPageProps) {
-    const searchQueryParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+    const searchQueryParams =
+        typeof window !== "undefined"
+            ? new URLSearchParams(window.location.search)
+            : new URLSearchParams();
     const tab = searchQueryParams.get("tab");
     const resolvedParams = use(params);
     const userId = resolvedParams.userId;
 
-    
     const [profileUser, setProfileUser] = useState<UserType | null>(null);
 
     // Check if we're on the client side
@@ -55,17 +57,17 @@ export default function Page({ params }: ConnectionsPageProps) {
                 setActiveFollowTab("followers"); // Default to followers
             }
         }
-        
     }, [userId, tab]);
 
     // Initialize activeFollowTab with localStorage value or default to "followers"
-    const [activeFollowTab, setActiveFollowTab] = useState<"followers" | "following">('followers');
+    const [activeFollowTab, setActiveFollowTab] = useState<
+        "followers" | "following"
+    >("followers");
 
     const [analytics, setAnalytics] = useState<AnalyticsResponseData | null>(
         null
     );
     const [loading, setLoading] = useState<boolean>(true);
-
 
     const fetchUserById = async (id: string) => {
         setLoading(true);
@@ -139,7 +141,6 @@ export default function Page({ params }: ConnectionsPageProps) {
 
         return await response.json();
     };
-
 
     useEffect(() => {
         getAnalytics();
@@ -310,13 +311,16 @@ export default function Page({ params }: ConnectionsPageProps) {
         (activeFollowTab === "following" && followingError);
 
     // Handle tab change with localStorage persistence
-    const handleTabChange = useCallback((tab: "followers" | "following") => {
-        setActiveFollowTab(tab);
-        // Save to localStorage with user-specific key
-        if (typeof window !== 'undefined') {
-            localStorage.setItem(`activeFollowTab_${userId}`, tab);
-        }
-    }, [userId]);
+    const handleTabChange = useCallback(
+        (tab: "followers" | "following") => {
+            setActiveFollowTab(tab);
+            // Save to localStorage with user-specific key
+            if (typeof window !== "undefined") {
+                localStorage.setItem(`activeFollowTab_${userId}`, tab);
+            }
+        },
+        [userId]
+    );
 
     return (
         <div className="flex flex-1 flex-col overflow-hidden">
@@ -341,10 +345,10 @@ export default function Page({ params }: ConnectionsPageProps) {
                                 <ArrowLeft size={24} className="text-black" />
                             </Link>
                             <div>
-                                <h1 className="text-2xl font-bold">
+                                <h1 className="text-lg lg:text-2xl font-bold">
                                     {profileUser?.name}
                                 </h1>
-                                <p className="text-gray-500">
+                                <p className="text-sm lg:text-base text-gray-500">
                                     @{profileUser?.username}
                                 </p>
                             </div>
@@ -354,7 +358,7 @@ export default function Page({ params }: ConnectionsPageProps) {
                     {/* Tabs */}
                     <div className="flex border-b border-gray-200">
                         <button
-                            className={`flex-1 cursor-pointer py-4 text-center font-medium text-lg ${
+                            className={`flex-1 cursor-pointer py-3 lg:py-4 text-center font-medium text-sm lg:text-lg ${
                                 activeFollowTab === "followers"
                                     ? "text-accent border-b-2 border-accent"
                                     : "text-gray-500"
@@ -365,7 +369,7 @@ export default function Page({ params }: ConnectionsPageProps) {
                         </button>
                         <div className="border-r border-gray-200"></div>
                         <button
-                            className={`flex-1 cursor-pointer py-4 text-center font-medium text-lg ${
+                            className={`flex-1 cursor-pointer py-3 lg:py-4 text-center font-medium text-sm lg:text-lg ${
                                 activeFollowTab === "following"
                                     ? "text-accent border-b-2 border-accent"
                                     : "text-gray-500"
@@ -379,27 +383,19 @@ export default function Page({ params }: ConnectionsPageProps) {
             )}
 
             {/* Filter bar */}
-            {/* <div className="flex justify-between items-center px-4 py-3">
-                <div className="flex items-center">
-                <span className="text-gray-600 mr-2">Sort by:</span>
-                <button className="flex items-center font-medium">
-                    {sortOption} <ChevronDown size={20} className="ml-1" />
-                </button>
-                </div>
-                <div className="relative">
+            <div className="relative  mx-4 my-3">
                 <input
                     type="text"
                     placeholder="Search"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-full w-40 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    // value={searchTerm}
+                    // onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-full w-full focus:outline-none focus:ring-1 focus:ring-blue-accent"
                 />
                 <Search
                     size={18}
                     className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400"
                 />
-                </div>
-            </div> */}
+            </div>
 
             {/* User List */}
             <div className="flex-1 overflow-y-auto">
@@ -419,8 +415,8 @@ export default function Page({ params }: ConnectionsPageProps) {
                         ).length === 0 ? (
                             <div className="p-8 text-center text-gray-500">
                                 <p className="text-lg">
-                                    {activeFollowTab === "followers" 
-                                        ? "No followers yet" 
+                                    {activeFollowTab === "followers"
+                                        ? "No followers yet"
                                         : "Not following anyone yet"}
                                 </p>
                             </div>
@@ -441,7 +437,9 @@ export default function Page({ params }: ConnectionsPageProps) {
                                             <ProfileAvatar
                                                 src={user.profileImage}
                                                 alt={user.name || user.username}
-                                                userName={user.name || user.username}
+                                                userName={
+                                                    user.name || user.username
+                                                }
                                                 size="sm"
                                                 className="rounded-full mr-3 object-cover"
                                             />
@@ -455,23 +453,30 @@ export default function Page({ params }: ConnectionsPageProps) {
                                             </div>
                                         </Link>
                                         {/* <button
-                                            onClick={() => handleFollowToggle(user)}
+                                            onClick={() =>
+                                                handleFollowToggle(user)
+                                            }
                                             className={`font-medium py-2 px-6 rounded-full transition-colors ${
-                                                user.following 
-                                                ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                                                : 'bg-blue-700 text-white hover:bg-blue-800'
+                                                user.following
+                                                    ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                                    : "bg-blue-700 text-white hover:bg-blue-800"
                                             }`}
                                             disabled={followMutation.isPending}
-                                            >
-                                            {followMutation.isPending && followMutation.variables?.targetUserId === user._id
-                                                ? 'Unfollow...'
-                                                : user.following ? 'Following' : 'Follow'}
-                                            </button> */}
+                                        >
+                                            {followMutation.isPending &&
+                                            followMutation.variables
+                                                ?.targetUserId === user._id
+                                                ? "Unfollow..."
+                                                : user.following
+                                                ? "Following"
+                                                : "Follow"}
+                                        </button> */}
                                     </div>
                                 ))}
 
                                 {/* Load more button */}
-                                {((activeFollowTab === "followers" && hasMoreFollowers) ||
+                                {((activeFollowTab === "followers" &&
+                                    hasMoreFollowers) ||
                                     (activeFollowTab === "following" &&
                                         hasMoreFollowing)) && (
                                     <div className="p-4">
@@ -480,7 +485,9 @@ export default function Page({ params }: ConnectionsPageProps) {
                                             disabled={isLoadingMore}
                                             className="w-full py-3 border border-gray-300 rounded-lg text-blue-600 font-medium hover:bg-gray-50 transition-colors"
                                         >
-                                            {isLoadingMore ? "Loading..." : "Load More"}
+                                            {isLoadingMore
+                                                ? "Loading..."
+                                                : "Load More"}
                                         </button>
                                     </div>
                                 )}

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
     Dialog,
     DialogContent,
@@ -20,7 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { UserDetailsRequest } from "@/service/api.interface";
+import { UserData, UserDetailsRequest } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
 import { toast } from "react-hot-toast";
 
@@ -35,9 +35,8 @@ const isValidURL = (urlString: string): boolean => {
     }
 };
 
-export const UserProfileDialog = ({}) => {
+export const UserProfileDialog = ({ user, onSuccess }: { user: UserData, onSuccess: () => void }) => {
     const [calendarOpen, setCalendarOpen] = useState<boolean>(false);
-    const { user } = useUser();
     // Store the original user data for comparison
     const [originalData, setOriginalData] = useState<UserDetailsRequest | null>(
         null
@@ -98,6 +97,7 @@ export const UserProfileDialog = ({}) => {
                     user.profileBackgroundImage || undefined,
             };
             setOriginalData(initialData);
+            setProfileData(initialData); // Initialize profileData with the same data
         }
     }, [user]);
 
@@ -143,7 +143,7 @@ export const UserProfileDialog = ({}) => {
         // Get the original value for this field
         const getOriginalValue = (fieldName: string): string => {
             if (!originalData) return "";
-            
+
             switch (fieldName) {
                 case "fName":
                     return originalData.fName || "";
@@ -237,7 +237,7 @@ export const UserProfileDialog = ({}) => {
 
     const handleDateChange = (date: Date | undefined) => {
         setProfileData((prev) => ({ ...prev, dob: date }));
-        
+
         if (date) {
             setCalendarOpen(false);
         }
@@ -285,16 +285,45 @@ export const UserProfileDialog = ({}) => {
         return newErrors;
     };
 
+    // Move the validation logic inside useMemo to prevent infinite re-renders
+    const validationIssues = useMemo(() => {
+        const newErrors: Record<string, string | null> = {};
+
+        const fieldsToValidate = [
+            { name: "fName", value: profileData.fName },
+            { name: "lName", value: profileData.lName },
+            { name: "occupation", value: profileData.occupation },
+            { name: "headline", value: profileData.headline },
+            { name: "location", value: profileData.location },
+            { name: "bio", value: profileData.bio },
+            { name: "portfolioLink", value: profileData.portfolioLink },
+            { name: "gender", value: profileData.gender },
+            { name: "pronouns", value: profileData.pronouns },
+        ];
+
+        fieldsToValidate.forEach((field) => {
+            const error = validateField(field.name, field.value);
+            newErrors[field.name] = error;
+        });
+
+        return newErrors;
+    }, [profileData, originalData]);
+
+    const hasValidationErrors = useMemo(() => {
+        return Object.values(validationIssues).some((e) => e !== null);
+    }, [validationIssues]);
+
     // Fix the handleProfileUpdate function to send all fields, including empty strings
     const handleProfileUpdate = async () => {
-        const validationIssues = runAllValidationsAndGetErrors();
-        const hasValidationErrors = Object.values(validationIssues).some(
-            (e) => e !== null
-        );
+        // Run validation and update errors state
+        const currentErrors = runAllValidationsAndGetErrors();
+        const hasErrors = Object.values(currentErrors).some((e) => e !== null);
 
-        if (hasValidationErrors) {
+        if (hasErrors) {
             // Show the first validation error
-            const firstError = Object.values(validationIssues).find((e) => e !== null);
+            const firstError = Object.values(currentErrors).find(
+                (e) => e !== null
+            );
             if (firstError) {
                 toast.error(`Validation Error: ${firstError}`);
             }
@@ -305,49 +334,90 @@ export const UserProfileDialog = ({}) => {
             const formData = new FormData();
 
             // Helper function to get the value to send (original if current is empty and original exists)
-            const getValueToSend = (currentValue: string | undefined, fieldName: string): string => {
+            const getValueToSend = (
+                currentValue: string | undefined,
+                fieldName: string
+            ): string => {
                 if (!originalData) return currentValue || "";
-                
+
                 const originalValue = (() => {
                     switch (fieldName) {
-                        case "fName": return originalData.fName || "";
-                        case "lName": return originalData.lName || "";
-                        case "location": return originalData.location || "";
-                        case "portfolioLink": return originalData.portfolioLink || "";
-                        case "bio": return originalData.bio || "";
-                        case "occupation": return originalData.occupation || "";
-                        case "headline": return originalData.headline || "";
-                        case "gender": return originalData.gender || "";
-                        case "pronouns": return originalData.pronouns || "";
-                        default: return "";
+                        case "fName":
+                            return originalData.fName || "";
+                        case "lName":
+                            return originalData.lName || "";
+                        case "location":
+                            return originalData.location || "";
+                        case "portfolioLink":
+                            return originalData.portfolioLink || "";
+                        case "bio":
+                            return originalData.bio || "";
+                        case "occupation":
+                            return originalData.occupation || "";
+                        case "headline":
+                            return originalData.headline || "";
+                        case "gender":
+                            return originalData.gender || "";
+                        case "pronouns":
+                            return originalData.pronouns || "";
+                        default:
+                            return "";
                     }
                 })();
 
                 // If current value is empty but original had value, keep original
-                if ((currentValue || "").trim() === "" && originalValue.trim() !== "") {
+                if (
+                    (currentValue || "").trim() === "" &&
+                    originalValue.trim() !== ""
+                ) {
                     return originalValue;
                 }
-                
+
                 return currentValue || "";
             };
 
             // Append fields with validation-aware values
-            formData.append("fName", getValueToSend(profileData.fName, "fName"));
-            formData.append("lName", getValueToSend(profileData.lName, "lName"));
-            formData.append("location", getValueToSend(profileData.location, "location"));
-            formData.append("portfolioLink", getValueToSend(profileData.portfolioLink, "portfolioLink"));
+            formData.append(
+                "fName",
+                getValueToSend(profileData.fName, "fName")
+            );
+            formData.append(
+                "lName",
+                getValueToSend(profileData.lName, "lName")
+            );
+            formData.append(
+                "location",
+                getValueToSend(profileData.location, "location")
+            );
+            formData.append(
+                "portfolioLink",
+                getValueToSend(profileData.portfolioLink, "portfolioLink")
+            );
             formData.append("bio", getValueToSend(profileData.bio, "bio"));
-            formData.append("occupation", getValueToSend(profileData.occupation, "occupation"));
-            formData.append("headline", getValueToSend(profileData.headline, "headline"));
-            formData.append("gender", getValueToSend(profileData.gender, "gender"));
-            formData.append("pronouns", getValueToSend(profileData.pronouns, "pronouns"));
+            formData.append(
+                "occupation",
+                getValueToSend(profileData.occupation, "occupation")
+            );
+            formData.append(
+                "headline",
+                getValueToSend(profileData.headline, "headline")
+            );
+            formData.append(
+                "gender",
+                getValueToSend(profileData.gender, "gender")
+            );
+            formData.append(
+                "pronouns",
+                getValueToSend(profileData.pronouns, "pronouns")
+            );
 
             // Create name field based on first and last name
             const fNameToSend = getValueToSend(profileData.fName, "fName");
             const lNameToSend = getValueToSend(profileData.lName, "lName");
-            const fullName = fNameToSend && lNameToSend 
-                ? `${fNameToSend} ${lNameToSend}`.trim()
-                : "";
+            const fullName =
+                fNameToSend && lNameToSend
+                    ? `${fNameToSend} ${lNameToSend}`.trim()
+                    : "";
             formData.append("name", fullName);
 
             // Handle date field normally - no special validation
@@ -361,7 +431,10 @@ export const UserProfileDialog = ({}) => {
             if (profileImageFile) {
                 formData.append("profileImage", profileImageFile);
             } else if (profileData.profileImage) {
-                formData.append("profileImage", profileData.profileImage.toString());
+                formData.append(
+                    "profileImage",
+                    profileData.profileImage.toString()
+                );
             } else {
                 formData.append("profileImage", "");
             }
@@ -369,7 +442,10 @@ export const UserProfileDialog = ({}) => {
             if (backgroundImageFile) {
                 formData.append("profileBackgroundImage", backgroundImageFile);
             } else if (profileData.profileBackgroundImage) {
-                formData.append("profileBackgroundImage", profileData.profileBackgroundImage.toString());
+                formData.append(
+                    "profileBackgroundImage",
+                    profileData.profileBackgroundImage.toString()
+                );
             } else {
                 formData.append("profileBackgroundImage", "");
             }
@@ -384,12 +460,14 @@ export const UserProfileDialog = ({}) => {
                 console.log("Profile updated successfully");
                 toast.success("Profile updated successfully!");
                 // Refresh the page to show updated profile
-                window.location.reload();
+                onSuccess();
             } else {
                 const errorText = await response.json();
                 console.log("Error response:", errorText);
                 toast.error(
-                    `Failed to update profile: ${errorText.message || errorText.error || "Unknown error"}`
+                    `Failed to update profile: ${
+                        errorText.message || errorText.error || "Unknown error"
+                    }`
                 );
             }
         } catch (error) {
@@ -437,7 +515,6 @@ export const UserProfileDialog = ({}) => {
                             </p>
                         )}
                     </div>
-
                     {/* Last Name */}
                     <div className="space-y-2">
                         <label htmlFor="lName" className="text-sm font-medium">
@@ -459,18 +536,21 @@ export const UserProfileDialog = ({}) => {
                     </div>
                     {/* Username */}
                     {/* <div className="space-y-2">
-            <label htmlFor="username" className="text-sm font-medium">
-              Username<span className="text-red-500">*</span>
-            </label>
-            <Input
-              id="username"
-              name="username"
-              placeholder="Your username"
-              value={profileData.username || ""}
-              onChange={handleInputChange}
-              required
-            />
-          </div> */}
+                        <label
+                            htmlFor="username"
+                            className="text-sm font-medium"
+                        >
+                            Username<span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                            id="username"
+                            name="username"
+                            placeholder="Your username"
+                            value={profileData.username || ""}
+                            onChange={handleInputChange}
+                            required
+                        />
+                    </div> */}
                     {/* Headline */}
                     <div className="space-y-2">
                         <label
@@ -493,7 +573,6 @@ export const UserProfileDialog = ({}) => {
                             </p>
                         )}
                     </div>
-
                     {/* Profile Image */}
                     <div className="space-y-2">
                         <label
@@ -521,7 +600,6 @@ export const UserProfileDialog = ({}) => {
                             </div>
                         )}
                     </div>
-
                     {/* Background Image */}
                     <div className="space-y-2">
                         <label
@@ -550,22 +628,20 @@ export const UserProfileDialog = ({}) => {
                                 </div>
                             )}
                     </div>
-
-                    {/* //!Name
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium">
-              Name<span className="text-red-500">*</span>
-            </label>
-            <Input
-              id="name"
-              name="name"
-              placeholder="Your full name"
-              value={profileData.name || ""}
-              onChange={handleInputChange}
-              required
-            />
-          </div> */}
-
+                    //!Name
+                    {/* <div className="space-y-2">
+                        <label htmlFor="name" className="text-sm font-medium">
+                            Name<span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                            id="name"
+                            name="name"
+                            placeholder="Your full name"
+                            value={profileData.name || ""}
+                            onChange={handleInputChange}
+                            required
+                        />
+                    </div> */}
                     {/* Location */}
                     <div className="space-y-2">
                         <label
@@ -588,7 +664,6 @@ export const UserProfileDialog = ({}) => {
                             </p>
                         )}
                     </div>
-
                     {/* Gender */}
                     <div className="space-y-2">
                         <label htmlFor="gender" className="text-sm font-medium">
@@ -622,7 +697,6 @@ export const UserProfileDialog = ({}) => {
                             </p>
                         )}
                     </div>
-
                     {/* Date of Birth */}
                     <div className="space-y-2">
                         <label htmlFor="dob" className="text-sm font-medium">
@@ -648,7 +722,10 @@ export const UserProfileDialog = ({}) => {
                                 <div className="absolute z-50 right-1 bottom-1 mb-1 bg-white rounded-2xl shadow-md">
                                     <Calendar
                                         mode="single"
-                                        selected={profileData.dob && new Date(profileData.dob)}
+                                        selected={
+                                            profileData.dob &&
+                                            new Date(profileData.dob)
+                                        }
                                         onSelect={handleDateChange}
                                         disabled={(date) => {
                                             if (date > new Date()) return true;
@@ -714,7 +791,6 @@ export const UserProfileDialog = ({}) => {
                             </p>
                         )}
                     </div>
-
                     {/* Occupation */}
                     <div className="space-y-2">
                         <label
@@ -739,7 +815,6 @@ export const UserProfileDialog = ({}) => {
                             </p>
                         )}
                     </div>
-
                     {/* Portfolio Link */}
                     <div className="space-y-2">
                         <label
@@ -764,7 +839,6 @@ export const UserProfileDialog = ({}) => {
                             </p>
                         )}
                     </div>
-
                     {/* Bio */}
                     <div className="space-y-2">
                         <label htmlFor="bio" className="text-sm font-medium">
@@ -790,7 +864,7 @@ export const UserProfileDialog = ({}) => {
                     <Button
                         onClick={handleProfileUpdate}
                         className="bg-accent hover:bg-accent text-white cursor-pointer px-8"
-                        disabled={!isDataModified} // Or: !isDataModified || Object.values(errors).some(e => e !== null)
+                        disabled={!isDataModified || hasValidationErrors } 
                     >
                         Save
                     </Button>

@@ -1,14 +1,8 @@
-
 // Base tabs for desktop (we'll keep it minimal for desktop)
-export const FEED_TABS = [
-    "For You",
-];
+export const FEED_TABS = ["For You"];
 
 // Mobile-specific tabs (showing more options on mobile)
-export const MOBILE_FEED_TABS = [
-    "For You",
-    "The SDG News"
-];
+export const MOBILE_FEED_TABS = ["For You", "The SDG News"];
 
 export const NOTIFICATION_TABS = [
     "Posts", // - post
@@ -18,18 +12,11 @@ export const NOTIFICATION_TABS = [
     // "The SDG Event",
 ];
 
-export const SCHEME_TABS = [
-    "Categories",
-    "State/UTs",
-    "Central Ministeries",
-];
+export const SCHEME_TABS = ["Categories", "State/UTs", "Central Ministeries"];
 
 export const VIDEO_TABS = ["The SDG Talks", "The SDG Podcast"];
 
-export const SDG_SOCIETY_TABS = [
-    "Feed",
-    "Updates",
-];
+export const SDG_SOCIETY_TABS = ["Feed", "Updates"];
 
 export const USER_PROFILE_TABS = [
     { id: "about", label: "About" },
@@ -52,13 +39,7 @@ export const SOCIETY_ADMIN_PROFILE_TABS = [
 
 export const REPORT_TABS = ["All", "UNDP", "NITI Aayog", "State", "Ministry"];
 
-export const BOOKMARKS_TABS = [
-    "All",
-    "Posts",
-    "News",
-    "Videos",
-    "Jobs",
-];
+export const BOOKMARKS_TABS = ["All", "Posts", "News", "Videos", "Jobs"];
 
 export const SEARCH_RESULT_CATEGORIES = [
     { id: "all", label: "All" },
@@ -73,17 +54,18 @@ export const SEARCH_RESULT_CATEGORIES = [
 ];
 
 export const JOB_TABS = [
-        { id: "preferences", label: "Preferences" },
-        { id: "applied", label: "Applied Jobs" },
-        { id: "saved", label: "Saved Jobs" },
-    ];
+    { id: "preferences", label: "Preferences" },
+    { id: "applied", label: "Applied Jobs" },
+    { id: "saved", label: "Saved Jobs" },
+];
+
+export const MENTOR_PROFILE_TABS = [
+    'Book a slot',
+    'Student\'s Testimonials',
+]
 
 export const PROFILE_OPTIONS = [
-    {
-        icon: "/icons/house.svg",
-        label: "Home",
-        route: "/",
-    },
+    { icon: "/icons/house.svg", label: "Home", route: "/" },
     {
         icon: "/icons/Profile.svg",
         label: "Profile",
@@ -93,15 +75,30 @@ export const PROFILE_OPTIONS = [
     { route: "/goals", label: "The 17 Goals", icon: "/icons/Target.svg" },
     { route: "/videos", label: "Videos", icon: "/icons/Videos.svg" },
     { route: "/society", label: "The SDG Society", icon: "/icons/society.png" },
-    // {route: "/mentorship", label: "Mentorship", icon: "/icons/leadership-development.png"},
-    { route: "/internship", label: "Internship", icon: "/icons/Internship.svg" },
+    {
+        route: "/mentorship",
+        label: "Mentorship",
+        icon: "/icons/leadership-development.png",
+    },
+    {
+        route: "/internship",
+        label: "Internship",
+        icon: "/icons/Internship.svg",
+    },
     { route: "/jobs", label: "Job", icon: "/icons/Job.svg" },
-    { route: "/scheme", label: "Scheme Search", icon: "/icons/Scheme.svg", },
-    { route: "/reports", label: "Reports", icon: "/icons/chart-no-axes-gantt.svg", },
-    { route: "/notifications", label: "Notifications", icon: "/icons/Notification.svg" },
+    { route: "/scheme", label: "Scheme Search", icon: "/icons/Scheme.svg" },
+    {
+        route: "/reports",
+        label: "Reports",
+        icon: "/icons/chart-no-axes-gantt.svg",
+    },
+    {
+        route: "/notifications",
+        label: "Notifications",
+        icon: "/icons/Notification.svg",
+    },
     { route: "/settings", label: "Settings", icon: "/icons/settings.svg" },
 ];
-
 
 export const PROFILE_ANALYTICS = [
     {
@@ -158,14 +155,10 @@ export const SCHEME_DATA_TABS = [
     "Application Process",
 ];
 
-export const JOB_TYPE = [
-    "full-time", "part-time", "contract", "internship"
-];
+export const JOB_TYPE = ["full-time", "part-time", "contract", "internship"];
 
 // export const LOCATION_TYPE = [
 //     "remote", "hybrid", "on-site"
 // ];
 
-export const EXPERIENCE_LEVEL = [
-    "entry", "mid", "senior"
-];
+export const EXPERIENCE_LEVEL = ["entry", "mid", "senior"];

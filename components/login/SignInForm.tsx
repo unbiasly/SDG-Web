@@ -79,13 +79,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ className }) => {
                 const cookieData = await cookieResponse.json();
 
                 if (cookieResponse.ok) {
-                    toast.success(
-                        <div>
-                            <span>Signed in successfully!</span>
-                            <br />
-                            <span>{data?.message}</span>
-                        </div>
-                    );
+                    toast.success('Signed in Successfully!');
                     // Force hard reload with cache busting
                     window.location.href = `/?t=${Date.now()}`;
                     

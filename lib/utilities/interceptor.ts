@@ -9,6 +9,8 @@ export const setupAPIInterceptor = () => {
     // Interface for queued requests
     interface QueuedRequest {
         request: () => Promise<Response>;
+        resolve: (response: Response) => void;
+        reject: (error: any) => void;
     }
     
     // Request queue for handling 401 responses
@@ -47,16 +49,21 @@ export const setupAPIInterceptor = () => {
 
     // Function to process queued requests after token refresh
     const processQueue = async (success: boolean) => {
-        if (success) {
-            await Promise.all(
-                requestQueue.map(({ request }) =>
-                    request().catch((error) => {
-                        console.error("Error processing queued request:", error);
-                    })
-                )
-            );
+        while (requestQueue.length > 0) {
+            const { request, resolve, reject } = requestQueue.shift()!;
+            
+            if (success) {
+                try {
+                    const response = await request();
+                    resolve(response);
+                } catch (error) {
+                    reject(error);
+                }
+            } else {
+                // If token refresh failed, reject all queued requests
+                reject(new Error('Token refresh failed'));
+            }
         }
-        requestQueue.length = 0;
     };
 
     // Function to prevent navigation to auth pages
@@ -152,7 +159,7 @@ export const setupAPIInterceptor = () => {
     }
 
     // Original fetch interceptor logic
-    window.fetch = async function (input: URL | RequestInfo, init?: RequestInit) {
+    window.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
         const executeRequest = () => originalFetch(input, init);
 
         try {
@@ -160,10 +167,7 @@ export const setupAPIInterceptor = () => {
             const clonedResponse = response.clone();
 
             // Enhanced session validation on response
-            if (
-                clonedResponse.status === 403 ||
-                clonedResponse.status === 401
-            ) {
+            if (clonedResponse.status === 403) {
                 // Clear all authentication data immediately
                 try {
                     await originalFetch("/api/logout", { method: "POST" });
@@ -205,18 +209,11 @@ export const setupAPIInterceptor = () => {
             if (clonedResponse.status === 401) {
                 // If we're already refreshing, queue this request
                 if (refreshState.isRefreshing) {
-                    return new Promise((resolve, reject) => {
+                    return new Promise<Response>((resolve, reject) => {
                         requestQueue.push({
-                            request: () =>
-                                executeRequest()
-                                    .then((response) => {
-                                        resolve(response);
-                                        return response;
-                                    })
-                                    .catch((error) => {
-                                        reject(error);
-                                        throw error;
-                                    }),
+                            request: executeRequest,
+                            resolve,
+                            reject
                         });
                     });
                 }
@@ -245,12 +242,19 @@ export const setupAPIInterceptor = () => {
                     if (res.ok) {
                         // Token refresh successful, retry the original request and process queue
                         refreshState.isRefreshing = false;
+                        
+                        // Process all queued requests
                         await processQueue(true);
-                        return executeRequest();
-                    } else if (res.status === 401) {
+                        
+                        // Retry the original request with new token
+                        return await executeRequest();
+                    } else if (res.status === 401 || res.status === 400) {
                         console.warn("Session expired or refresh failed");
                         refreshState.isRefreshing = false;
+                        
+                        // Process queue with failure
                         await processQueue(false);
+                        
                         try {
                             await originalFetch("/api/logout", {
                                 method: "POST",
@@ -259,13 +263,23 @@ export const setupAPIInterceptor = () => {
                         } catch (error) {
                             console.error("Error during logout:", error);
                         }
+                        
+                        // Return original 401 response
+                        return response;
                     } else {
                         refreshState.isRefreshing = false;
-                        await processQueue(false); // Still try to process queue on other errors
+                        await processQueue(false);
+                        
+                        // Return original response for other errors
+                        return response;
                     }
                 } catch (err) {
                     console.error("Token refresh error:", err);
                     refreshState.isRefreshing = false;
+                    await processQueue(false);
+                    
+                    // Return original response on refresh error
+                    return response;
                 }
             }
 

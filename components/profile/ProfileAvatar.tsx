@@ -28,7 +28,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
     onClick,
     className,
     userName,
-    borderColor = "black",
+    borderColor = "gray-200",
 }) => {
     const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -44,7 +44,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
     return (
         <div className={`aspect-square ${sizeClasses[size]} ${className}`}>
             <div
-                className={`relative w-full h-full overflow-hidden rounded-full bg-gray-100 border-2 border-${borderColor} shadow-lg`}
+                className={`relative w-full h-full overflow-hidden rounded-full bg-gray-100 border-${size === 'lg' || size === 'xl' ? '4' : '2'} border-${borderColor} ${size ==='lg' || size === 'xl' ?  'shadow-xl' : 'shadow-lg'}`}
             >
                 {src ? (
                     <Image

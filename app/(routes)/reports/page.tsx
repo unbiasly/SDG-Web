@@ -165,7 +165,7 @@ const Page = () => {
     }, [isLoading, isError, hasNextPage, isFetchingNextPage, data?.pages?.length, allReports.length]);
 
     return (
-        <div className="min-h-screen p-4 md:p-6">
+        <div className="min-h-screen flex-1 p-4 md:p-6">
             {/* Search Bar */}
             <div className="relative max-w-4xl mx-auto mb-8">
                 <div className="relative">

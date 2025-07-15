@@ -64,6 +64,7 @@ async function getCroppedImg(
 }
 
 
+
 const BackgroundImageDialog = () => {
     const { user } = useUser();
     const [imageSrc, setImageSrc] = useState<string | null>(null); // For react-easy-crop data URL
@@ -147,7 +148,7 @@ const BackgroundImageDialog = () => {
         }
     };
 
-    const initialDisplayImageSrc = typeof user?.profileBackgroundImage === 'string' ? user.profileBackgroundImage : '/placeholder-background.jpg';
+    const initialDisplayImageSrc = typeof user?.profileBackgroundImage === 'string' ? user.profileBackgroundImage : '/Profile-BG.png';
 
     return (
         <Dialog 
