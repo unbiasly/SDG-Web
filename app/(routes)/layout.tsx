@@ -14,8 +14,6 @@ import {
 import Link from "next/link";
 import { getRandomColor } from "@/lib/utilities/generateColor";
 import SearchBar from "@/components/feed/SearchBar";
-import { setupAPIInterceptor } from "@/lib/utilities/interceptor";
-import { AppApi } from "@/service/app.api";
 
 
 export default function RootLayout({
@@ -31,7 +29,7 @@ export default function RootLayout({
         dispatch(fetchUserStart());
         try {
             // Add cache busting parameter and no-cache headers
-            const response = await fetch(`/api?t=${Date.now()}`, {
+            const response = await fetch(`/api`, {
                 credentials: "include",
                 cache: 'no-store', // Prevent caching
                 headers: {
@@ -68,7 +66,6 @@ export default function RootLayout({
     }, [dispatch]);
 
     useEffect(() => {
-        setupAPIInterceptor();
         fetchUser();
     }, [fetchUser]);
 

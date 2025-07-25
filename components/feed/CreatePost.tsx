@@ -24,6 +24,7 @@ import {
 import { useUser } from "@/lib/redux/features/user/hooks";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { AppApi } from "@/service/app.api";
 
 const CreatePost = () => {
     // State variables
@@ -43,17 +44,9 @@ const CreatePost = () => {
     // Create post mutation using TanStack Query
     const createPostMutation = useMutation({
         mutationFn: async (formData: FormData) => {
-            const response = await fetch("/api/post", {
-                method: "POST",
-                body: formData,
-            });
+            const response = await AppApi.createPost(formData);
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Failed to create post: ${errorText}`);
-            }
-
-            return response.json();
+            return response.data;
         },
         onSuccess: () => {
             // Reset form state

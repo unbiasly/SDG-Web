@@ -15,7 +15,7 @@ import { AddTicketModal } from "./AddTicket";
 import { toast } from "react-hot-toast";
 import { AppApi } from "@/service/app.api";
 
-export const CreateEvent = () => {
+export const CreateEvent = ({ userId }: { userId: string }) => {
     const [selectedImages, setSelectedImages] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -273,6 +273,7 @@ export const CreateEvent = () => {
                                                     className="w-full h-24 object-cover rounded"
                                                 />
                                                 <button
+                                                    aria-label="Remove image"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleRemoveImage(
@@ -309,6 +310,7 @@ export const CreateEvent = () => {
                             )}
                         </div>
                         <input
+                            aria-label="Event images"
                             ref={fileInputRef}
                             type="file"
                             accept="image/jpeg,image/jpg,image/png,image/webp"
@@ -324,6 +326,7 @@ export const CreateEvent = () => {
                             Event Type
                         </label>
                         <select
+                            aria-label="Event type"
                             value={formData.type}
                             onChange={handleInputChange("type")}
                             className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -404,7 +407,7 @@ export const CreateEvent = () => {
 
                     {/* Action Buttons */}
                     <div className="space-y-3">
-                        <AddCoHostModal hosts={hosts} setHosts={setHosts} />
+                        <AddCoHostModal userId={userId} hosts={hosts} setHosts={setHosts} />
                         <AddTicketModal
                             ticketLink={formData.ticketLink}
                             setTicketLink={(link) =>

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { MENTOR_PROFILE_TABS } from "@/lib/constants/index-constants";
 import { CategoryMentor, MentorReview, MentorSlot } from "@/service/api.interface";
 import { AppApi } from "@/service/app.api";
-import { SlowBuffer } from "buffer";
+import { se } from "date-fns/locale";
 import { MessageSquare, Plus } from "lucide-react";
 import React, { use, useEffect, useState } from "react";
 
@@ -26,6 +26,19 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
     const [updatedSlot, setUpdatedSlot] = useState(false);
     const [addedReview, setAddedReview] = useState(false);
     const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+    const [selfUserId, setSelfUserId] = useState<string | null>(null);
+    
+    useEffect(() => {
+        const getCookie = (name: string): string | null => {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+            return null;
+        };
+
+        setSelfUserId(getCookie('userId'));
+    }, []);
+    
 
     const fetchReviews = async () => {
         try {
@@ -82,7 +95,7 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
     }
 
 
-    const amMentor = mentor?._id === id;
+    const amMentor = mentor?._id === selfUserId;
 
     useEffect(() => {
         getMentors();
@@ -96,11 +109,14 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
         fetchSlots();
     }, [id, updatedSlot]);
 
-    // Filter slots based on selected date
+    // Filter slots based on selected date (considering IST)
     const filteredSlots = selectedDate 
         ? slots.filter(slot => {
-            const slotDate = new Date(slot.startTime).toDateString();
-            return slotDate === new Date(selectedDate).toDateString();
+            const slotDate = new Date(slot.startTime);
+            const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+            const istSlotDate = new Date(slotDate.getTime() + istOffset);
+            const slotDateStr = istSlotDate.toISOString().split('T')[0];
+            return slotDateStr === selectedDate;
         })
         : slots;
 
@@ -189,9 +205,13 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
                                                     selectedSlot?._id ===
                                                     slot._id
                                                 }
-                                                onClick={() =>
-                                                    setSelectedSlot(slot)
-                                                }
+                                                onClick={() => {
+                                                    if (selectedSlot?._id === slot._id) {
+                                                        setSelectedSlot(null);
+                                                    } else {
+                                                        setSelectedSlot(slot);
+                                                    }
+                                                }}
                                                 available={slot.isBooked === false}
                                             />
                                         ))}
@@ -272,21 +292,25 @@ const DateTabOrganizer: React.FC<DateTabOrganizerProps> = ({ slots, selectedDate
     const uniqueDates = Array.from(
         new Set(
             slots.map(slot => {
+                // Convert to IST before extracting date
                 const date = new Date(slot.startTime);
-                return date.toISOString().split('T')[0]; // Get YYYY-MM-DD format
+                const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+                const istDate = new Date(date.getTime() + istOffset);
+                return istDate.toISOString().split('T')[0]; // Get YYYY-MM-DD format in IST
             })
         )
     ).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
-    // Get today's date for comparison
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Get today's date in IST for comparison
+    const todayIST = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+    const todayISTDate = new Date(todayIST.getTime() + istOffset);
+    todayISTDate.setUTCHours(0, 0, 0, 0); // Reset time to start of day in UTC (which represents IST date)
 
-    // Filter dates that are today or in the future, then take max 4
+    // Filter dates that are today or in the future in IST, then take max 4
     const futureDates = uniqueDates.filter(dateStr => {
-        const date = new Date(dateStr);
-        date.setHours(0, 0, 0, 0);
-        return date >= today;
+        const date = new Date(dateStr + 'T00:00:00Z'); // Treat as UTC to avoid timezone conversion
+        return date >= todayISTDate;
     }).slice(0, 4);
 
     // Set default selected date if none selected
@@ -296,38 +320,33 @@ const DateTabOrganizer: React.FC<DateTabOrganizerProps> = ({ slots, selectedDate
         }
     }, [futureDates, selectedDate, onDateSelect]);
 
-    // Helper function to format date for display
+    // Helper function to format date for display (IST context)
     const formatDateForDisplay = (dateStr: string) => {
-        const date = new Date(dateStr);
-        const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
+        const date = new Date(dateStr + 'T00:00:00Z');
+        const todayISTDateOnly = new Date(todayISTDate);
+        const tomorrowIST = new Date(todayISTDate);
+        tomorrowIST.setUTCDate(tomorrowIST.getUTCDate() + 1);
 
-        // Reset hours for comparison
-        const dateOnly = new Date(date);
-        dateOnly.setHours(0, 0, 0, 0);
-        const todayOnly = new Date(today);
-        todayOnly.setHours(0, 0, 0, 0);
-        const tomorrowOnly = new Date(tomorrow);
-        tomorrowOnly.setHours(0, 0, 0, 0);
-
-        if (dateOnly.getTime() === todayOnly.getTime()) {
+        if (date.getTime() === todayISTDateOnly.getTime()) {
             return "Today";
-        } else if (dateOnly.getTime() === tomorrowOnly.getTime()) {
+        } else if (date.getTime() === tomorrowIST.getTime()) {
             return "Tomorrow";
         } else {
-            return date.toLocaleDateString('en-US', { 
+            return date.toLocaleDateString('en-IN', { 
                 day: '2-digit', 
-                month: 'short' 
+                month: 'short',
+                timeZone: 'UTC' // Since we're treating the date as UTC
             });
         }
     };
 
-    // Count slots for each date
+    // Count slots for each date (considering IST)
     const getSlotCount = (dateStr: string) => {
         return slots.filter(slot => {
-            const slotDate = new Date(slot.startTime).toISOString().split('T')[0];
-            return slotDate === dateStr;
+            const slotDate = new Date(slot.startTime);
+            const istSlotDate = new Date(slotDate.getTime() + istOffset);
+            const slotDateStr = istSlotDate.toISOString().split('T')[0];
+            return slotDateStr === dateStr;
         }).length;
     };
 
@@ -336,7 +355,7 @@ const DateTabOrganizer: React.FC<DateTabOrganizerProps> = ({ slots, selectedDate
     }
 
     return (
-        <div className="flex w-full justify-evenly border-b text-sm lg:text-base  overflow-x-auto px-4">
+        <div className="flex w-full justify-evenly border-b text-sm lg:text-base overflow-x-auto px-4">
             {futureDates.map((dateStr, index) => {
                 const isSelected = selectedDate === dateStr;
                 const slotCount = getSlotCount(dateStr);

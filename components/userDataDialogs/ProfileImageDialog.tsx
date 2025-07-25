@@ -63,7 +63,7 @@ async function getCroppedImg(
     });
 }
 
-const ProfileImageDialog = () => {
+const ProfileImageDialog = ({ onSuccess } : { onSuccess: () => void }) => {
     const { user } = useUser();
     const [imageSrc, setImageSrc] = useState<string | null>(null);
     const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
@@ -144,7 +144,9 @@ const ProfileImageDialog = () => {
                 toast.success("Profile image updated successfully!");
                 setIsOpen(false); // This will trigger onOpenChange which calls resetStates
                 // Consider a more targeted state update (e.g., Redux) instead of full reload
-                window.location.reload();
+                if (onSuccess) {
+                    onSuccess(); // Call the success callback
+                }
             } else {
                 toast.error(
                     result.message || "Failed to update profile image."

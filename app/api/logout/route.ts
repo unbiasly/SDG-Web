@@ -7,8 +7,6 @@ export async function POST() {
     const jwtToken = cookieStore.get('jwtToken')?.value;
     const sessionId = cookieStore.get('sessionId')?.value;
 
-    let backendResponseMessage = "Logout initiated";
-
     try {
         if (jwtToken && sessionId) {
             const apiResponse = await fetch(`${baseURL}/logout`, {
@@ -21,45 +19,8 @@ export async function POST() {
                 body: JSON.stringify({ sessionId: sessionId })
             });
 
-            // Consider logout successful for cookie clearing if backend says OK, or session already invalid
-            if (apiResponse.ok || apiResponse.status === 401 || apiResponse.status === 403) {
-                if (apiResponse.status !== 204) { // 204 has no body
-                    try {
-                        const data = await apiResponse.json();
-                        console.log("Backend logout response:", data);
-                        backendResponseMessage = data.message || `Backend logout status: ${apiResponse.status}`;
-                    } catch (e) {
-                        console.log("Backend logout response (not JSON or empty):", apiResponse.status);
-                        backendResponseMessage = `Backend logout status: ${apiResponse.status}`;
-                    }
-                } else {
-                     console.log("Backend logout successful with 204 No Content");
-                     backendResponseMessage = "Backend logout successful (204)";
-                }
-            } else {
-                // Backend logout failed with an unexpected error
-                const errorText = await apiResponse.text().catch(() => `Backend logout failed with status: ${apiResponse.status}`);
-                console.error('Backend logout failed:', apiResponse.status, errorText);
-                backendResponseMessage = `Backend logout failed: ${errorText}`;
-            }
-        } else {
-            backendResponseMessage = "No session found to logout from backend, clearing local cookies.";
-            console.log(backendResponseMessage);
-        }
-
-        // Always attempt to clear cookies and return a success response for the /api/logout route itself
-        const response = new NextResponse(
-            JSON.stringify({ success: true, message: "Cookies cleared. " + backendResponseMessage }),
-            {
-                status: 200,
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
-                }
-            }
-        );
+            const data = await apiResponse.json();
+            
 
         const cookieOptions = {
             httpOnly: true,
@@ -69,13 +30,14 @@ export async function POST() {
             path: '/'
         };
 
-        response.cookies.set('jwtToken', '', cookieOptions);
-        response.cookies.set('refreshToken', '', cookieOptions);
-        response.cookies.set('sessionId', '', cookieOptions);
-        response.cookies.set('userId', '', cookieOptions);
+        cookieStore.set('jwtToken', '', cookieOptions);
+        cookieStore.set('refreshToken', '', cookieOptions);
+        cookieStore.set('sessionId', '', cookieOptions);
+        cookieStore.set('userId', '', cookieOptions);
 
         console.log("Cookies cleared, returning 200 from /api/logout");
-        return response;
+        return NextResponse.json({ success: true, message: 'Logged out successfully ', data }, { status: 200 });
+        }
 
     } catch (error: any) {
         console.error('Error during logout process in /api/logout:', error.message);
@@ -91,10 +53,10 @@ export async function POST() {
             maxAge: 0,
             path: '/'
         };
-        errorResponse.cookies.set('jwtToken', '', fallbackCookieOptions);
-        errorResponse.cookies.set('refreshToken', '', fallbackCookieOptions);
-        errorResponse.cookies.set('sessionId', '', fallbackCookieOptions);
-        errorResponse.cookies.set('userId', '', fallbackCookieOptions);
+        cookieStore.set('jwtToken', '', fallbackCookieOptions);
+        cookieStore.set('refreshToken', '', fallbackCookieOptions);
+        cookieStore.set('sessionId', '', fallbackCookieOptions);
+        cookieStore.set('userId', '', fallbackCookieOptions);
         return errorResponse;
     }
 }

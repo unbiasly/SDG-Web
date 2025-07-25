@@ -252,6 +252,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
             className={`flex w-full lg:w-full items-center justify-start space-x-2 py-2 p-2 rounded-xl hover:bg-accent/30 ${
                 isActive ? "font-bold text-accent" : ""
             }`}
+            prefetch={false}
         >
             <Image
                 src={icon}

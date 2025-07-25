@@ -17,7 +17,6 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { UserData, UserDetailsRequest } from "@/service/api.interface";
-import { useUser } from "@/lib/redux/features/user/hooks";
 import { toast } from "react-hot-toast";
 import { DatePicker } from "../ui/date-picker";
 
@@ -33,12 +32,14 @@ const isValidURL = (urlString: string): boolean => {
 };
 
 export const UserProfileDialog = ({ user, onSuccess }: { user: UserData, onSuccess: () => void }) => {
+    const [isOpen, setIsOpen] = useState(false);
     const [calendarOpen, setCalendarOpen] = useState<boolean>(false);
+    
     // Store the original user data for comparison
-    const [originalData, setOriginalData] = useState<UserDetailsRequest | null>(
-        null
-    );
-    const [profileData, setProfileData] = useState<UserDetailsRequest>(() => {
+    const [originalData, setOriginalData] = useState<UserDetailsRequest | null>(null);
+    
+    // Helper function to get initial data from user prop
+    const getInitialDataFromUser = () => {
         const today = new Date();
         const thirteenYearsAgo = new Date(
             today.getFullYear() - 13,
@@ -47,10 +48,7 @@ export const UserProfileDialog = ({ user, onSuccess }: { user: UserData, onSucce
         );
         
         return {
-            name:
-                user?.fName && user?.lName
-                    ? `${user.fName} ${user.lName}`
-                    : undefined,
+            name: user?.fName && user?.lName ? `${user.fName} ${user.lName}` : undefined,
             location: user?.location,
             gender: user?.gender || undefined,
             dob: user?.dob ? new Date(user.dob) : thirteenYearsAgo,
@@ -66,52 +64,55 @@ export const UserProfileDialog = ({ user, onSuccess }: { user: UserData, onSucce
             profileImage: user?.profileImage || undefined,
             profileBackgroundImage: user?.profileBackgroundImage || undefined,
         };
-    });
+    };
+
+    const [profileData, setProfileData] = useState<UserDetailsRequest>(getInitialDataFromUser);
 
     // Add file state for image uploads
     const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
-    const [backgroundImageFile, setBackgroundImageFile] = useState<File | null>(
-        null
-    );
+    const [backgroundImageFile, setBackgroundImageFile] = useState<File | null>(null);
+    
     // Track if data has been modified
     const [isDataModified, setIsDataModified] = useState(false);
-    // const [dobError, setDobError] = useState<string | null>(null); // Removed, integrated into errors
     const [errors, setErrors] = useState<Record<string, string | null>>({});
 
-    // Initialize original data when component mounts
+    // Reset function to restore original state
+    const resetToOriginalState = () => {
+        const initialData = getInitialDataFromUser();
+        setProfileData(initialData);
+        setOriginalData(initialData);
+        setProfileImageFile(null);
+        setBackgroundImageFile(null);
+        setIsDataModified(false);
+        setErrors({});
+        setCalendarOpen(false);
+    };
+
+    // Handle dialog open/close
+    const handleDialogChange = (open: boolean) => {
+        setIsOpen(open);
+        if (open) {
+            // Reset to fresh data when opening
+            resetToOriginalState();
+        } else {
+            // Also reset when closing (in case user cancels)
+            resetToOriginalState();
+        }
+    };
+
+    // Initialize original data when user prop changes or dialog opens
     useEffect(() => {
-        if (user) {
-            const initialData = {
-                name:
-                    user?.fName && user?.lName
-                        ? `${user.fName} ${user.lName}`
-                        : undefined,
-                location: user.location || undefined,
-                gender: user.gender || undefined,
-                dob: user.dob ? new Date(user.dob) : undefined,
-                portfolioLink: user.portfolioLink || undefined,
-                bio: user.bio || undefined,
-                education: user.education || [],
-                experience: user.experience || [],
-                fName: user.fName || undefined,
-                lName: user.lName || undefined,
-                occupation: user.occupation || undefined,
-                pronouns: user.pronouns || undefined,
-                headline: user.headline || undefined,
-                profileImage: user.profileImage || undefined,
-                profileBackgroundImage:
-                    user.profileBackgroundImage || undefined,
-            };
+        if (user && isOpen) {
+            const initialData = getInitialDataFromUser();
             setOriginalData(initialData);
             setProfileData(initialData); // Initialize profileData with the same data
         }
-    }, [user]);
+    }, [user, isOpen]);
 
     // Check for modifications whenever profileData, profileImageFile, or backgroundImageFile changes
     useEffect(() => {
         if (!originalData) return;
 
-        // Compare fields between current form data and original data
         const isTextDataChanged =
             originalData.fName !== profileData.fName ||
             originalData.lName !== profileData.lName ||
@@ -123,14 +124,10 @@ export const UserProfileDialog = ({ user, onSuccess }: { user: UserData, onSucce
             originalData.pronouns !== profileData.pronouns ||
             originalData.headline !== profileData.headline;
 
-        // Compare dates (accounting for potential timezone differences)
         const isDateChanged =
-            originalData.dob?.toDateString() !==
-            profileData.dob?.toDateString();
+            originalData.dob?.toDateString() !== profileData.dob?.toDateString();
 
-        // Check if any file was selected
-        const isFileChanged =
-            profileImageFile !== null || backgroundImageFile !== null;
+        const isFileChanged = profileImageFile !== null || backgroundImageFile !== null;
 
         setIsDataModified(isTextDataChanged || isDateChanged || isFileChanged);
     }, [profileData, profileImageFile, backgroundImageFile, originalData]);
@@ -322,34 +319,6 @@ export const UserProfileDialog = ({ user, onSuccess }: { user: UserData, onSucce
             setProfileData(initialData); // Initialize profileData with the same data
         }
     }, [user]);
-
-    // Check for modifications whenever profileData, profileImageFile, or backgroundImageFile changes
-    useEffect(() => {
-        if (!originalData) return;
-
-        // Compare fields between current form data and original data
-        const isTextDataChanged =
-            originalData.fName !== profileData.fName ||
-            originalData.lName !== profileData.lName ||
-            originalData.location !== profileData.location ||
-            originalData.gender !== profileData.gender ||
-            originalData.portfolioLink !== profileData.portfolioLink ||
-            originalData.bio !== profileData.bio ||
-            originalData.occupation !== profileData.occupation ||
-            originalData.pronouns !== profileData.pronouns ||
-            originalData.headline !== profileData.headline;
-
-        // Compare dates (accounting for potential timezone differences)
-        const isDateChanged =
-            originalData.dob?.toDateString() !==
-            profileData.dob?.toDateString();
-
-        // Check if any file was selected
-        const isFileChanged =
-            profileImageFile !== null || backgroundImageFile !== null;
-
-        setIsDataModified(isTextDataChanged || isDateChanged || isFileChanged);
-    }, [profileData, profileImageFile, backgroundImageFile, originalData]);
 
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -593,8 +562,9 @@ export const UserProfileDialog = ({ user, onSuccess }: { user: UserData, onSucce
                 // Handle successful update
                 console.log("Profile updated successfully");
                 toast.success("Profile updated successfully!");
-                // Refresh the page to show updated profile
-                onSuccess();
+                setIsOpen(false); // Close dialog
+                resetToOriginalState(); // Reset state
+                onSuccess(); // Call success callback
             } else {
                 const errorText = await response.json();
                 console.log("Error response:", errorText);
@@ -613,9 +583,11 @@ export const UserProfileDialog = ({ user, onSuccess }: { user: UserData, onSucce
     };
 
     return (
-        <Dialog>
-            <DialogTrigger className="rounded-full cursor-pointer px-6 py-2 bg-accent hover:bg-accent/80 text-white border-none backdrop-blur-sm transition-all duration-300 font-medium text-sm md:text-base">
-                Edit Profile
+        <Dialog open={isOpen} onOpenChange={handleDialogChange}>
+            <DialogTrigger asChild>
+                <button className="rounded-full cursor-pointer px-6 py-2 bg-accent hover:bg-accent/80 text-white border-none backdrop-blur-sm transition-all duration-300 font-medium text-sm md:text-base">
+                    Edit Profile
+                </button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto hidden-scrollbar bg-white">
                 <DialogHeader className="border-b border-gray-300 pb-4">
@@ -957,11 +929,18 @@ export const UserProfileDialog = ({ user, onSuccess }: { user: UserData, onSucce
                     </div>
                 </div>
 
-                <div className="border-t pt-4 flex justify-end">
+                <div className="border-t pt-4 flex justify-end space-x-3">
+                    <Button
+                        variant="outline"
+                        onClick={() => setIsOpen(false)}
+                        className="px-6"
+                    >
+                        Cancel
+                    </Button>
                     <Button
                         onClick={handleProfileUpdate}
                         className="bg-accent hover:bg-accent text-white cursor-pointer px-8"
-                        disabled={!isDataModified || hasValidationErrors } 
+                        disabled={!isDataModified || hasValidationErrors}
                     >
                         Save
                     </Button>

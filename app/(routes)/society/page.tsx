@@ -29,21 +29,14 @@ const Page = () => {
     const [isLoadingTalks, setIsLoadingTalks] = useState(true);
     
     async function fetchPosts(cursor?: string): Promise<PostsFetchResponse> {
-        const url = cursor ? `/api/post?cursor=${cursor}&type=sdg-society` : "/api/post?type=sdg-society";
-        
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-        });
 
-        if (!response.ok) {
+        const response = await AppApi.fetchPosts(cursor, 'sdg-society');
+        if (!response.success) {
             throw new Error("Failed to fetch posts");
         }
 
-        return response.json();
+        return response.data;
+
     }
 
     // Set up infinite query

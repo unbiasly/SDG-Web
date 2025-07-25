@@ -65,7 +65,7 @@ async function getCroppedImg(
 
 
 
-const BackgroundImageDialog = () => {
+const BackgroundImageDialog = ({ onSuccess }: { onSuccess: () => void }) => {
     const { user } = useUser();
     const [imageSrc, setImageSrc] = useState<string | null>(null); // For react-easy-crop data URL
     const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
@@ -136,7 +136,7 @@ const BackgroundImageDialog = () => {
             if (response.ok && result.success) {
                 toast.success('Background image updated successfully!');
                 setIsOpen(false); // This will trigger onOpenChange, which calls resetCropStates
-                window.location.reload(); // Consider updating state via Redux/context instead
+                onSuccess();
             } else {
                 toast.error(result.message || 'Failed to update background image.');
             }
@@ -165,7 +165,7 @@ const BackgroundImageDialog = () => {
                     <Camera size={20} className="sm:w-6 sm:h-6" color='white'/>
                 </div>
             </DialogTrigger>
-            <DialogContent showDialogClose={false} className='bg-[#1e1e1e] text-white border-none w-full lg:min-w-4xl  mx-auto'>
+            <DialogContent showDialogClose={false} className='bg-[#1e1e1e] text-white border-none w-full lg:min-w-4xl mx-auto'>
                 <DialogTitle className='text-center text-lg font-semibold mb-4'>Cover Photo</DialogTitle>
                 <div className="flex flex-col items-center space-y-4 w-full">
                     <div className="w-full relative rounded-lg overflow-hidden flex items-center bg-[#1e1e1e] aspect-[4/2]">
@@ -180,16 +180,17 @@ const BackgroundImageDialog = () => {
                                     onZoomChange={setZoom}
                                     onCropComplete={onCropComplete}
                                     classes={{ containerClassName: 'rounded-lg' }}
+                                    objectFit='contain'
                                 />
                             </div>
                         ) : (
-                            <div className='w-full relative aspect-[4/1] '>
+                            <div className='w-full relative aspect-[4/1]'>
                                 <Image
                                     src={initialDisplayImageSrc}
                                     alt="Background Preview"
                                     fill
-                                    className=" rounded-lg object-cover"
-                                    priority={!imageSrc} // Only prioritize if it's the initial image
+                                    className="rounded-lg object-cover"
+                                    priority={!imageSrc}
                                 />
                             </div>
                         )}

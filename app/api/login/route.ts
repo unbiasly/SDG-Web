@@ -20,9 +20,6 @@ export async function POST(request: NextRequest) {
             data,
             {
                 status: response.status,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
             }
         );
     } catch (error) {

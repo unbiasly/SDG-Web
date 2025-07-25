@@ -12,7 +12,6 @@ import {
     SOCIETY_PROFILE_TABS,
     SOCIETY_ADMIN_PROFILE_TABS,
 } from "@/lib/constants/index-constants";
-import { useUser } from "@/lib/redux/features/user/hooks";
 import {
     AnalyticsResponseData,
     Education,
@@ -55,7 +54,19 @@ export default function Page({
     params: Promise<{ userId: string }>;
 }) {
     const { userId } = use(params);
-    const { user } = useUser();
+    const [selfUserId, setSelfUserId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const getCookie = (name: string): string | null => {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+            return null;
+        };
+
+        setSelfUserId(getCookie('userId'));
+    }, []);
+
     const queryClient = useQueryClient();
 
     // State declarations - consolidated
@@ -92,8 +103,8 @@ export default function Page({
 
     // Memoized computed values - PREVENT RECALCULATION
     const isOwnProfile = useMemo(() => {
-        return user?._id === profileUser?._id;
-    }, [user?._id, profileUser?._id]);
+        return selfUserId === profileUser?._id;
+    }, [selfUserId, profileUser?._id]);
 
     const isSocietyProfile = useMemo(() => {
         return profileUser?.role_slug === "sdg-society";
@@ -102,26 +113,20 @@ export default function Page({
     const isSmallScreen = useMediaQuery("(max-width: 768px)");
     const avatarSize = isSmallScreen ? "lg" : "xl";
 
+    console.log("Rendering Profile Page for userId:", userId);
+
     // Memoized API functions - PREVENT RECREATION
-    const fetchUserById = useCallback(async (id: string, retryCount = 0) => {
-        const MAX_RETRIES = 3;
-        const RETRY_DELAY = 1000;
-
-        if (retryCount === 0) {
-            setIsLoading(true);
-            setFetchAttempts(0);
-        }
-        setFetchAttempts(retryCount + 1);
-
+    const fetchUserById = useCallback(async (id: string) => {
         try {
             const response = await AppApi.fetchUser(id);
+            console.log("Fetched user data:", response);
 
             if (!response.success) {
                 throw new Error("User not found");
             }
 
             const userData = response.data;
-            if (userData?.data) {
+            if (userData.data) {
                 // BATCH STATE UPDATES - PREVENT MULTIPLE RE-RENDERS
                 setProfileUser(userData.data);
                 setIsFollowingActive(userData.data.isFollowing);
@@ -131,30 +136,18 @@ export default function Page({
             
             throw new Error("No user data received");
         } catch (error) {
-            console.error(`Failed to fetch user by ID (attempt ${retryCount + 1}):`, error);
-            
-            if (retryCount < MAX_RETRIES && (error as any)?.status === 401) {
-                console.log(`Retrying in ${RETRY_DELAY}ms...`);
-                setIsTokenRefreshing(true);
-                
-                await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-                
-                setIsTokenRefreshing(false);
-                return await fetchUserById(id, retryCount + 1);
-            }
-            
+            console.error(`Failed to fetch user by ID:`, error);
+            setFetchAttempts(prev => prev + 1);
             return null;
         } finally {
-            if (retryCount === 0) {
-                setIsLoading(false);
-                setIsTokenRefreshing(false);
-            }
+            setIsLoading(false);
+            setIsTokenRefreshing(false);
         }
     }, []); // No dependencies to prevent recreation
 
-    const trackProfileView = useCallback(async (targetUserId: string) => {
+    const trackProfileView = useCallback(async () => {
         // Don't track if viewing own profile
-        if (user?._id === targetUserId) return;
+        if (selfUserId === userId) return;
 
         try {
             await fetch("/api/analytics", {
@@ -162,18 +155,17 @@ export default function Page({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     action: "track",
-                    userId: targetUserId,
+                    userId: userId,
                     type: "profile_view",
-                    viewerId: user?._id,
+                    viewerId: selfUserId,
                 }),
             });
         } catch (error) {
             console.error("Failed to track profile view:", error);
         }
-    }, [user?._id]);
+    }, [selfUserId]);
 
     const getAnalytics = useCallback(async () => {
-        if (!userId) return;
 
         try {
             const response = await fetch(`/api/analytics`, {
@@ -192,7 +184,7 @@ export default function Page({
         } catch (error) {
             console.error("Analytics Fetch Error:", error);
         }
-    }, [userId]); // Only depend on userId
+    }, []); // Only depend on userId
 
     const getSocietyEvents = useCallback(async () => {
         if (!userId) return;
@@ -209,26 +201,18 @@ export default function Page({
     // MAIN DATA FETCHING EFFECT - OPTIMIZED
     useEffect(() => {
         if (!userId) return;
-
-        let isCancelled = false; // Prevent state updates if component unmounts
-
         const fetchAllData = async () => {
             try {
                 // Fetch user data first
                 const userData = await fetchUserById(userId);
-                
-                if (isCancelled) return;
 
                 // Track profile view for other users
-                if (userData && user?._id !== userId) {
-                    trackProfileView(userId);
+                if (userData && selfUserId && selfUserId !== userId) {
+                    trackProfileView();
                 }
 
                 // Fetch analytics for own profile
-                if (userData && user?._id === userData._id) {
                     await getAnalytics();
-                }
-
                 // Fetch society events if it's a society profile
                 if (userData?.role_slug === "sdg-society") {
                     await getSocietyEvents();
@@ -242,11 +226,8 @@ export default function Page({
         };
 
         fetchAllData();
-
-        return () => {
-            isCancelled = true; // Cleanup function
-        };
-    }, [userId, isUpdated, fetchUserById, trackProfileView, getAnalytics, getSocietyEvents, user?._id]);
+    }, [userId, isUpdated]);
+    // trackProfileView, getAnalytics, getSocietyEvents,
 
     // SEPARATE EFFECT FOR LOCAL STORAGE - PREVENT UNNECESSARY API CALLS
     useEffect(() => {
@@ -286,7 +267,7 @@ export default function Page({
     } = useInfiniteQuery({
         queryKey: ["societyMembers", userId],
         queryFn: async ({ pageParam = null }) => {
-            const response = await AppApi.getSocietyMembers(30, pageParam as string | null);
+            const response = await AppApi.getSocietyMembers(userId, 30, pageParam as string | null);
             if (!response.success) {
                 throw new Error(response.error || "Failed to fetch society members");
             }
@@ -299,7 +280,7 @@ export default function Page({
             return undefined;
         },
         initialPageParam: null,
-        enabled: !!userId && isSocietyProfile && isOwnProfile && activeProfileTab === "members", // Only fetch when needed
+        enabled: !!userId && isSocietyProfile && activeProfileTab === "members", // Only fetch when needed
         staleTime: 5 * 60 * 1000,
         gcTime: 10 * 60 * 1000,
     });
@@ -439,7 +420,7 @@ export default function Page({
                     />
                 )}
                 <div onClick={(e) => e.stopPropagation()}>
-                    {isOwnProfile && <BackgroundImageDialog />}
+                    {isOwnProfile && <BackgroundImageDialog onSuccess={() => setIsUpdated(!isUpdated)} />}
                 </div>
             </div>
 
@@ -455,15 +436,15 @@ export default function Page({
                         onClick={() => setIsProfileImageViewOpen(true)}
                     />
                     <div onClick={(e) => e.stopPropagation()}>
-                        {isOwnProfile && <ProfileImageDialog />}
+                        {isOwnProfile && <ProfileImageDialog onSuccess={() => setIsUpdated(!isUpdated)} />}
                     </div>
                 </div>
                 {isOwnProfile ? (
-                    profileUser && <UserProfileDialog user={profileUser} onSuccess={() => setIsUpdated(!isUpdated)} />
+                    profileUser && <UserProfileDialog user={profileUser} onSuccess={() => setIsUpdated(!isUpdated)}  />
                 ) : (
                     <FollowButton
                         targetId={profileUser?._id}
-                        userId={user?._id || ""}
+                        userId={selfUserId || ""}
                         followed={profileUser?.isFollowing}
                         onFollowChange={(isFollowing) => {
                             setIsFollowingActive(isFollowing);
@@ -754,7 +735,7 @@ export default function Page({
                         <div>
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-lg font-bold">Events</h2>
-                                {isOwnProfile && <CreateEvent />}
+                                {isOwnProfile && <CreateEvent userId={userId} />}
                             </div>
                             <div>
                                 {events.length > 0 ? (
@@ -780,7 +761,6 @@ export default function Page({
                     )}
     
                     {isSocietyProfile &&
-                        isOwnProfile &&
                         activeProfileTab === "members" && (
                             <div>
                                 <div className="flex items-center justify-between mb-4">
@@ -817,6 +797,7 @@ export default function Page({
                                             {allMembers.map((member) => (
                                                 <SocietyMemberCard
                                                     member={member}
+                                                    selfUserId={selfUserId || undefined}
                                                     key={member._id}
                                                 />
                                             ))}
@@ -859,6 +840,7 @@ export default function Page({
                                         Membership Requests
                                     </h2>
                                     <div className="flex items-center gap-2">
+                                        <label htmlFor="csv-upload" className="hidden">Upload your CSV File</label>
                                         <input
                                             type="file"
                                             accept=".csv"

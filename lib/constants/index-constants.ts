@@ -27,6 +27,7 @@ export const SOCIETY_PROFILE_TABS = [
     { id: "about", label: "About" },
     { id: "posts", label: "Posts" },
     { id: "events", label: "Events" },
+    { id: "members", label: "Members" },
 ];
 
 export const SOCIETY_ADMIN_PROFILE_TABS = [

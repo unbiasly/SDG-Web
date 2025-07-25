@@ -3,6 +3,7 @@ import Loading from '@/components/Loader';
 import { PostCard } from '@/components/feed/PostCard';
 import { formatDate } from '@/lib/utilities/formatDate';
 import { Post } from '@/service/api.interface';
+import { AppApi } from '@/service/app.api';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -19,16 +20,9 @@ const Page = () => {
     const getPost = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/post/details`, {
-                method: 'POST',
-                body: JSON.stringify({ postId: id })
-            });
-            
-            if (!response.ok) {
-                throw new Error('Post not found');
-            }
+            const response = await AppApi.fetchPosts(undefined, undefined, undefined, id as string);
 
-            const data = await response.json();
+            const data = await response.data;
             setPost(data.data);
             console.log(data.data);
         } catch (err) {

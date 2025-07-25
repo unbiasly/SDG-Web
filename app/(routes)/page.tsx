@@ -10,6 +10,7 @@ import Loader from "@/components/Loader";
 import { PostsFetchResponse } from "@/service/api.interface";
 import { PostWithImpressionTracking } from "@/components/feed/PostWithImpressionTracking";
 import { useMediaQuery } from "@/hooks/use-media-query"; // Import the useMediaQuery hook
+import { AppApi } from "@/service/app.api";
 
 export default function Home() {
     const isMobile = useMediaQuery("(max-width: 1024px)");
@@ -23,22 +24,11 @@ export default function Home() {
 
 
     async function fetchPosts(cursor?: string): Promise<PostsFetchResponse> {
-        const url = cursor ? `/api/post?cursor=${cursor}` : "/api/post";
+        const response = await AppApi.fetchPosts(cursor);
 
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error("Failed to fetch posts");
-        }
-
-        return response.json();
+        return response.data;
     }
+    
     // Set up infinite query
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
         useInfiniteQuery({

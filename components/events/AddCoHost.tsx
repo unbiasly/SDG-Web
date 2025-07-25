@@ -18,9 +18,10 @@ import Loader from "../Loader";
 interface AddCoHostModalProps {
     hosts: string[];
     setHosts: (hosts: string[]) => void;
+    userId: string;
 }
 
-export const AddCoHostModal = ({ hosts, setHosts }: AddCoHostModalProps) => {
+export const AddCoHostModal = ({ hosts, setHosts, userId }: AddCoHostModalProps) => {
     const [members, setMembers] = useState<SocietyMember[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedHosts, setSelectedHosts] = useState<string[]>(hosts);
@@ -42,7 +43,7 @@ export const AddCoHostModal = ({ hosts, setHosts }: AddCoHostModalProps) => {
                     console.warn("Max iterations reached in pagination");
                     break;
                 }
-                const response = await AppApi.getSocietyMembers(50, cursor);
+                const response = await AppApi.getSocietyMembers(userId, 30, cursor);
 
                 if (response.success && response.data?.data) {
                     allMembers = [...allMembers, ...response.data.data];
@@ -220,6 +221,7 @@ export const AddCoHostModal = ({ hosts, setHosts }: AddCoHostModalProps) => {
                                                 </div>
                                                 <div className="flex items-center space-x-2">
                                                     <input
+                                                        id={member._id!}
                                                         type="checkbox"
                                                         checked={selectedHosts.includes(
                                                             member._id!
@@ -230,6 +232,7 @@ export const AddCoHostModal = ({ hosts, setHosts }: AddCoHostModalProps) => {
                                                             )
                                                         }
                                                         className="w-5 h-5 border-2 border-gray-300 rounded accent-accent"
+                                                        aria-label={`Select ${member.name || member.email || "member"} as co-host`}
                                                     />
                                                 </div>
                                             </div>

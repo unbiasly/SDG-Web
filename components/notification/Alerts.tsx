@@ -3,6 +3,7 @@ import { Notification } from "@/service/api.interface";
 import { ChevronRight, MessageSquare, Video, UserPlus, BriefcaseBusiness, FileCheck, FileText, FileEdit, Bell } from "lucide-react";
 import ProfileAvatar from "../profile/ProfileAvatar";
 import { useCallback } from "react";
+import { AppApi } from "@/service/app.api";
 
 const Alerts = ({ _id, post, category, type, message, isRead, userProfile }: Notification) => {
     // Determine the alert style based on type
@@ -46,23 +47,9 @@ const Alerts = ({ _id, post, category, type, message, isRead, userProfile }: Not
     
     const handleRead = useCallback(async (notificationId: string) => {
         try {
-            const response = await fetch(`/api/notifications`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    notificationId
-                })
-            });
+            const response = await AppApi.readNotification(notificationId);
             
-            if (!response.ok) {
-                throw new Error(`Failed to mark notification as read: ${response.status} ${response.statusText}`);
-            }
-            
-            const responseData = await response.json();
-            
-            if (responseData.success) {
+            if (response.success) {
                 navigateTo();
             } else {
                 throw new Error("Failed to update notification");

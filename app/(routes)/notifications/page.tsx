@@ -7,6 +7,7 @@ import { Notification } from '@/service/api.interface';
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
+import { AppApi } from '@/service/app.api';
 
 const Page = () => {
     const [activeTab, setActiveTab] = useState("Posts");
@@ -36,23 +37,9 @@ const Page = () => {
 
     // Define the fetchNotifications function that will be used by useInfiniteQuery
     const fetchNotifications = async ({ pageParam = null }) => {
-        const response = await fetch('/api/notifications', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                limit: 30,
-                cursor: pageParam,
-                category: currentCategory,
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Failed to fetch notifications: ${response.status} ${response.statusText}`);
-        }
-        
-        return response.json();
+        const response = await AppApi.fetchNotifications(pageParam as string | null, currentCategory);
+
+        return response.data;
     };
 
     // Use infinite query hook with the category as part of the query key

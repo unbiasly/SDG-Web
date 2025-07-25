@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import ProfileAvatar from "../profile/ProfileAvatar";
 import { SocietyMember } from "@/service/api.interface";
 import Options from "../custom-ui/Options";
-import { PencilIcon, TrashIcon } from "lucide-react";
+import { PencilIcon } from "lucide-react";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,12 +11,14 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface SocietyMemberCardProps {
+    selfUserId?: string;
     member: SocietyMember;
     onMemberUpdate?: (updatedMember: Partial<SocietyMember> & { _id: string }) => void;
     onMemberRemove?: (memberId: string) => void;
 }
 
 const SocietyMemberCard: React.FC<SocietyMemberCardProps> = ({ 
+    selfUserId,
     member, 
     onMemberUpdate,
     onMemberRemove 
@@ -85,7 +87,7 @@ const SocietyMemberCard: React.FC<SocietyMemberCardProps> = ({
                         )}
                     </div>
                 </div>
-                <Options menuOptions={menuOptions} />
+                {selfUserId && member._id === selfUserId && <Options menuOptions={menuOptions} />}
             </div>
 
             <EditMemberDialog

@@ -9,7 +9,7 @@ import {
     JobListing,
 } from "@/service/api.interface";
 import { ArrowLeft, Bookmark } from "lucide-react";
-import React, { useCallback, useState, useMemo } from "react";
+import React, { useCallback, useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { PostCard } from "@/components/feed/PostCard";
 import VideoCard from "@/components/video/VideoCard";
@@ -49,19 +49,24 @@ const BookmarksContent = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>("All");
     const [selectedJob, setSelectedJob] = useState<JobListing | null>(null);
 
+    useEffect(() => {
+        // Invalidate all bookmark queries when component mounts
+        queryClient.invalidateQueries({ queryKey: ["bookmarkedPosts"] });
+        queryClient.invalidateQueries({ queryKey: ["bookmarkedNews"] });
+        queryClient.invalidateQueries({ queryKey: ["bookmarkedVideos"] });
+        queryClient.invalidateQueries({ queryKey: ["bookmarkedJobs"] });
+    }, [queryClient]);
+
     // Define fetch functions for each bookmark type
     const fetchPosts = async ({
         pageParam = null,
     }: {
         pageParam?: string | null;
     }) => {
-        const url = new URL("/api/post/bookmark", window.location.origin);
-        if (pageParam) url.searchParams.append("cursor", pageParam);
+        const response = await AppApi.fetchPosts(pageParam || undefined, undefined, true);
+        if (!response.success) throw new Error("Failed to fetch post bookmarks");
+        return response.data;
 
-        const response = await fetch(url.toString());
-        if (!response.ok) throw new Error("Failed to fetch post bookmarks");
-
-        return response.json() as Promise<BookmarkResponse<PostBookmarkData>>;
     };
 
     const fetchNews = async ({
@@ -125,6 +130,7 @@ const BookmarksContent = () => {
         queryKey: ["bookmarkedPosts"],
         queryFn: fetchPosts,
         enabled: true,
+        refetchOnMount: true,
         getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
         initialPageParam: null,
     });
@@ -141,6 +147,7 @@ const BookmarksContent = () => {
         queryKey: ["bookmarkedNews"],
         queryFn: fetchNews,
         enabled: true,
+        refetchOnMount: true,
         getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
         initialPageParam: null,
     });
@@ -157,6 +164,7 @@ const BookmarksContent = () => {
         queryKey: ["bookmarkedVideos"],
         queryFn: fetchVideos,
         enabled: true,
+        refetchOnMount: true,
         getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
         initialPageParam: null,
     });
@@ -174,6 +182,7 @@ const BookmarksContent = () => {
         queryKey: ['bookmarkedJobs'],
         queryFn: fetchJobs,
         enabled: true,
+        refetchOnMount: true,
         getNextPageParam: (lastPage): string | undefined => {
             return lastPage.pagination?.hasMore ? lastPage.pagination.nextCursor : undefined;
         },

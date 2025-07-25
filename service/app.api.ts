@@ -33,7 +33,247 @@ export const AppApi = {
             return null;
         }
     },
-    
+
+    setCookie: async (cookieName: string, cookieValue: string) => {
+        try {
+            const response = await fetch("/api/setCookieToken", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Cache-Control": "no-cache",
+                    "Pragma": "no-cache"
+                },
+                cache: 'no-store',
+                body: JSON.stringify({
+                    cookieName,
+                    cookieValue
+                }),
+                credentials: "include",
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    auth: async (email: string, password: string, isSignUp: boolean = false) => {
+        try {
+            const response = await fetch("/api/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(isSignUp ? {} : {
+                        "Cache-Control": "no-cache",
+                        "Pragma": "no-cache"
+                    })
+                },
+                ...(isSignUp ? {} : { cache: 'no-store' }),
+                body: JSON.stringify({
+                    email,
+                    password,
+                    device_id: "web",
+                    device_token: "web",
+                    ...(isSignUp ? { isSignUp: true } : { isSignin: true }),
+                }),
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data?.error || data?.message || `${isSignUp ? 'Sign-up' : 'Login'} failed`);
+            }
+
+            // Set cookies with the response data
+            const cookieResponse = await fetch("/api/setCookieToken", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Cache-Control": "no-cache",
+                    "Pragma": "no-cache"
+                },
+                cache: 'no-store',
+                body: JSON.stringify({
+                    jwtToken: data.jwtToken,
+                    refreshToken: data.refreshToken,
+                    sessionId: data.sessionId,
+                    userId: data.userId,
+                    ...(data.role_type && {role_type: data.role_type})
+                }),
+                credentials: "include",
+            });
+
+            const cookieData = await cookieResponse.json();
+
+            return {
+                success: true,
+                data: data,
+                cookieData: cookieData
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    logout: async () => {},
+
+    forgotPassword: async (email: string) => {},
+
+    resetPassword: async (token: string, newPassword: string) => {
+        try {
+            const response = await fetch("/api/reset-password", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    token,
+                    newPassword,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to reset password");
+            }
+
+            return {
+                success: true,
+                data: await response.json()
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    updatePassword: async (currentPassword: string, newPassword: string) => {},
+
+    deactivate: async () => {},
+
+    getSessions: async () => {},
+
+    removeSession: async (sessionId: string) => {},
+
+    fetchPosts: async (cursor?: string, type?: string, bookmarkedPosts?:boolean, id?: string) => {
+        try {
+            // If id is provided, fetch specific post details
+            if (id) {
+                const response = await fetch(`/api/post/details`, {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ postId: id })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Post not found');
+                }
+
+                const data = await response.json();
+                return {
+                    success: true,
+                    data: data
+                };
+            } 
+            if (bookmarkedPosts) {
+                const url = new URL("/api/post/bookmark", window.location.origin);
+                if (cursor) url.searchParams.append("cursor", cursor);
+
+                const response = await fetch(url.toString());
+                if (!response.ok) {
+                    throw new Error("Failed to fetch post bookmarks");
+                }
+
+                const data = await response.json();
+                return {
+                    success: true,
+                    data: data
+                };
+            }
+
+            // Otherwise, fetch posts list with pagination
+            const queryParams = new URLSearchParams();
+            if (cursor) queryParams.append('cursor', cursor);
+            if (type) queryParams.append('type', type);
+            queryParams.append('limit', '30');
+            const queryString = queryParams.toString();
+
+            const response = await fetch(`/api/post?${queryString}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch posts");
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    createPost: async (postData: FormData) => {
+        try {
+            const response = await fetch("/api/post", {
+                method: "POST",
+                body: postData,
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                return {
+                    success: false,
+                    error: `Failed to create post: ${errorText}`
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    fetchNews: async (cursor?: string, limit: number = 30) => {},
+
+
+
     postAction : async (
         postID:string, 
         actionType:string, 
@@ -249,6 +489,68 @@ export const AppApi = {
         }
     },
 
+    fetchNotifications: async (pageParam?: string | null, currentCategory?: string, limit: number = 30) => {
+        try {
+            const response = await fetch('/api/notifications', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    limit,
+                    cursor: pageParam,
+                    category: currentCategory,
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch notifications: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    readNotification: async (notificationId: string) => {
+        try {
+            const response = await fetch(`/api/notifications`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    notificationId
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to mark notification as read: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
+    fetchVideos: async (cursor?: string | null, limit: number = 30) => {},
+
     fetchUser: async (userId?:string) => {
         try {
             const response = await fetch(`/api/user`, {
@@ -352,6 +654,44 @@ export const AppApi = {
         }
     },
 
+    search: async (query: string, type: string, cursor?: string | null, limit: number = 30) => {},
+
+    fetchSchemes: async (page: number, identifier?: string, value?: string, keyword?: string) => {
+        try {
+            const response = await fetch(`/api/scheme`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    page,
+                    ...(identifier && { identifier }),
+                    ...(value && { value }),
+                    ...(keyword && { keyword }),
+                }),
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.statusText
+                };
+            }
+
+            // Get updated data from API response
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    },
+
     fetchJobs: async (cursor?: string, limit?: number, jobType?:string, jobId?:string) => {
         try {
             const response = await fetch(`/api/jobs${jobId ? `?id=${jobId}`: ''}`, {
@@ -386,6 +726,10 @@ export const AppApi = {
             };
         }
     },
+
+    createJob: async (formData: FormData) => {},
+
+
 
     jobAction: async (jobId: string, action: string, answers?: QuestionAnswer[], resume?: File) => {
         try {
@@ -584,9 +928,10 @@ export const AppApi = {
         }
     },
 
-    getSocietyMembers : async (limit = 30, cursor?: string | null) => {
+    getSocietyMembers : async (userId: string, limit = 30, cursor?: string | null) => {
         try {
             const queryParams = new URLSearchParams();
+            if (userId) queryParams.append('userId', userId);
             if (limit) queryParams.append('limit', limit.toString());
             if (cursor) queryParams.append('cursor', cursor);
             const queryString = queryParams.toString();

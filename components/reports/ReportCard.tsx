@@ -58,18 +58,18 @@ const ReportCard: React.FC<SDG_Report> = ({
                     </span>
                     <button
                         onClick={() => {
-                            if (report_url && report_url.startsWith("http")) {
-                                window.open(
-                                    report_url,
-                                    "_blank",
-                                    "noopener,noreferrer"
-                                );
-                            }
+                            const link = document.createElement('a');
+                            link.href = report_url;
+                            link.download = title;
+                            link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
                         }}
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer duration-200"
                         aria-label={`Download ${title} report`}
                     >
-                        {/* existing button content */}
                         <Download className="w-5 h-5 text-gray-600" />
                     </button>
                 </div>

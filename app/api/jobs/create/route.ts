@@ -94,17 +94,6 @@ export async function POST(req: NextRequest) {
         if (contentType && contentType.includes("application/json")) {
             const data = await response.json();
             
-            if (!response.ok) {
-                console.error("Backend API error:", data);
-                return NextResponse.json(
-                    { 
-                        error: data.message || 'Failed to create job',
-                        details: data.error || 'Unknown error'
-                    },
-                    { status: response.status }
-                );
-            }
-            
             return NextResponse.json(data, { status: response.status });
         } else {
             // Handle non-JSON response (like HTML error pages)

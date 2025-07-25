@@ -77,6 +77,7 @@ const SearchBar = ({ className = "" }: { className?: string }) => {
             !searchBarRef.current.contains(event.relatedTarget as Node | null)
         ) {
             setIsFocused(false);
+            event.currentTarget.value = '';
         }
     };
 

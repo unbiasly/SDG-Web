@@ -14,8 +14,6 @@ import {
 import Link from "next/link";
 import { getRandomColor } from "@/lib/utilities/generateColor";
 import SearchBar from "@/components/feed/SearchBar";
-import { setupAPIInterceptor } from "@/lib/utilities/interceptor";
-import { AppApi } from "@/service/app.api";
 
 
 export default function RootLayout({
@@ -24,7 +22,6 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     const dispatch = useAppDispatch();
-    const [isInterceptorSetup, setIsInterceptorSetup] = useState(false);
 
     const fetchUser = useCallback(async () => {
         dispatch(fetchUserStart());
@@ -64,12 +61,8 @@ export default function RootLayout({
     }, [dispatch]);
 
     useEffect(() => {
-        if (!isInterceptorSetup) {
-            setupAPIInterceptor();
-            setIsInterceptorSetup(true);
-        }
         fetchUser();
-    }, [fetchUser, isInterceptorSetup]);
+    }, [fetchUser]);
 
 
     return (

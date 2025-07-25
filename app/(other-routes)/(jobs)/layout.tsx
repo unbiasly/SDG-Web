@@ -26,12 +26,27 @@ export default function JobsLayout({ children }: LayoutProps) {
     const isInternshipPage = pathname.includes('/internship/') || pathname.includes('/internship');
     const isDetailPage = pathname.includes('/jobs/') || pathname.includes('/internship/');
 
+    const [selfRole, setSelfRole] = useState<string | null>(null);
+        
+    useEffect(() => {
+        const getCookie = (name: string): string | null => {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+            return null;
+        };
+
+        setSelfRole(getCookie('role_type'));
+    }, []);
+
+
     const mobileJobDetail = isMobile && selectedJob
     const router = useRouter();
 
     // Add this helper to check if we're on a detail page
     const isOnDetailPage = pathname.includes('/jobs/') || pathname.includes('/internship/');
     const shouldShowDetailPage = isOnDetailPage || (!isMobile && isDetailPage);
+    const isSociety = selfRole === 'sdg-society';
 
     const tabs = JOB_TABS;
 
@@ -167,7 +182,7 @@ export default function JobsLayout({ children }: LayoutProps) {
                 <div className="p-4">
                     <div className="mb-4 space-y-2">
                         <h1 className="text-2xl font-bold ">{isInternshipPage ? 'Internships' : 'Jobs'}</h1>
-                        <JobDialog/>
+                        {isSociety && <JobDialog />}
                     </div>
                     <div className="flex space-x-1 mb-4 hidden-scrollbar">
                         {tabs.map((tab) => (

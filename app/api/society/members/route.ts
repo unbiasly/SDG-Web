@@ -8,9 +8,10 @@ export async function GET(req: NextRequest) {
     const jwtToken = cookieStore.get('jwtToken')?.value;
     const searchParams = req.nextUrl.searchParams;
     const cursor = searchParams.get('cursor');
-    
+    const userId = searchParams.get('userId');
+
     try {
-        const url = cursor ? `${baseURL}/sdg-society/get-members?cursor=${cursor}` : `${baseURL}/sdg-society/get-members`;
+        const url = cursor ? `${baseURL}/sdg-society/get-members?userId=${userId}&cursor=${cursor}` : `${baseURL}/sdg-society/get-members?userId=${userId}`;
         const response = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`
