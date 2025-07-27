@@ -16,15 +16,15 @@ const ProfileEventCard = ({ event }: ProfileEventCardProps) => {
 
     return (
         <div
-            className="border flex p-2 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow mb-4 cursor-pointer"
+            className="border flex p-2 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
         >
             {event.banners && event.banners.length > 0 && (
-                <div className="relative aspect-square w-40 flex-shrink-0">
+                <div className="relative aspect-square w-30 flex-shrink-0">
                     <Image
                         src={event.banners[0]}
                         alt={`${event.title} event banner`}
                         fill
-                        className="object-cover rounded-lg"
+                        className="object-cover aspect-square rounded-lg"
                         onError={(e) => {
                             e.currentTarget.style.display = 'none';
                         }}
@@ -34,9 +34,10 @@ const ProfileEventCard = ({ event }: ProfileEventCardProps) => {
             <div className="p-4 flex-1">
                 <div className="flex items-start justify-between gap-2 mb-2">
                     {/* Date and time */}
-                    <div className="flex items-center gap-1 text-sm text-gray-500">
+                    <div className="flex items-center gap-1 text-xs lg:text-sm text-gray-500">
                         <CalendarIcon className="w-4 h-4" />
-                        <span>{format(eventDate, "eee, dd MMM yyyy")}</span>
+                        <span className="lg:hidden">{format(eventDate, "dd MMM")}</span>
+                        <span className="hidden lg:inline">{format(eventDate, "eee, dd MMM yyyy")}</span>
                         <span>•</span>
                         <span>{format(eventDate, "h:mm a")}</span>
                     </div>
@@ -53,7 +54,7 @@ const ProfileEventCard = ({ event }: ProfileEventCardProps) => {
                     </div> */}
                 </div>
 
-                <h3 className="text-lg font-semibold mb-2 text-gray-900">
+                <h3 className="text-base lg:text-lg font-semibold mb-2 text-gray-900">
                     {event.title}
                 </h3>
 
@@ -65,13 +66,13 @@ const ProfileEventCard = ({ event }: ProfileEventCardProps) => {
 
                 <div className="flex items-center justify-between">
                     {event.location && (
-                        <div className="flex items-center gap-1 text-sm text-gray-600">
+                        <div className="flex items-center gap-1 text-xs lg:text-sm text-gray-600">
                             <MapPinIcon className="w-4 h-4" />
                             <span>{event.location}</span>
                         </div>
                     )}
 
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="items-center gap-2 text-sm hidden lg:flex text-gray-600">
                         <div className="flex items-center gap-1">
                             <UsersIcon className="w-4 h-4" />
                             <span>{event.host?.length || 1}</span>

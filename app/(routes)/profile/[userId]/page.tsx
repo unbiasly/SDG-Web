@@ -735,7 +735,7 @@ export default function Page({
                         <div>
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-lg font-bold">Events</h2>
-                                {isOwnProfile && <CreateEvent userId={userId} />}
+                                {isOwnProfile && <CreateEvent onSuccess={() => setIsUpdated(!isUpdated)} userId={userId} />}
                             </div>
                             <div>
                                 {events.length > 0 ? (

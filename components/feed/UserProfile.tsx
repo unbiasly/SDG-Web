@@ -249,7 +249,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     const linkContent = (
         <Link
             href={route}
-            className={`flex w-full lg:w-full items-center justify-start space-x-2 py-2 p-2 rounded-xl hover:bg-accent/30 ${
+            className={`flex w-full lg:w-full items-center justify-start space-x-2 p-2  rounded-xl hover:bg-accent/30 ${
                 isActive ? "font-bold text-accent" : ""
             }`}
             prefetch={false}
@@ -262,7 +262,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
                 height={25}
             />
             <span
-                className={`text-md font-regular ml-2 block md:hidden lg:block`}
+                className={`text-md font-regular ml-0 lg:ml-2 block md:hidden lg:block`}
             >
                 {label}
             </span>

@@ -95,7 +95,7 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
     }
 
 
-    const amMentor = mentor?._id === selfUserId;
+    const amMentor = mentor?.user._id === selfUserId;
 
     useEffect(() => {
         getMentors();

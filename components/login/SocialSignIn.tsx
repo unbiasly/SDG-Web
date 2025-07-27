@@ -96,13 +96,15 @@ const SocialSignIn: React.FC<SocialSignInProps> = ({
                     const cookieData = await cookieResponse.json();
 
                     if (cookieResponse.ok) {
-                        // toast.success("You are now logged in.");
+                        toast.success("You are now logged in.");
                         router.push("/onboarding");
                     } else {
                         toast.error(cookieData?.error || cookieData?.message);
+                        setIsLoading?.(false);
                     }
                 } else {
                     toast.error(data?.error || data?.message);
+                    setIsLoading?.(false);
                 }
             }
         } catch (error) {

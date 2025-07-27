@@ -255,6 +255,7 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
     const handleCommentAdded = useCallback(() => {
         // getComments();
         onPostUpdate?.();
+        queryClient.invalidateQueries({ queryKey: ["userPosts"], exact: false });
     }, [ onPostUpdate]);
 
     const handleReportSubmitted = useCallback(() => {

@@ -15,7 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 interface JobDetailProps {
     job: JobListing;
-    onSave?: (jobId: string) => void;
+    onSave?: () => void;
 }
 
 
@@ -65,7 +65,7 @@ const JobDetail =  ({ job, onSave }: JobDetailProps) => {
             const answers = isSaved ? [] : [];
             await AppApi.jobAction(job._id || '', action, answers);
             if (onSave) {
-                onSave(job._id || '');
+                onSave();
             }
             queryClient.invalidateQueries({ queryKey: ['jobs'], exact: false });
         } catch (error) {
@@ -129,11 +129,11 @@ const JobDetail =  ({ job, onSave }: JobDetailProps) => {
             )}
 
             <div className="grid grid-cols-2 gap-4 ">
-                {!job.applyUrl ? 
+                {job.applyUrl ? 
                 <Link href={job.applyUrl} target="_blank" className="bg-accent text-center text-white py-2 rounded-full">
                     Apply from Link
                 </Link>
-                : <ApplyJob jobData={job}  />}
+                : <ApplyJob jobData={job} onSave={onSave} />}
                 <Button className={`border h-full hover:border-accent/60 bg-white hover:bg-accent/60 hover:text-white border-accent cursor-pointer text-accent py-2 rounded-full ${isSaved && "bg-accent/80 text-white"}`} onClick={handleSave}>
                     {isSaved ? "Saved" : "Save"}
                 </Button>

@@ -141,7 +141,7 @@ const Page = () => {
                 setActiveTab={handleTabChange}
                 tabs={VIDEO_TABS}
             >
-                <div className="grid grid-cols-1 md:grid-cols-1 px-4 gap-4">
+                <div className="flex flex-col items-center p-4 gap-4">
                     {videos.map((video) => (
                         <div className="px-0" key={video._id}>
                             <VideoCard

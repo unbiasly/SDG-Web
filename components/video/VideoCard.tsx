@@ -278,12 +278,6 @@ const VideoCard = ({
         });
     };
 
-    const formattedDate = video.published_date
-        ? formatDistanceToNow(new Date(video.published_date), {
-            addSuffix: true,
-        })
-        : "";
-
     const menuOptions = [
         {
             icon: <Share2 className="h-5 w-5 text-gray-500" />,
@@ -372,7 +366,8 @@ const VideoCard = ({
                     </div>
                 ) : (
                     <div className="cursor-pointer w-full h-full overflow-hidden aspect-video flex items-center justify-center">
-                        <img
+                        <Image
+                            fill
                             src={video.thumbnail_url}
                             alt={video.title}
                             className="max-h-full max-w-full object-cover aspect-video"

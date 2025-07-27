@@ -135,7 +135,7 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
                         </div>
                     )}
                     
-                    <JobDetail job={job} onSave={(jobId: string) => setSavePressed(!savePressed)}/>
+                    <JobDetail job={job} onSave={() => setSavePressed(!savePressed)}/>
                 </div>
             ) : (
                 <div className="flex-1 flex items-center justify-center">

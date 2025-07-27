@@ -13,6 +13,7 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
     const [savePressed, setSavePressed] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isUpdated, setIsUpdated] = useState(false);
     
     const router = useRouter();
     const jobId = use(params).id;
@@ -55,7 +56,7 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
             setError('No job ID provided');
             setIsLoading(false);
         }
-    }, [jobId, savePressed, job?.isApplied]);
+    }, [jobId, savePressed, isUpdated, job?.isApplied]);
 
     const handleGoBack = () => {
         if (isMobile) {
@@ -124,8 +125,8 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
                             )}
                         </div>
                     )}
-                    
-                    <JobDetail job={job} onSave={(jobId: string) => setSavePressed(!savePressed)}/>
+
+                    <JobDetail job={job} onSave={() => setIsUpdated(!isUpdated)} />
                 </div>
             ) : (
                 <div className="flex-1 flex items-center justify-center">

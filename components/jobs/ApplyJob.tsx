@@ -15,10 +15,10 @@ import { useQueryClient } from "@tanstack/react-query";
 interface ApplyJobProps {
     jobData: JobListing;
     onEdit?: () => void;
-    onPost?: () => void;
+    onSave?: () => void;
 }
 
-export const ApplyJob: React.FC<ApplyJobProps> = ({ jobData, onEdit, onPost }) => {
+export const ApplyJob: React.FC<ApplyJobProps> = ({ jobData, onEdit, onSave }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [currentScreen, setCurrentScreen] = useState<"questions" | "resume">("questions");
     const [isOpen, setIsOpen] = useState(false);
@@ -117,6 +117,13 @@ export const ApplyJob: React.FC<ApplyJobProps> = ({ jobData, onEdit, onPost }) =
                 setSubmissionState('submitted');
                 toast.success('Application submitted successfully!');
                 queryClient.invalidateQueries({ queryKey: ['jobs'] });
+                if (onSave) {
+                    onSave();
+                }
+                // Clear all states after successful submission
+                setAnswers({});
+                setResumeFile(null);
+                setCurrentScreen("questions");
                 setIsOpen(false);
             } else {
                 throw new Error(response.error || 'Failed to submit application');
@@ -135,6 +142,7 @@ export const ApplyJob: React.FC<ApplyJobProps> = ({ jobData, onEdit, onPost }) =
         setAnswers({});
         setResumeFile(null);
         setCurrentScreen("questions");
+        setSubmissionState('idle');
         setIsOpen(false);
     };
 

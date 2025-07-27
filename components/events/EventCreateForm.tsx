@@ -15,10 +15,11 @@ import { AddTicketModal } from "./AddTicket";
 import { toast } from "react-hot-toast";
 import { AppApi } from "@/service/app.api";
 
-export const CreateEvent = ({ userId }: { userId: string }) => {
+export const CreateEvent = ({ userId, onSuccess }: { userId: string, onSuccess: () => void }) => {
     const [selectedImages, setSelectedImages] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
     const [formData, setFormData] = useState({
         title: "",
         location: "",
@@ -197,6 +198,8 @@ export const CreateEvent = ({ userId }: { userId: string }) => {
                 setSelectedImages([]);
                 setImagePreviews([]);
                 setHosts([]);
+                onSuccess();
+                setIsOpen(false); // Close dialog
 
                 // Close dialog (you might want to add a close handler)
             } else {
@@ -237,7 +240,7 @@ export const CreateEvent = ({ userId }: { userId: string }) => {
     };
 
     return (
-        <Dialog>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <div className="p-1 rounded-full cursor-pointer hover:bg-gray-300">
                     <Plus />
