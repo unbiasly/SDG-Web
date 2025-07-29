@@ -15,9 +15,6 @@ export async function GET() {
     });
     const data = await response.json();
     console.log("data", data);
-    if (!response.ok) {
-        return new Response(JSON.stringify(data), { status: response.status });
-    }
 
     return NextResponse.json(data);
 }
@@ -45,10 +42,6 @@ export async function PUT(request:NextRequest) {
     });
     
     const data = await response.json();
-
-    if (!response.ok) {
-        return new Response(JSON.stringify(data), { status: response.status });
-    }
     
     
     return NextResponse.json(data);

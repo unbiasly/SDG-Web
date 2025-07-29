@@ -16,13 +16,6 @@ export async function GET(req: NextRequest) {
             },
         });
         
-        if (!response.ok) {
-            return NextResponse.json(
-                { error: `Failed to fetch mentor slots: ${response.status}` },
-                { status: response.status }
-            );
-        }
-        
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
@@ -44,13 +37,6 @@ export async function POST(req: NextRequest) {
             },
             body: JSON.stringify({ mentor_id, time, duration })
         });
-
-        if (!response.ok) {
-            return NextResponse.json(
-                { error: `Failed to create slot: ${response.status}` },
-                { status: response.status }
-            );
-        }
         
         const data = await response.json();
         console.log("Slot created successfully:", data);

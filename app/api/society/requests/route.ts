@@ -25,13 +25,6 @@ export async function GET(req: NextRequest) {
             },
         });
         
-        if (!response.ok) {
-            return NextResponse.json(
-                { error: `Failed to fetch student requests: ${response.status}` },
-                { status: response.status }
-            );
-        }
-        
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
@@ -78,13 +71,6 @@ export async function PATCH(req: NextRequest) {
             },
             method: 'PATCH',
         });
-
-        if (!response.ok) {
-            return NextResponse.json(
-                { error: `Failed to verify or reject request: ${response.status}` },
-                { status: response.status }
-            );
-        }
 
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });

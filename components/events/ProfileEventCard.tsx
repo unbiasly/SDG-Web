@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import Image from "next/image";
 import React from "react";
 import { CalendarIcon, MapPinIcon, UsersIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface ProfileEventCardProps {
     event: Event;
@@ -10,6 +11,7 @@ interface ProfileEventCardProps {
 
 const ProfileEventCard = ({ event }: ProfileEventCardProps) => {
     // Format the event date
+    const router = useRouter();
     const eventDate = new Date(event.time);
     const isValidDate = !isNaN(eventDate.getTime());
     const isUpcoming = isValidDate && eventDate > new Date();
@@ -17,6 +19,11 @@ const ProfileEventCard = ({ event }: ProfileEventCardProps) => {
     return (
         <div
             className="border flex p-2 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => {
+                if (event.ticket_link) {
+                    router.push(event.ticket_link);
+                }
+            }}
         >
             {event.banners && event.banners.length > 0 && (
                 <div className="relative aspect-square w-30 flex-shrink-0">

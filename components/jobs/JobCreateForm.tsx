@@ -5,10 +5,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { CalendarIcon, Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { Calendar } from "../ui/calendar";
-import { format } from "date-fns";
+import { DatePicker } from "../ui/date-picker";
 import { EXPERIENCE_LEVEL, JOB_TYPE } from "@/lib/constants/index-constants";
 import { JobListing, ScreeningQuestion } from "@/service/api.interface";
 
@@ -27,7 +26,6 @@ export const CreateJobForm: React.FC<CreateJobFormProps> = ({
     const [questionType, setQuestionType] = useState<'numeric' | 'yes/no' | ''>('');
     const [newTag, setNewTag] = useState("");
     const [errors, setErrors] = useState<Partial<Record<keyof JobListing, string>>>({});
-    const [calendarOpen, setCalendarOpen] = useState(false);
 
     const handleInputChange = (
         field: keyof JobListing,
@@ -429,40 +427,15 @@ export const CreateJobForm: React.FC<CreateJobFormProps> = ({
                 <label htmlFor="expiresAt" className="text-sm font-medium text-gray-700">
                     Expiration Date *
                 </label>
-                <div className="relative">
-                    <Button
-                        variant="outline"
-                        className={`w-full justify-start text-left font-normal ${
-                            !formData.expiresAt && "text-muted-foreground"
-                        } ${errors.expiresAt ? "border-red-500" : ""}`}
-                        onClick={() => setCalendarOpen(!calendarOpen)}
-                    >
-                        {formData.expiresAt ? (
-                            format(new Date(formData.expiresAt), "PPP")
-                        ) : (
-                            <span>Select expiration date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4" />
-                    </Button>
-                    {calendarOpen && (
-                        <div className="absolute z-50 right-1 bottom-1 mb-1 bg-white rounded-2xl shadow-md">
-                            <Calendar
-                                mode="single"
-                                selected={
-                                    formData.expiresAt
-                                        ? new Date(formData.expiresAt)
-                                        : undefined
-                                }
-                                onSelect={(date) => {
-                                    handleInputChange("expiresAt", date ? date.toISOString() : "");
-                                    setCalendarOpen(false);
-                                }}
-                                disabled={(date) => date < new Date()}
-                                className="p-3 pointer-events-auto"
-                            />
-                        </div>
-                    )}
-                </div>
+                <DatePicker
+                    selected={formData.expiresAt ? new Date(formData.expiresAt) : undefined}
+                    onSelect={(date) => {
+                        handleInputChange("expiresAt", date ? date.toISOString() : "");
+                    }}
+                    placeholder="Select expiration date"
+                    disabled={(date) => date < new Date()}
+                    className={`w-full ${errors.expiresAt ? "border-red-500" : ""}`}
+                />
                 {errors.expiresAt && (
                     <p className="text-sm text-red-500">{errors.expiresAt}</p>
                 )}

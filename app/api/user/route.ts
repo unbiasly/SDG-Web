@@ -20,12 +20,6 @@ export async function POST(req: NextRequest) {
             }
         });
         
-        if (!response.ok) {
-            // Handle unauthorized response from backend
-            
-            throw new Error(`API error: ${response.status}`);
-        }
-        
         const data = await response.json();
         return NextResponse.json(data);
     } catch (error) {

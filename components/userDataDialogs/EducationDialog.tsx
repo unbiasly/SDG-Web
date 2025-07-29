@@ -17,10 +17,10 @@ import {
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CalendarIcon, Loader2, X } from "lucide-react";
-import { format, isBefore } from "date-fns";
+import { Loader2 } from "lucide-react";
+import { isBefore } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Education } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
 import { toast } from "react-hot-toast";
@@ -31,10 +31,6 @@ interface EducationFormContentProps {
     educationData: Education;
     handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
     handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-    startDateCalendarOpen: boolean;
-    setStartDateCalendarOpen: (open: boolean) => void;
-    endDateCalendarOpen: boolean;
-    setEndDateCalendarOpen: (open: boolean) => void;
     handleDateChange: (field: "startDate" | "endDate", date: Date | undefined) => void;
     currentlyStudying: boolean;
     handleCurrentlyStudyingChange: (checked: boolean) => void;
@@ -46,10 +42,6 @@ const EducationFormContent: React.FC<EducationFormContentProps> = ({
     educationData,
     handleInputChange,
     handleKeyDown,
-    startDateCalendarOpen,
-    setStartDateCalendarOpen,
-    endDateCalendarOpen,
-    setEndDateCalendarOpen,
     handleDateChange,
     currentlyStudying,
     handleCurrentlyStudyingChange,
@@ -96,43 +88,12 @@ const EducationFormContent: React.FC<EducationFormContentProps> = ({
                 <label htmlFor="startDate" className="text-sm font-medium">
                     Start Date<span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className={cn(
-                            "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
-                            !educationData.startDate &&
-                                "text-muted-foreground dark:text-gray-400"
-                        )}
-                        onClick={() =>
-                            setStartDateCalendarOpen(!startDateCalendarOpen)
-                        }
-                    >
-                        {educationData.startDate ? (
-                            format(new Date(educationData.startDate), "PPP")
-                        ) : (
-                            <span>Start Date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4" />
-                    </Button>
-                    {startDateCalendarOpen && (
-                        <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
-                            <Calendar
-                                mode="single"
-                                selected={
-                                    educationData.startDate
-                                        ? new Date(educationData.startDate)
-                                        : undefined
-                                }
-                                onSelect={(date) =>
-                                    handleDateChange("startDate", date)
-                                }
-                                initialFocus
-                            />
-                        </div>
-                    )}
-                </div>
+                <DatePicker
+                    selected={educationData.startDate ? new Date(educationData.startDate) : undefined}
+                    onSelect={(date) => handleDateChange("startDate", date)}
+                    placeholder="Start Date"
+                    className="w-full"
+                />
             </div>
 
             {/* Currently studying checkbox */}
@@ -159,49 +120,12 @@ const EducationFormContent: React.FC<EducationFormContentProps> = ({
                     >
                         End Date<span className="text-red-500">*</span>
                     </label>
-                    <div className="relative">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className={cn(
-                                "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
-                                !educationData.endDate &&
-                                    "text-muted-foreground dark:text-gray-400",
-                                dateError && "border-red-500" // Highlight the button when there's an error
-                            )}
-                            onClick={() =>
-                                setEndDateCalendarOpen(!endDateCalendarOpen)
-                            }
-                        >
-                            {educationData.endDate ? (
-                                format(
-                                    new Date(educationData.endDate),
-                                    "PPP"
-                                )
-                            ) : (
-                                <span>End Date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4" />
-                        </Button>
-                        {endDateCalendarOpen && (
-                            <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
-                                <Calendar
-                                    mode="single"
-                                    selected={
-                                        educationData.endDate
-                                            ? new Date(
-                                                  educationData.endDate
-                                              )
-                                            : undefined
-                                    }
-                                    onSelect={(date) =>
-                                        handleDateChange("endDate", date)
-                                    }
-                                    initialFocus
-                                />
-                            </div>
-                        )}
-                    </div>
+                    <DatePicker
+                        selected={educationData.endDate ? new Date(educationData.endDate) : undefined}
+                        onSelect={(date) => handleDateChange("endDate", date)}
+                        placeholder="End Date"
+                        className={cn("w-full", dateError && "border-red-500")}
+                    />
                 </div>
             )}
 
@@ -309,10 +233,6 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
         startDate: new Date().toISOString(),
         endDate: new Date().toISOString(),
     });
-    const [startDateCalendarOpen, setStartDateCalendarOpen] =
-        useState<boolean>(false);
-    const [endDateCalendarOpen, setEndDateCalendarOpen] =
-        useState<boolean>(false);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [currentlyStudying, setCurrentlyStudying] = useState<boolean>(false);
     const [dateError, setDateError] = useState<string>("");
@@ -433,9 +353,6 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
                 return updated;
             });
         }
-
-        if (field === "startDate") setStartDateCalendarOpen(false);
-        if (field === "endDate") setEndDateCalendarOpen(false);
     };
 
     const handleCurrentlyStudyingChange = (checked: boolean) => {
@@ -649,10 +566,6 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
                 educationData={educationData}
                 handleInputChange={handleInputChange}
                 handleKeyDown={handleKeyDown}
-                startDateCalendarOpen={startDateCalendarOpen}
-                setStartDateCalendarOpen={setStartDateCalendarOpen}
-                endDateCalendarOpen={endDateCalendarOpen}
-                setEndDateCalendarOpen={setEndDateCalendarOpen}
                 handleDateChange={handleDateChange}
                 currentlyStudying={currentlyStudying}
                 handleCurrentlyStudyingChange={handleCurrentlyStudyingChange}
@@ -694,10 +607,6 @@ export const EducationDialog: React.FC<EducationDialogProps> = ({
             educationData={educationData}
             handleInputChange={handleInputChange}
             handleKeyDown={handleKeyDown}
-            startDateCalendarOpen={startDateCalendarOpen}
-            setStartDateCalendarOpen={setStartDateCalendarOpen}
-            endDateCalendarOpen={endDateCalendarOpen}
-            setEndDateCalendarOpen={setEndDateCalendarOpen}
             handleDateChange={handleDateChange}
             currentlyStudying={currentlyStudying}
             handleCurrentlyStudyingChange={handleCurrentlyStudyingChange}

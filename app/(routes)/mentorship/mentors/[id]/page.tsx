@@ -13,6 +13,7 @@ import { AppApi } from "@/service/app.api";
 import { se } from "date-fns/locale";
 import { MessageSquare, Plus } from "lucide-react";
 import React, { use, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 const Page = ({ params }: { params: Promise<{ id: string }> }) => {
     const { id } = use(params);
@@ -85,6 +86,9 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
             const response = await AppApi.bookSlot(mentor?.category[0] || '', selectedSlot?._id || '');
             if (response.success) {
                 console.log("Slot booked successfully:", response.data);
+                toast.success("Slot booked successfully!");
+                setSelectedSlot(null); // Clear selected slot after booking
+                setUpdatedSlot(!updatedSlot);
                 // Optionally, you can update the UI or state here
             } else {
                 console.error("Failed to book slot:", response.error);

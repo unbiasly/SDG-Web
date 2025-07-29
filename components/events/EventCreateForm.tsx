@@ -9,11 +9,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar, Upload, Plus, Ticket, X, Loader2 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { AddCoHostModal } from "./AddCoHost";
 import { AddTicketModal } from "./AddTicket";
 import { toast } from "react-hot-toast";
 import { AppApi } from "@/service/app.api";
+import { Calendar24 } from "../ui/date-time";
 
 export const CreateEvent = ({ userId, onSuccess }: { userId: string, onSuccess: () => void }) => {
     const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -24,7 +25,7 @@ export const CreateEvent = ({ userId, onSuccess }: { userId: string, onSuccess: 
         title: "",
         location: "",
         description: "",
-        time: "",
+        time: undefined as Date | undefined,
         type: "event" as "event" | "talk",
         ticketLink: "",
     });
@@ -35,6 +36,20 @@ export const CreateEvent = ({ userId, onSuccess }: { userId: string, onSuccess: 
     const MAX_IMAGES = 5;
     const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
     const ALLOWED_IMAGE_TYPES = [".jpg", ".jpeg", ".png", ".webp"];
+
+    // Use useCallback to prevent function recreation on every render
+    const handleDateTimeChange = useCallback((date: Date | undefined, time: string) => {
+        if (date && time) {
+            const [hours, minutes] = time.split(':').map(Number);
+            const dateTime = new Date(date);
+            dateTime.setHours(hours, minutes, 0, 0);
+            
+            setFormData(prev => ({
+                ...prev,
+                time: dateTime
+            }));
+        }
+    }, []);
 
     const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(event.target.files || []);
@@ -121,8 +136,8 @@ export const CreateEvent = ({ userId, onSuccess }: { userId: string, onSuccess: 
             return false;
         }
 
-        // Validate datetime format
-        const eventDate = new Date(formData.time);
+        // Validate datetime format (formData.time is already a Date object)
+        const eventDate = formData.time;
         if (isNaN(eventDate.getTime())) {
             toast.error("Please enter a valid date and time");
             return false;
@@ -155,8 +170,8 @@ export const CreateEvent = ({ userId, onSuccess }: { userId: string, onSuccess: 
                 ticketLink = "https://" + ticketLink;
             }
 
-            // Convert datetime to ISO string
-            const eventTime = new Date(formData.time).toISOString();
+            // Convert datetime to ISO string (formData.time is already a Date object)
+            const eventTime = formData.time!.toISOString();
 
             // Create FormData for multipart request
             const eventFormData = new FormData();
@@ -165,7 +180,7 @@ export const CreateEvent = ({ userId, onSuccess }: { userId: string, onSuccess: 
             eventFormData.append("description", formData.description);
             eventFormData.append("time", eventTime);
             eventFormData.append("type", formData.type);
-            eventFormData.append("ticketLink", ticketLink);
+            eventFormData.append("ticket_link", ticketLink);
 
             // Add hosts as JSON array (current user will be added automatically by backend)
             if (hosts.length > 0) {
@@ -191,7 +206,7 @@ export const CreateEvent = ({ userId, onSuccess }: { userId: string, onSuccess: 
                     title: "",
                     location: "",
                     description: "",
-                    time: "",
+                    time: undefined,
                     type: "event",
                     ticketLink: "",
                 });
@@ -375,19 +390,11 @@ export const CreateEvent = ({ userId, onSuccess }: { userId: string, onSuccess: 
 
                     {/* Start Date & Time */}
                     <div>
-                        <label
-                            htmlFor="datetime"
-                            className="text-base font-medium text-gray-700"
-                        >
+                        <label className="text-base font-medium text-gray-700">
                             Start date & time *
                         </label>
-                        <div className="relative mt-2">
-                            <Input
-                                id="datetime"
-                                type="datetime-local"
-                                value={formData.time}
-                                onChange={handleInputChange("time")}
-                            />
+                        <div className="mt-2">
+                            <Calendar24 onDateTimeChange={handleDateTimeChange} />
                         </div>
                     </div>
 

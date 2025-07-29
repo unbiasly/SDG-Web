@@ -3,6 +3,7 @@ import { Bell } from "lucide-react";
 import Image from "next/image";
 import { Event } from "@/service/api.interface";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 
 interface UpdateCardProps {
     event: Event;
@@ -13,8 +14,13 @@ const UpdateCard: React.FC<UpdateCardProps> = ({
     event
     // onRemindClick,
 }) => {
+    const router = useRouter();
     return (
-        <div className="bg-white border-1 border-black rounded-lg shadow-md overflow-hidden lg:mx-10">
+        <div className="bg-white border-1 border-black rounded-lg shadow-md overflow-hidden lg:mx-10" onClick={() => {
+                if (event.ticket_link) {
+                    router.push(event.ticket_link);
+                }
+            }}>
             <div className="relative rounded-t-lg">
                 {event.banners && event.banners.length > 0 ? (
                 <Image

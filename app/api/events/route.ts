@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
         const description = formData.get('description');
         const time = formData.get('time');
         const type = formData.get('type');
+    
         
         // Validate required fields
         if (!title) {

@@ -1,11 +1,11 @@
 'use client';
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, X } from "lucide-react";
+import { X } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { AppApi } from "@/service/app.api";
@@ -52,13 +52,11 @@ const MentorCreateForm = () => {
     
     // Form state for date picker
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-    const [calendarOpen, setCalendarOpen] = useState<boolean>(false);
 
 
 
     const handleDateChange = (date: Date | undefined) => {
         setSelectedDate(date);
-        setCalendarOpen(false);
         if (date) {
             setMentorData(prev => ({
                 ...prev,
@@ -303,39 +301,17 @@ const MentorCreateForm = () => {
                                 <label htmlFor="availability" className="block text-sm font-medium text-gray-700">
                                     Availability Date <span className="text-red-500">*</span>
                                 </label>
-                                <div className="relative">
-                                    <Button
-                                        variant="outline"
-                                        type="button"
-                                        className={cn(
-                                            "w-full justify-start text-left font-normal",
-                                            !selectedDate && "text-muted-foreground"
-                                        )}
-                                        onClick={() => setCalendarOpen(!calendarOpen)}
-                                    >
-                                        {selectedDate ? (
-                                            format(selectedDate, "PPP")
-                                        ) : (
-                                            <span>Select available date</span>
-                                        )}
-                                        <CalendarIcon className="ml-auto h-4 w-4" />
-                                    </Button>
-                                    {calendarOpen && (
-                                        <div className="absolute z-50 top-full left-0 mt-2 bg-white rounded-lg shadow-lg border">
-                                            <Calendar
-                                                mode="single"
-                                                selected={selectedDate}
-                                                onSelect={handleDateChange}
-                                                disabled={(date) => {
-                                                    const today = new Date();
-                                                    today.setHours(0, 0, 0, 0);
-                                                    return date < today;
-                                                }}
-                                                className="p-3"
-                                            />
-                                        </div>
-                                    )}
-                                </div>
+                                <DatePicker
+                                    selected={selectedDate}
+                                    onSelect={handleDateChange}
+                                    placeholder="Select available date"
+                                    disabled={(date) => {
+                                        const today = new Date();
+                                        today.setHours(0, 0, 0, 0);
+                                        return date < today;
+                                    }}
+                                    className="w-full"
+                                />
                             </div>
 
                             {/* Category - Optional */}
@@ -380,6 +356,7 @@ const MentorCreateForm = () => {
                                     <button 
                                         className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
                                         onClick={() => setCurrentView("mentor")}
+                                        aria-label="Edit mentor details"
                                     >
                                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.828-2.828z"></path>

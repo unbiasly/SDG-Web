@@ -18,13 +18,6 @@ export async function GET(req: NextRequest) {
             },
         });
         
-        if (!response.ok) {
-            return NextResponse.json(
-+                { error: `Failed to fetch members: ${response.status}` },
-                    { status: response.status }
-            );
-        }
-        
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
@@ -51,14 +44,6 @@ export async function PATCH(req: NextRequest) {
                 designation
             }),
         });
-
-        
-        if (!response.ok) {
-            return NextResponse.json(
-                { error: `Failed to edit member: ${response.status}` },
-                { status: response.status }
-            );
-        }
         
         const data = await response.json();
         console.log("Edit member response:", data);
@@ -101,12 +86,6 @@ export async function POST(req: NextRequest) {
 
             const data = await response.json();
             console.log("CSV upload response:", data);
-            if (!response.ok) {
-                return NextResponse.json(
-                    { error: `Failed to upload CSV: ${response.status}` },
-                    { status: response.status }
-                );
-            }
 
             return NextResponse.json(data, { status: response.status });
         } catch (error) {
@@ -134,13 +113,6 @@ export async function POST(req: NextRequest) {
             },
             body: JSON.stringify({ members }),
         });
-
-        if (!response.ok) {
-            return NextResponse.json(
-                { error: `Failed to add members: ${response.status}` },
-                { status: response.status }
-            );
-        }
 
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });

@@ -40,13 +40,6 @@ export async function POST(req: NextRequest) {
         });
 
         const data = await response.json();
-        
-        if (!response.ok) {
-            return NextResponse.json(
-                { success: false, message: data.message || "Failed to fetch videos" },
-                { status: response.status }
-            );
-        }
 
         return NextResponse.json(data);
     } catch (error) {
@@ -96,13 +89,6 @@ export async function PATCH(req: NextRequest) {
         });
 
         const data = await response.json();
-        
-        if (!response.ok) {
-            return NextResponse.json(
-                { success: false, message: data.message || "Failed to perform action" },
-                { status: response.status }
-            );
-        }
 
         return NextResponse.json({
             success: true,

@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect, use, useCallback } from "react";
+import { useState, useEffect, use, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronDown, Search } from "lucide-react";
+import { ArrowLeft, ChevronDown, Search, X } from "lucide-react";
 import {
     useInfiniteQuery,
     useMutation,
@@ -68,6 +68,17 @@ export default function Page({ params }: ConnectionsPageProps) {
         null
     );
     const [loading, setLoading] = useState<boolean>(true);
+    const [searchTerm, setSearchTerm] = useState<string>("");
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
+
+    // Debounce search term for better performance
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 300); // 300ms delay
+
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     const fetchUserById = async (id: string) => {
         setLoading(true);
@@ -270,6 +281,21 @@ export default function Page({ params }: ConnectionsPageProps) {
                 })) || []
         ) || [];
 
+    // Filter users based on search term
+    const filterUsers = useCallback((users: UserType[], term: string) => {
+        if (!term.trim()) return users;
+        
+        const searchLower = term.toLowerCase().trim();
+        return users.filter((user) => 
+            user.name?.toLowerCase().includes(searchLower) ||
+            user.username.toLowerCase().includes(searchLower) ||
+            user.email.toLowerCase().includes(searchLower)
+        );
+    }, []);
+
+    const filteredFollowers = filterUsers(followers, debouncedSearchTerm);
+    const filteredFollowing = filterUsers(following, debouncedSearchTerm);
+
     // Get total counts
     const followersCount = analytics?.data?.followCounts?.followerCount;
     const followingCount = analytics?.data?.followCounts?.followingCount;
@@ -314,6 +340,8 @@ export default function Page({ params }: ConnectionsPageProps) {
     const handleTabChange = useCallback(
         (tab: "followers" | "following") => {
             setActiveFollowTab(tab);
+            // Clear search when switching tabs for better UX
+            setSearchTerm("");
             // Save to localStorage with user-specific key
             if (typeof window !== "undefined") {
                 localStorage.setItem(`activeFollowTab_${userId}`, tab);
@@ -387,14 +415,24 @@ export default function Page({ params }: ConnectionsPageProps) {
                 <input
                     type="text"
                     placeholder="Search"
-                    // value={searchTerm}
-                    // onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-full w-full focus:outline-none focus:ring-1 focus:ring-blue-accent"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-10 py-2 border border-gray-300 rounded-full w-full focus:outline-none focus:ring-1 focus:ring-blue-accent"
                 />
                 <Search
                     size={18}
                     className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400"
                 />
+                {/* Clear search button - only show when there's a search term and not loading */}
+                {searchTerm.trim() && searchTerm === debouncedSearchTerm && (
+                    <button
+                        onClick={() => setSearchTerm("")}
+                        className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        aria-label="Clear search"
+                    >
+                        <X size={18} />
+                    </button>
+                )}
             </div>
 
             {/* User List */}
@@ -409,90 +447,120 @@ export default function Page({ params }: ConnectionsPageProps) {
                     <div className="p-4 text-center">Loading...</div>
                 ) : (
                     <div className="divide-y divide-gray-100">
-                        {(activeFollowTab === "followers"
-                            ? followers
-                            : following
-                        ).length === 0 ? (
-                            <div className="p-8 text-center text-gray-500">
-                                <p className="text-lg">
-                                    {activeFollowTab === "followers"
-                                        ? "No followers yet"
-                                        : "Not following anyone yet"}
-                                </p>
-                            </div>
-                        ) : (
-                            <>
-                                {(activeFollowTab === "followers"
-                                    ? followers
-                                    : following
-                                ).map((user) => (
-                                    <div
-                                        key={user._id}
-                                        className="flex items-center justify-between p-4"
-                                    >
-                                        <Link
-                                            href={`/profile/${user._id}`}
-                                            className="flex items-center flex-1"
-                                        >
-                                            <ProfileAvatar
-                                                src={user.profileImage}
-                                                alt={user.name || user.username}
-                                                userName={
-                                                    user.name || user.username
-                                                }
-                                                size="sm"
-                                                className="rounded-full mr-3 object-cover"
-                                            />
-                                            <div>
-                                                <h3 className="font-bold hover:underline">
-                                                    {user.name || user.email}
-                                                </h3>
-                                                <p className="text-gray-600 hover:underline">
-                                                    @{user.username}
-                                                </p>
-                                            </div>
-                                        </Link>
-                                        {/* <button
-                                            onClick={() =>
-                                                handleFollowToggle(user)
-                                            }
-                                            className={`font-medium py-2 px-6 rounded-full transition-colors ${
-                                                user.following
-                                                    ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                                                    : "bg-blue-700 text-white hover:bg-blue-800"
-                                            }`}
-                                            disabled={followMutation.isPending}
-                                        >
-                                            {followMutation.isPending &&
-                                            followMutation.variables
-                                                ?.targetUserId === user._id
-                                                ? "Unfollow..."
-                                                : user.following
-                                                ? "Following"
-                                                : "Follow"}
-                                        </button> */}
-                                    </div>
-                                ))}
+                        {/* Get current filtered list based on active tab */}
+                        {(() => {
+                            const currentList = activeFollowTab === "followers" 
+                                ? filteredFollowers 
+                                : filteredFollowing;
+                            const originalList = activeFollowTab === "followers" 
+                                ? followers 
+                                : following;
 
-                                {/* Load more button */}
-                                {((activeFollowTab === "followers" &&
-                                    hasMoreFollowers) ||
-                                    (activeFollowTab === "following" &&
-                                        hasMoreFollowing)) && (
-                                    <div className="p-4">
-                                        <button
-                                            onClick={loadMore}
-                                            disabled={isLoadingMore}
-                                            className="w-full py-3 border border-gray-300 rounded-lg text-blue-600 font-medium hover:bg-gray-50 transition-colors"
-                                        >
-                                            {isLoadingMore
-                                                ? "Loading..."
-                                                : "Load More"}
-                                        </button>
+                            // No users at all in this tab
+                            if (originalList.length === 0) {
+                                return (
+                                    <div className="p-8 text-center text-gray-500">
+                                        <p className="text-lg">
+                                            {activeFollowTab === "followers"
+                                                ? "No followers yet"
+                                                : "Not following anyone yet"}
+                                        </p>
                                     </div>
-                                )}
-                            </>
-                        )}
+                                );
+                            }
+
+                            // Has users but search returned no results
+                            if (debouncedSearchTerm.trim() && currentList.length === 0) {
+                                return (
+                                    <div className="p-8 text-center text-gray-500">
+                                        <p className="text-lg">No users found</p>
+                                        <p className="text-sm mt-2">
+                                            Try searching with a different term or clear the search to see all {activeFollowTab}
+                                        </p>
+                                    </div>
+                                );
+                            }
+
+                            // Display filtered results
+                            return (
+                                <>
+                                    {currentList.map((user) => (
+                                        <div
+                                            key={user._id}
+                                            className="flex items-center justify-between p-4"
+                                        >
+                                            <Link
+                                                href={`/profile/${user._id}`}
+                                                className="flex items-center flex-1"
+                                            >
+                                                <ProfileAvatar
+                                                    src={user.profileImage || ""}
+                                                    alt={user.name || user.username}
+                                                    userName={
+                                                        user.name || user.username
+                                                    }
+                                                    size="sm"
+                                                    className="rounded-full mr-3 object-cover"
+                                                />
+                                                <div>
+                                                    <h3 className="font-bold hover:underline">
+                                                        {user.name || user.email}
+                                                    </h3>
+                                                    <p className="text-gray-600 hover:underline">
+                                                        @{user.username}
+                                                    </p>
+                                                </div>
+                                            </Link>
+                                            {/* <button
+                                                onClick={() =>
+                                                    handleFollowToggle(user)
+                                                }
+                                                className={`font-medium py-2 px-6 rounded-full transition-colors ${
+                                                    user.following
+                                                        ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                                        : "bg-blue-700 text-white hover:bg-blue-800"
+                                                }`}
+                                                disabled={followMutation.isPending}
+                                            >
+                                                {followMutation.isPending &&
+                                                followMutation.variables
+                                                    ?.targetUserId === user._id
+                                                    ? "Unfollow..."
+                                                    : user.following
+                                                    ? "Following"
+                                                    : "Follow"}
+                                            </button> */}
+                                        </div>
+                                    ))}
+
+                                    {/* Load more button - only show if no search term and has more data */}
+                                    {!debouncedSearchTerm.trim() && 
+                                        ((activeFollowTab === "followers" &&
+                                            hasMoreFollowers) ||
+                                            (activeFollowTab === "following" &&
+                                                hasMoreFollowing)) && (
+                                        <div className="p-4">
+                                            <button
+                                                onClick={loadMore}
+                                                disabled={isLoadingMore}
+                                                className="w-full py-3 border border-gray-300 rounded-lg text-blue-600 font-medium hover:bg-gray-50 transition-colors"
+                                            >
+                                                {isLoadingMore
+                                                    ? "Loading..."
+                                                    : "Load More"}
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Search results info */}
+                                    {debouncedSearchTerm.trim() && currentList.length > 0 && (
+                                        <div className="p-4 text-center text-gray-500 text-sm border-t">
+                                            Showing {currentList.length} of {originalList.length} {activeFollowTab}
+                                        </div>
+                                    )}
+                                </>
+                            );
+                        })()}
                     </div>
                 )}
             </div>

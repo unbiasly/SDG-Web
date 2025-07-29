@@ -17,10 +17,9 @@ import {
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CalendarIcon, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Experience } from "@/service/api.interface";
 import { useUser } from "@/lib/redux/features/user/hooks";
 import { toast } from "react-hot-toast";
@@ -34,10 +33,6 @@ interface ExperienceFormContentProps {
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => void;
     handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-    startDateCalendarOpen: boolean;
-    setStartDateCalendarOpen: (open: boolean) => void;
-    endDateCalendarOpen: boolean;
-    setEndDateCalendarOpen: (open: boolean) => void;
     handleDateChange: (
         field: "startDate" | "endDate",
         date: Date | undefined
@@ -52,10 +47,6 @@ const ExperienceFormContent: React.FC<ExperienceFormContentProps> = ({
     experienceData,
     handleInputChange,
     handleKeyDown,
-    startDateCalendarOpen,
-    setStartDateCalendarOpen,
-    endDateCalendarOpen,
-    setEndDateCalendarOpen,
     handleDateChange,
     currentlyWorking,
     handleCurrentlyWorkingChange,
@@ -102,43 +93,12 @@ const ExperienceFormContent: React.FC<ExperienceFormContentProps> = ({
                 <label htmlFor="startDate" className="text-sm font-medium">
                     Start Date<span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className={cn(
-                            "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
-                            !experienceData.startDate &&
-                                "text-muted-foreground dark:text-gray-400"
-                        )}
-                        onClick={() =>
-                            setStartDateCalendarOpen(!startDateCalendarOpen)
-                        }
-                    >
-                        {experienceData.startDate ? (
-                            format(new Date(experienceData.startDate), "PPP")
-                        ) : (
-                            <span>Start Date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4" />
-                    </Button>
-                    {startDateCalendarOpen && (
-                        <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
-                            <Calendar
-                                mode="single"
-                                selected={
-                                    experienceData.startDate
-                                        ? new Date(experienceData.startDate)
-                                        : undefined
-                                }
-                                onSelect={(date) =>
-                                    handleDateChange("startDate", date)
-                                }
-                                initialFocus
-                            />
-                        </div>
-                    )}
-                </div>
+                <DatePicker
+                    selected={experienceData.startDate ? new Date(experienceData.startDate) : undefined}
+                    onSelect={(date) => handleDateChange("startDate", date)}
+                    placeholder="Start Date"
+                    className="w-full"
+                />
             </div>
 
             {/* Currently working checkbox */}
@@ -162,43 +122,12 @@ const ExperienceFormContent: React.FC<ExperienceFormContentProps> = ({
                     <label htmlFor="endDate" className="text-sm font-medium">
                         End Date<span className="text-red-500">*</span>
                     </label>
-                    <div className="relative">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className={cn(
-                                "w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600",
-                                !experienceData.endDate &&
-                                    "text-muted-foreground dark:text-gray-400"
-                            )}
-                            onClick={() =>
-                                setEndDateCalendarOpen(!endDateCalendarOpen)
-                            }
-                        >
-                            {experienceData.endDate ? (
-                                format(new Date(experienceData.endDate), "PPP")
-                            ) : (
-                                <span>End Date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4" />
-                        </Button>
-                        {endDateCalendarOpen && (
-                            <div className="absolute z-50 mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
-                                <Calendar
-                                    mode="single"
-                                    selected={
-                                        experienceData.endDate
-                                            ? new Date(experienceData.endDate)
-                                            : undefined
-                                    }
-                                    onSelect={(date) =>
-                                        handleDateChange("endDate", date)
-                                    }
-                                    initialFocus
-                                />
-                            </div>
-                        )}
-                    </div>
+                    <DatePicker
+                        selected={experienceData.endDate ? new Date(experienceData.endDate) : undefined}
+                        onSelect={(date) => handleDateChange("endDate", date)}
+                        placeholder="End Date"
+                        className="w-full"
+                    />
                     {dateError && (
                         <p className="text-red-500 text-sm mt-1">{dateError}</p>
                     )}
@@ -304,10 +233,6 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
     // Store the original data for comparison
     const [originalData, setOriginalData] = useState<Experience | null>(null);
 
-    const [startDateCalendarOpen, setStartDateCalendarOpen] =
-        useState<boolean>(false);
-    const [endDateCalendarOpen, setEndDateCalendarOpen] =
-        useState<boolean>(false);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [currentlyWorking, setCurrentlyWorking] = useState<boolean>(false);
     const [originallyWorking, setOriginallyWorking] = useState<boolean>(false);
@@ -427,8 +352,6 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
                 }
             }
         }
-        if (field === "startDate") setStartDateCalendarOpen(false);
-        if (field === "endDate") setEndDateCalendarOpen(false);
     };
 
     const handleCurrentlyWorkingChange = (checked: boolean) => {
@@ -630,10 +553,6 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
                             experienceData={experienceData}
                             handleInputChange={handleInputChange}
                             handleKeyDown={handleKeyDown}
-                            startDateCalendarOpen={startDateCalendarOpen}
-                            setStartDateCalendarOpen={setStartDateCalendarOpen}
-                            endDateCalendarOpen={endDateCalendarOpen}
-                            setEndDateCalendarOpen={setEndDateCalendarOpen}
                             handleDateChange={handleDateChange}
                             currentlyWorking={currentlyWorking}
                             handleCurrentlyWorkingChange={
@@ -677,10 +596,6 @@ export const ExperienceDialog: React.FC<ExperienceDialogProps> = ({
                     experienceData={experienceData}
                     handleInputChange={handleInputChange}
                     handleKeyDown={handleKeyDown}
-                    startDateCalendarOpen={startDateCalendarOpen}
-                    setStartDateCalendarOpen={setStartDateCalendarOpen}
-                    endDateCalendarOpen={endDateCalendarOpen}
-                    setEndDateCalendarOpen={setEndDateCalendarOpen}
                     handleDateChange={handleDateChange}
                     currentlyWorking={currentlyWorking}
                     handleCurrentlyWorkingChange={handleCurrentlyWorkingChange}

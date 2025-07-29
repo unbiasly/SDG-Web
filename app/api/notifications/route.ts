@@ -45,11 +45,6 @@ export async function PUT(req: NextRequest) {
                 'Content-Type': 'application/json'
             },
         });
-
-        if (!response.ok) {
-            throw new Error(`Failed to update notification: ${response.status} ${response.statusText}`);
-        }
-
         const data = await response.json();
         return NextResponse.json(data);
     } catch (error) {

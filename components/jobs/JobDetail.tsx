@@ -12,6 +12,7 @@ import ShareContent from "../post/ShareContent";
 import { ApplyJob } from "./ApplyJob";
 import { AppApi } from "@/service/app.api";
 import { useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 interface JobDetailProps {
     job: JobListing;
@@ -63,11 +64,18 @@ const JobDetail =  ({ job, onSave }: JobDetailProps) => {
         try {
             const action = isSaved ? 'unsave' : 'saved';
             const answers = isSaved ? [] : [];
-            await AppApi.jobAction(job._id || '', action, answers);
-            if (onSave) {
-                onSave();
+            const response = await AppApi.jobAction(job._id || '', action, answers);
+            
+            if (response.success) {
+                if (onSave) {
+                    onSave();
+                }
+                toast.success(`Job ${isSaved ? 'unsaved' : 'saved'} successfully`);
+                queryClient.invalidateQueries({ queryKey: ['jobs'], exact: false });
+            } else {
+                toast.error(`Failed to ${isSaved ? 'unsave' : 'save'} job`);
+
             }
-            queryClient.invalidateQueries({ queryKey: ['jobs'], exact: false });
         } catch (error) {
             console.error(`Failed to ${isSaved ? 'unsave' : 'save'} job:`, error);
             // Optionally show user feedback about the error

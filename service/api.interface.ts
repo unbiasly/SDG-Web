@@ -555,6 +555,7 @@ export interface Event {
     description: string;
     location: string;
     type: string;
+    ticket_link?: string;
     host: string[];
     createdAt: string;
     updatedAt: string;

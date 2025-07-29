@@ -16,13 +16,6 @@ export async function GET(req: NextRequest) {
             },
         });
         
-        if (!response.ok) {
-            return NextResponse.json(
-                { error: `Failed to fetch mentors: ${response.status}` },
-                { status: response.status }
-            );
-        }
-        
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
