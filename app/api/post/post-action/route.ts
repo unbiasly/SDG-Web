@@ -5,7 +5,8 @@ import { NextRequest } from "next/server";
 export async function PATCH(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
-    
+    const sessionId = cookieStore.get('sessionId')?.value;
+
     // Parse the request body once
     const requestBody = await req.json();
     const { postId, actionType, comment, shareData } = requestBody;
@@ -28,7 +29,9 @@ export async function PATCH(req: NextRequest) {
             method: 'PATCH',
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
+                
             },
             body: Object.keys(bodyToSend).length > 0 ? JSON.stringify(bodyToSend) : undefined,
         });
@@ -46,6 +49,7 @@ export async function PATCH(req: NextRequest) {
 export async function POST(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const url = new URL(req.url);
     const limit = url.searchParams.get('limit') || '30';
     const cursor = url.searchParams.get('cursor');
@@ -66,7 +70,8 @@ export async function POST(req: NextRequest) {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
         });
         

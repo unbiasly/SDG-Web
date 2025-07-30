@@ -6,6 +6,7 @@ import { MentorRequestData } from "@/service/api.interface";
 export async function GET(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get("jwtToken")?.value;
+    const sessionId = cookieStore.get("sessionId")?.value;
     const { searchParams } = new URL(req.url);
     const categoryId = searchParams.get("categoryId");
     const mentorId = searchParams.get("mentorId");
@@ -24,6 +25,7 @@ export async function GET(req: NextRequest) {
                 headers: {
                     Authorization: `Bearer ${jwtToken}`,
                     "Content-Type": "application/json",
+                    "sessionId": sessionId || "",
                 },
             }
         );
@@ -39,6 +41,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get("jwtToken")?.value;
+    const sessionId = cookieStore.get("sessionId")?.value;
 
     if (!jwtToken) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -163,6 +166,7 @@ export async function POST(req: NextRequest) {
             headers: {
                 Authorization: `Bearer ${jwtToken}`,
                 "Content-Type": "application/json",
+                "sessionId": sessionId || "",
             },
             body: JSON.stringify(requestBodyForAPI),
         });

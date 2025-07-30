@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const searchParams = req.nextUrl.searchParams;
     const cursor = searchParams.get('cursor');
     const userId = searchParams.get('userId');
@@ -14,7 +15,8 @@ export async function GET(req: NextRequest) {
         const url = cursor ? `${baseURL}/sdg-society/get-members?userId=${userId}&cursor=${cursor}` : `${baseURL}/sdg-society/get-members?userId=${userId}`;
         const response = await fetch(url, {
             headers: {
-                'Authorization': `Bearer ${jwtToken}`
+                'Authorization': `Bearer ${jwtToken}`,
+                'sessionId': sessionId || '',
             },
         });
         
@@ -29,13 +31,15 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const { id, name, college, designation } = await req.json();
     
     try {
         const response = await fetch(`${baseURL}/sdg-society/member/${id}`, {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
             method: 'PATCH',
             body: JSON.stringify({
@@ -57,7 +61,8 @@ export async function PATCH(req: NextRequest) {
 export async function POST(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
-    
+    const sessionId = cookieStore.get('sessionId')?.value;
+
     const contentType = req.headers.get('content-type');
     
     // Handle CSV file upload
@@ -79,7 +84,8 @@ export async function POST(req: NextRequest) {
             const response = await fetch(`${baseURL}/sdg-society/add-member`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${jwtToken}`
+                    'Authorization': `Bearer ${jwtToken}`,
+                    'sessionId': sessionId || ''
                 },
                 body: uploadFormData,
             });
@@ -109,7 +115,8 @@ export async function POST(req: NextRequest) {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
             body: JSON.stringify({ members }),
         });

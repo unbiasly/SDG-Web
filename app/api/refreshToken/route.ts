@@ -31,6 +31,7 @@ export async function POST() {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "sessionId": cookieSessionId || ''
             },
             body: JSON.stringify(refreshBody),
         });

@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const body = await req.json();
     const { limit, cursor, category } = body;
     
@@ -19,7 +20,8 @@ export async function POST(req: NextRequest) {
         const response = await fetch(`${baseURL}/notification/?${queryString}`, {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
         });
         
@@ -34,6 +36,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const body = await req.json();
     const { notificationId } = body;
 
@@ -42,7 +45,8 @@ export async function PUT(req: NextRequest) {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
         });
         const data = await response.json();

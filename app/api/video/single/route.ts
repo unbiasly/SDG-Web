@@ -7,6 +7,7 @@ export async function POST(req: NextRequest) {
     try {
         const cookieStore = await cookies();
         const jwtToken = cookieStore.get('jwtToken')?.value;
+        const sessionId = cookieStore.get('sessionId')?.value;
         // Extract query parameters
         const searchParams = req.nextUrl.searchParams;
         const cursor = searchParams.get("cursor") || undefined;
@@ -26,7 +27,8 @@ export async function POST(req: NextRequest) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${jwtToken}`
+                "Authorization": `Bearer ${jwtToken}`,
+                "sessionId": sessionId || ""
             }
         });
 

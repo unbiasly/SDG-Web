@@ -15,6 +15,7 @@ export async function POST() {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'Authorization': `Bearer ${jwtToken}`,
+                    'sessionId': sessionId || ''
                 },
                 body: JSON.stringify({ sessionId: sessionId })
             });

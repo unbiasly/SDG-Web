@@ -6,7 +6,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
-    
+    const sessionId = cookieStore.get('sessionId')?.value;
+
     // Validate JWT token presence
     if (!jwtToken) {
         return NextResponse.json(
@@ -30,7 +31,8 @@ export async function GET(req: NextRequest) {
         const url = cursor ? `${baseURL}/sdg-society?cursor=${cursor}` : `${baseURL}/sdg-society`;
         const response = await fetch(url, {
             headers: {
-                'Authorization': `Bearer ${jwtToken}`
+                'Authorization': `Bearer ${jwtToken}`,
+                'sessionId': sessionId || '',
             },
         });
         

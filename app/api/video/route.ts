@@ -7,6 +7,7 @@ export async function POST(req: NextRequest) {
     try {
         const cookieStore = await cookies();
         const jwtToken = cookieStore.get('jwtToken')?.value;
+        const sessionId = cookieStore.get('sessionId')?.value;
         // Extract query parameters
         const searchParams = req.nextUrl.searchParams;
         const cursor = searchParams.get("cursor") || undefined;
@@ -35,7 +36,8 @@ export async function POST(req: NextRequest) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${jwtToken}`
+                "Authorization": `Bearer ${jwtToken}`,
+                'sessionId': sessionId || ''
             }
         });
 
@@ -56,6 +58,7 @@ export async function PATCH(req: NextRequest) {
     try {
         const cookieStore = await cookies();
         const jwtToken = cookieStore.get('jwtToken')?.value;
+        const sessionId = cookieStore.get('sessionId')?.value;
 
         // Extract video_id and type from URL path
         const url = new URL(req.url);
@@ -82,7 +85,8 @@ export async function PATCH(req: NextRequest) {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${jwtToken}`
+                "Authorization": `Bearer ${jwtToken}`,
+                'sessionId': sessionId || ''
             },
             body: JSON.stringify({ comment })
 

@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get("jwtToken")?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const { cursor, jobType, status } = await req.json();
     const jobId = req.nextUrl.searchParams.get("id");
     const limit = 30;
@@ -27,6 +28,7 @@ export async function POST(req: NextRequest) {
                 headers: {
                     Authorization: `Bearer ${jwtToken}`,
                     "Content-Type": "application/json",
+                    'sessionId': sessionId || ''
                 },
             }
         );
@@ -42,6 +44,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get("jwtToken")?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const urlParams = req.nextUrl.searchParams;
     const jobId = urlParams.get("jobId");
     const action = urlParams.get("action");
@@ -115,6 +118,7 @@ export async function PATCH(req: NextRequest) {
             method: "PATCH",
             headers: {
                 Authorization: `Bearer ${jwtToken}`,
+                'sessionId': sessionId || ''
             },
             body: requestBody,
         });

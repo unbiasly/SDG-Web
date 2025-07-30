@@ -6,11 +6,13 @@ import { NextResponse } from "next/server";
 export async function GET() {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     try {
         const response = await fetch(`${baseURL}/mentorship/category`, {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
         });
         

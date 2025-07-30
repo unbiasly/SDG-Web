@@ -5,12 +5,14 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET() {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
 
     const response = await fetch(`${baseURL}/session`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${jwtToken}`,
+            'sessionId': sessionId || ''
         },
     });
     const data = await response.json();
@@ -23,6 +25,7 @@ export async function GET() {
 export async function PUT(request:NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
 
     // Parsing the request body
     const { sessionIds } = await request.json();
@@ -37,6 +40,8 @@ export async function PUT(request:NextRequest) {
         headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${jwtToken}`,
+            'sessionId': sessionId || ''
+            
         },
         body: JSON.stringify({ sessionIds }),
     });

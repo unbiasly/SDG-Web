@@ -6,6 +6,7 @@ export async function POST(request: NextRequest) {
     try {
         const cookieStore = await cookies();
         const jwtToken = cookieStore.get("jwtToken")?.value;
+        const sessionId = cookieStore.get("sessionId")?.value;
 
         if (!jwtToken) {
             return NextResponse.json(
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${jwtToken}`,
+                'sessionId': sessionId || "",
             },
             body: JSON.stringify({
                 ...(reason && { reason }),

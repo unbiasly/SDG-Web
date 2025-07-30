@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET() {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     
     if (!jwtToken) {
         return NextResponse.json({ error: 'Unauthorized (Token Undefined)'}, { status: 401 });
@@ -14,7 +15,8 @@ export async function GET() {
         const response = await fetch(`${baseURL}/userDetails`, {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             }
         });
         
@@ -33,6 +35,7 @@ export async function PUT(req: NextRequest) {
     try {
         const cookieStore = await cookies();
         const jwtToken = cookieStore.get('jwtToken')?.value;
+        const sessionId = cookieStore.get('sessionId')?.value;
         
         if (!jwtToken) {
             return NextResponse.json({ error: 'Unauthorized (Token Undefined)'}, { status: 401 });
@@ -73,7 +76,8 @@ export async function PUT(req: NextRequest) {
                 method: "PUT",
                 headers: {
                     'Authorization': `Bearer ${jwtToken}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'sessionId': sessionId || ''
                 },
                 body: JSON.stringify(requestBody)
             });
@@ -180,7 +184,8 @@ export async function PUT(req: NextRequest) {
             const response = await fetch(`${baseURL}/userDetails`, {
                 method: "PUT",
                 headers: {
-                    "Authorization": `Bearer ${jwtToken}`
+                    "Authorization": `Bearer ${jwtToken}`,
+                    'sessionId': sessionId || ''
                     // Content-Type for FormData is set automatically by fetch
                 },
                 body: backendFormData

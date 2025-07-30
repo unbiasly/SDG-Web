@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
 
     if (!jwtToken) {
         return NextResponse.json(
@@ -21,7 +22,8 @@ export async function GET(req: NextRequest) {
         const url = cursor ? `${baseURL}/sdg-society/student-requests?cursor=${cursor}` : `${baseURL}/sdg-society/student-requests`;
         const response = await fetch(url, {
             headers: {
-                'Authorization': `Bearer ${jwtToken}`
+                'Authorization': `Bearer ${jwtToken}`,
+                'sessionId': sessionId || '',
             },
         });
         
@@ -36,6 +38,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const { id, type } = await req.json();
     if (!id || !type) {
         return NextResponse.json(
@@ -67,7 +70,8 @@ export async function PATCH(req: NextRequest) {
     try {
         const response = await fetch(`${baseURL}/sdg-society/verify-or-reject/${id}?type=${type}`, {
             headers: {
-                'Authorization': `Bearer ${jwtToken}`
+                'Authorization': `Bearer ${jwtToken}`,
+                'sessionId': sessionId || '',
             },
             method: 'PATCH',
         });

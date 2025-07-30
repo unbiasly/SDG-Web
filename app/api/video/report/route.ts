@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 export async function POST(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get("jwtToken")?.value;
+    const sessionId = cookieStore.get("sessionId")?.value;
     try {
         const body = await req.json();
         const { reason, report_category, id } = body;
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${jwtToken}`,
+                "sessionId": sessionId || ""
             },
             body: JSON.stringify({
                 ...(reason && { reason }),

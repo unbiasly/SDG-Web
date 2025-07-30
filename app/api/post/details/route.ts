@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
     const cookieStore = await cookies(); // Ensure to await the promise
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
 
         if (!jwtToken) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -22,7 +23,8 @@ export async function POST(req: NextRequest) {
             method: "GET",
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
         });
 

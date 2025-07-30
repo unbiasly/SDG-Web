@@ -5,6 +5,7 @@ import { baseURL } from "@/service/app.api";
 export async function GET(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get("jwtToken")?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
 
     try {
         if (!jwtToken) {
@@ -58,6 +59,7 @@ export async function GET(req: NextRequest) {
             headers: {
                 Authorization: `Bearer ${jwtToken}`,
                 "Content-Type": "application/json",
+                'sessionId': sessionId || ''
             },
         });
 

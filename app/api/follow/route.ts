@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const { userId, followingId, action, cursor, limit } = await request.json();
 
     type action = 'follow' | 'unfollow' | 'following' | 'followers' | 'all';
@@ -17,7 +18,9 @@ try {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${jwtToken}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'sessionId': sessionId || ''
+
         },
         body: JSON.stringify({ userId, followingId, })
     });

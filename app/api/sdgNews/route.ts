@@ -7,6 +7,7 @@ import { NextRequest } from "next/server";
 export async function POST(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const limit = 20;
 
     const { userId } = await req.json();
@@ -14,6 +15,8 @@ export async function POST(req: NextRequest) {
         headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${jwtToken}`,
+            "sessionId": sessionId || ""
+
         }
     });
 

@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
 
     // Check if user is authenticated
     if (!jwtToken) {
@@ -84,6 +85,7 @@ export async function POST(req: NextRequest) {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
                 'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
             body: JSON.stringify(body)
         });

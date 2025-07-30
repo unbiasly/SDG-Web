@@ -9,13 +9,15 @@ export async function POST(req: NextRequest) {
     const cookieStore = await cookies(); // Ensure to await the promise
     const { userId, cursor } = await req.json();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     
 
     try {
         const response = await fetch(`${baseURL}/post/?user_id=${userId}&limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`,{
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
         });
         

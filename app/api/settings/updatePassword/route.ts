@@ -5,6 +5,7 @@ import { NextRequest } from "next/server";
 export async function POST(request: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const { newPassword, oldPassword } = await request.json();
     
     if (!newPassword || !oldPassword) {
@@ -20,6 +21,8 @@ export async function POST(request: NextRequest) {
         headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${jwtToken}`,
+            'sessionId': sessionId || ''
+
         },
         body: JSON.stringify({ 
             newPassword, 

@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const searchParams = req.nextUrl.searchParams;
     const limit = 30;
     const cursor = searchParams.get('cursor');
@@ -21,7 +22,8 @@ export async function GET(req: NextRequest) {
         const response = await fetch(`${baseURL}/sdg-report${queryString}`, {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
         });
         
@@ -36,6 +38,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
 
     try {
         const formData = await req.formData();
@@ -83,6 +86,7 @@ export async function POST(req: NextRequest) {
             method: "POST",
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
+                'sessionId': sessionId || ''
             },
             body: forwardFormData
         });

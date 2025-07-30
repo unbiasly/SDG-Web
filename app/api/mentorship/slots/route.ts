@@ -6,13 +6,15 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const { searchParams } = new URL(req.url);
     const mentorId = searchParams.get("mentorId");
     try {
         const response = await fetch(`${baseURL}/mentorship/slot?mentor_id=${mentorId}`, {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
         });
         
@@ -27,13 +29,15 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const { mentor_id, time, duration } = await req.json();
     try {
         const response = await fetch(`${baseURL}/mentorship/slot`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
             body: JSON.stringify({ mentor_id, time, duration })
         });
@@ -50,6 +54,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const { slot_id, category_id } = await req.json();
 
 
@@ -58,7 +63,8 @@ export async function PUT(req: NextRequest) {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
             body: JSON.stringify({ slot_id, category_id })
         });

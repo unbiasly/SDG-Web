@@ -5,6 +5,7 @@ import { NextResponse } from "next/server"; // Import NextResponse
 export async function DELETE() {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
 
     // Prepare the response object early to set cookies on it
     let apiResponseData;
@@ -16,6 +17,7 @@ export async function DELETE() {
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${jwtToken}`,
+                'sessionId': sessionId || ''
             },
         });
 

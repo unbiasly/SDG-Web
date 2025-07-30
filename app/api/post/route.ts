@@ -6,21 +6,26 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     const searchParams = req.nextUrl.searchParams;
     const limit = 30;
     const cursor = searchParams.get('cursor') || '';
     const type = searchParams.get('type');
+
+    console.log(sessionId)
     
     try {
         
         const response = await fetch(`${baseURL}/post/?limit=${limit}&cursor=${cursor}${type === 'sdg-society' ? '&type=sdg-society' : ''}`, {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
         });
         
         const data = await response.json();
+        console.log("data", data);
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
         console.error("Error fetching posts:", error);
@@ -31,6 +36,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
 
     try {
         const formData = await req.formData();
@@ -60,6 +66,8 @@ export async function POST(req: NextRequest) {
             method: "POST",
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
             body: forwardFormData
         });
@@ -92,6 +100,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
 
     try {
         const formData = await req.formData();
@@ -146,6 +155,8 @@ export async function PUT(req: NextRequest) {
             method: "PUT",
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
+                'Content-Type': 'application/json',
+                'sessionId': sessionId || ''
             },
             body: requestData // Removed unnecessary parentheses
         });
@@ -177,6 +188,7 @@ export async function PUT(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     if (!jwtToken) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -193,7 +205,8 @@ export async function DELETE(req: NextRequest) {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${jwtToken}`
+                'Authorization': `Bearer ${jwtToken}`,
+                'sessionId': sessionId || ''
             }
         });
         

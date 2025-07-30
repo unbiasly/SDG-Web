@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 export const GET = async (req: NextRequest) => {
     const cookieStore = await cookies();
     const jwtToken = cookieStore.get('jwtToken')?.value;
+    const sessionId = cookieStore.get('sessionId')?.value;
     try {
 
         // Extract query parameters
@@ -22,7 +23,8 @@ export const GET = async (req: NextRequest) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${jwtToken}`
+                "Authorization": `Bearer ${jwtToken}`,
+                'sessionId': sessionId || ''
             }
         });
 
