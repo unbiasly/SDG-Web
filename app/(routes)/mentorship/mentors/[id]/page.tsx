@@ -8,6 +8,7 @@ import { TimeSlot } from "@/components/mentorship/TimeSlot";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import { Button } from "@/components/ui/button";
 import { MENTOR_PROFILE_TABS } from "@/lib/constants/index-constants";
+import { useUser } from "@/lib/redux/features/user/hooks";
 import { CategoryMentor, MentorReview, MentorSlot } from "@/service/api.interface";
 import { AppApi } from "@/service/app.api";
 import { se } from "date-fns/locale";
@@ -27,18 +28,8 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
     const [updatedSlot, setUpdatedSlot] = useState(false);
     const [addedReview, setAddedReview] = useState(false);
     const [isLoadingReviews, setIsLoadingReviews] = useState(true);
-    const [selfUserId, setSelfUserId] = useState<string | null>(null);
-    
-    useEffect(() => {
-        const getCookie = (name: string): string | null => {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
-            return null;
-        };
-
-        setSelfUserId(getCookie('userId'));
-    }, []);
+    const { user } = useUser();
+    const selfUserId = user?._id || "";
     
 
     const fetchReviews = async () => {

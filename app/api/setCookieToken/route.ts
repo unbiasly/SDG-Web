@@ -48,28 +48,9 @@ export async function POST(req: NextRequest) {
                 sameSite: 'lax',
                 maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
                 path: '/'
-        })}
-        if (userId) {
-            response.cookies.set({
-                name: 'userId',
-                value: userId,
-                secure: process.env.NODE_ENV === 'production', // Only secure in production
-                sameSite: 'lax',
-                maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
-                path: '/'
             });
         }
-        if (role_type) {
-            response.cookies.set({
-                name: 'role_type',
-                value: role_type,
-                secure: process.env.NODE_ENV === 'production', // Only secure in production
-                sameSite: 'lax',
-                maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
-                path: '/'
-            });
-        }
-        
+
         response.cookies.set({
             name: 'temp-onboarding-access',
             value: 'true',

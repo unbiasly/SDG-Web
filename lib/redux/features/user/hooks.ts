@@ -13,9 +13,6 @@ import {
   fetchUserSuccess, 
   fetchUserFailure,
   updateUserDetails,
-//   addEducation,
-//   addExperience,
-  setFallbackColor
 } from "./userSlice";
 import { UserResponse, Education, Experience } from "@/service/api.interface";
 

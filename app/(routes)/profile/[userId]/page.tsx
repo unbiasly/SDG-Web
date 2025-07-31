@@ -47,6 +47,7 @@ import { toast } from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { AddMemberForm } from "@/components/society/AddMemberForm";
 import VerifiedRole from "@/components/custom-ui/VerifiedRole";
+import { useUser } from "@/lib/redux/features/user/hooks";
 
 export default function Page({
     params,
@@ -54,18 +55,8 @@ export default function Page({
     params: Promise<{ userId: string }>;
 }) {
     const { userId } = use(params);
-    const [selfUserId, setSelfUserId] = useState<string | null>(null);
-
-    useEffect(() => {
-        const getCookie = (name: string): string | null => {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
-            return null;
-        };
-
-        setSelfUserId(getCookie('userId'));
-    }, []);
+    const { user } = useUser();
+    const selfUserId = user?._id;
 
     const queryClient = useQueryClient();
 

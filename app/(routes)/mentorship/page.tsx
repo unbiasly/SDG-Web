@@ -2,23 +2,16 @@
 import BackPageHeader from "@/components/custom-ui/BackPageHeader";
 import MentorCreateForm from "@/components/mentorship/MentorCreateForm";
 import { MentorshipCard } from "@/components/mentorship/MentorshipCard";
+import { useUser } from "@/lib/redux/features/user/hooks";
 import { MentorshipCategory } from "@/service/api.interface";
 import { AppApi } from "@/service/app.api";
 import React, { useEffect, useState } from "react";
 
 const Page = () => {
     const [categories, setCategories] = useState<MentorshipCategory[]>([]);
-    const [userRole, setUserRole] = useState<string>('');
-    
-        useEffect(() => {
-            const roleType = document.cookie
-                .split('; ')
-                .find(row => row.startsWith('role_type='))
-                ?.split('=')[1];
-            setUserRole(roleType || '');
-        }, []);
-    
-    const canBeMentor = userRole === 'public-representative';
+    const { user } = useUser();
+
+    const canBeMentor = user?.isMentor;
 
     const getCategories = async () => {
         try {

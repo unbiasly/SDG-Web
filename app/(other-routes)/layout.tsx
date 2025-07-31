@@ -9,7 +9,6 @@ import {
     fetchUserFailure,
     fetchUserStart,
     fetchUserSuccess,
-    setFallbackColor,
 } from "@/lib/redux/features/user/userSlice";
 import Link from "next/link";
 import { getRandomColor } from "@/lib/utilities/generateColor";
@@ -47,7 +46,7 @@ export default function RootLayout({
 
             if (data.data && data.data._id) {
                 const fallbackColor = getRandomColor();
-                dispatch(setFallbackColor(fallbackColor));
+                localStorage.setItem(`fallbackColor`, fallbackColor);
             }
             dispatch(fetchUserSuccess(data));
         } catch (error) {

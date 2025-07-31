@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Camera } from "lucide-react";
 import Image from "next/image";
 import { useAppSelector } from "@/lib/redux/hooks";
@@ -80,7 +80,7 @@ const UserFallback: React.FC<UserFallbackProps> = ({
     userName,
     roundedBorder = "rounded-full",
 }) => {
-    const fallbackColor = useAppSelector((state) => state.user.fallbackColor);
+    const fallbackColor = localStorage.getItem('fallbackColor') || '#6b7280'; // Default to gray if not set
 
     const sizeClasses = {
         xs: "text-xl",

@@ -105,6 +105,9 @@ export interface UserData {
     role_id?: string;
     role_slug?: string;
     roleRequested?: boolean;
+    mentorRequested?: boolean;
+    isMentor?: boolean;
+    role_verified?: boolean;
     bio?: string;
     occupation?: string;
     headline?: string;
